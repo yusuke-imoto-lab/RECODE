@@ -1,0 +1,35 @@
+# General
+*~
+.DS_Store
+
+# Data directory
+data/*
+tests/data
+
+# Documents
+*.rst
+docs
+sphinx
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info
+dist/
+
+# pyenv
+.python-version
+
+# dotenv
+.env
+
+# virtualenv
+.venv/
+venv/
+ENV/
+
+# Poetry
+poetry.lock
+poetry.toml
+

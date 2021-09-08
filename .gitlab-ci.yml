@@ -1,0 +1,35 @@
+image: python:latest
+
+stages:
+  - test
+  - deploy
+
+autopep8:
+  stage: test
+  script:
+    - pip install autopep8
+    - python -m autopep8 --diff --exit-code $(find . -name "*.py")
+
+deploy:pypi:main:
+  stage: deploy
+  before_script:
+    - export VERSION=$(grep "^version" pyproject.toml | grep -o "[0-9]\.[0-9]\.[0-9]").dev$(date +"%Y%m%d%H%M")
+  script:
+    - pip install poetry
+    - poetry version $VERSION
+    - poetry build -f wheel
+    - poetry publish --username __token__ --password ${PYPI_ORG_TOKEN} --no-ansi -n -v
+  only:
+    - main
+
+deploy:pypi:tag:
+  stage: deploy
+  before_script:
+    - export VERSION=$CI_COMMIT_REF_NAME
+  script:
+    - pip install poetry
+    - poetry version $VERSION
+    - poetry build -f wheel
+    - poetry publish --username __token__ --password ${PYPI_ORG_TOKEN} --no-ansi -n -v
+  only:
+    - tags

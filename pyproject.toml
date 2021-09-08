@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "screcode"
+version = "0.1.0"
+description = "scRECODE"
+authors = ["Yusuke Imoto"]
+readme = "README.md"
+repository = "https://github.com/yusukeimoto/scRECODE"
+documentation = "https://github.com/yusukeimoto/scRECODE"
+
+[tool.poetry.dependencies]
+python       = ">=3.7,<3.10"
+numpy        = "^1.21"
+scikit-learn = "^0.24"
+scipy        = "^1.7"
+h5py         = "^3.4"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
