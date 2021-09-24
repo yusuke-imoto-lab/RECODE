@@ -4,6 +4,7 @@ import scipy.sparse
 import h5py
 
 
+## test 0924
 def scRECODE(data, return_param=False):
     data_xRECODE = np.array(data, dtype=float)
     idx_gene = np.sum(data, axis=0) > 0
