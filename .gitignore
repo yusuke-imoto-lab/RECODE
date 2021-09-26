@@ -37,4 +37,5 @@ poetry.toml
 screcode/data/
 screcode/test.py
 screcode_work/data/
+screcode_work/figure/
 screcode_work/test.py
