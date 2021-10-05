@@ -131,7 +131,7 @@ class RECODE():
 		else:
 			noise_var = 1
 		return self.noise_reduct_noise_var(noise_var)
-
+	
 
 class scRECODE():
 	def __init__(
@@ -202,9 +202,8 @@ class scRECODE():
 		param.update(param_t)
 		recode = RECODE(return_param=True,param_estimate=False,acceleration=self.acceleration,acceleration_ell_max=self.acceleration_ell_max)
 		X_norm_RECODE = recode.fit_transform(X_norm)
-		X_scRECODE_scaled = self.inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
 		X_scRECODE = np.zeros(X.shape,dtype=float)
-		X_scRECODE[:,self.idx_gene] = (X_scRECODE_scaled.T*np.sum(self.X_temp,axis=1)).T
+		X_scRECODE[:,self.idx_gene] = self.inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
 		X_scRECODE = np.where(X_scRECODE>0,X_scRECODE,0)
 		elapsed_time = time.time() - start
 		param['#silent genes'] = sum(np.sum(X,axis=0)==0)
@@ -257,7 +256,6 @@ class scRECODE():
 		ax1.tick_params(labelbottom=True,labelleft=False,bottom=True)
 		ax1.set_xlabel('Density',fontsize=14)
 		ax1.spines['right'].set_visible(False)
-		ax1.spines['left'].set_visible(False)
 		ax1.spines['top'].set_visible(False)
 		ax1.tick_params(left=False)
 		if save:
@@ -269,13 +267,25 @@ class scRECODE():
 		  title='',
 		  figsize=(15,5),
 		  ps = 10,
-		  size_factor=10**6,
+		ax1.spines['left'].set_visible(False)
+		  size_factor='median',
 		  save = False,
 		  save_filename = 'compare_mean_variance_log',
 		  save_format = 'png'
 	):
+		if size_factor=='median':
+			size_factor = np.median(np.sum(self.X,axis=1))
+			size_factor_scRECODE = np.median(np.sum(self.X_scRECODE,axis=1))
+		elif size_factor=='mean':
+			size_factor = np.mean(np.sum(self.X,axis=1))
+			size_factor_scRECODE = np.mean(np.sum(self.X_scRECODE,axis=1))
+		elif (type(size_factor) == int) | (type(size_factor) == float):
+			size_factor_scRECODE = size_factor
+		else:
+			size_factor = np.median(np.sum(self.X,axis=1))
+			size_factor_scRECODE = np.median(np.sum(self.X_scRECODE,axis=1))
 		X_ss_log = np.log2(size_factor*(self.X[:,self.idx_gene].T/np.sum(self.X,axis=1)).T+1)
-		X_scRECODE_ss_log = np.log2(size_factor*(self.X_scRECODE[:,self.idx_gene].T/np.sum(self.X_scRECODE,axis=1)).T+1)
+		X_scRECODE_ss_log = np.log2(size_factor_scRECODE*(self.X_scRECODE[:,self.idx_gene].T/np.sum(self.X_scRECODE,axis=1)).T+1)
 		fig = plt.figure(figsize=figsize)
 		ax0 = fig.add_subplot(1,2,1)
 		x,y = np.mean(X_ss_log,axis=0),np.var(X_ss_log,axis=0)
@@ -309,21 +319,21 @@ def scRECODE_h5(h5_file, decimals=5):
                  for x in input_h5['matrix']['features']['name']]
     cell_list = np.array([x.decode('ascii', 'ignore')
                          for x in input_h5['matrix']['barcodes']], dtype=object)
-    X_xRECODE,param = scRECODE(return_param=True).fit_transform(X)
-    X_xRECODE_csc = scipy.sparse.csc_matrix(
-        np.round(X_xRECODE, decimals=decimals).T)
-    outpur_h5 = '%s_xRECODE.h5' % (h5_file[:-3])
+    X_scRECODE,param = scRECODE(return_param=True).fit_transform(X)
+    X_scRECODE_csc = scipy.sparse.csc_matrix(
+        np.round(X_scRECODE, decimals=decimals).T)
+    outpur_h5 = '%s_scRECODE.h5' % (h5_file[:-3])
     with h5py.File(outpur_h5, 'w') as f:
         f.create_group('matrix')
         for key in input_h5['matrix'].keys():
             if key == 'X':
-                f['matrix'].create_Xset(key, X=X_xRECODE_csc.X)
+                f['matrix'].create_Xset(key, X=X_scRECODE_csc.X)
             elif key == 'indices':
-                f['matrix'].create_Xset(key, X=X_xRECODE_csc.indices)
+                f['matrix'].create_Xset(key, X=X_scRECODE_csc.indices)
             elif key == 'indptr':
-                f['matrix'].create_Xset(key, X=X_xRECODE_csc.indptr)
+                f['matrix'].create_Xset(key, X=X_scRECODE_csc.indptr)
             elif key == 'shape':
-                f['matrix'].create_Xset(key, X=X_xRECODE_csc.shape)
+                f['matrix'].create_Xset(key, X=X_scRECODE_csc.shape)
             elif type(input_h5['matrix'][key]) == h5py._hl.Xset.Xset:
                 f['matrix'].create_Xset(key, X=input_h5['matrix'][key])
             else:
