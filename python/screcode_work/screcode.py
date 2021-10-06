@@ -10,6 +10,9 @@ import warnings
 
 
 class RECODE():
+    """ Add description here
+    """
+
 	def __init__(
 		self,
 		return_param = False,
@@ -25,6 +28,16 @@ class RECODE():
 		self.return_param=return_param
 	
 	def fit(self,X):
+    """ Add description here
+        Parameters
+        ----------
+        data: description
+        return_param: description
+
+        Returns
+        --------
+            description
+    """
 		n,d = X.shape
 		if self.acceleration:
 			self.n_pca = min(n-1,d-1,self.acceleration_ell_max)

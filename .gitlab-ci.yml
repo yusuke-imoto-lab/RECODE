@@ -7,12 +7,14 @@ stages:
 autopep8:
   stage: test
   script:
+    - cd python/screcode
     - pip install autopep8
     - python -m autopep8 --diff --exit-code $(find . -name "*.py")
 
 deploy:pypi:main:
   stage: deploy
   before_script:
+    - cd python
     - export VERSION=$(grep "^version" pyproject.toml | grep -o "[0-9]\.[0-9]\.[0-9]").dev$(date +"%Y%m%d%H%M")
   script:
     - pip install poetry
@@ -25,6 +27,7 @@ deploy:pypi:main:
 deploy:pypi:tag:
   stage: deploy
   before_script:
+    - cd python
     - export VERSION=$CI_COMMIT_REF_NAME
   script:
     - pip install poetry

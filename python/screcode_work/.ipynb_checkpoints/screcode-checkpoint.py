@@ -1,4 +1,4 @@
-import numpy as np
+impoart numpy as np
 import sklearn.decomposition
 import scipy.sparse
 import h5py
