@@ -216,7 +216,7 @@ class scRECODE():
         self.X_temp = X[:,self.idx_gene]
 
     def fit_transform(self,X):
-        """Apply scRECODE to X. 
+        """Apply scRECODE to X.
         
         Parameters
         ----------
