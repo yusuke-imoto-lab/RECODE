@@ -10,7 +10,7 @@ import warnings
 
 
 class RECODE():
-    """ RECODE (Resolution of curse of dimensionality). 
+    """RECODE (Resolution of curse of dimensionality). 
 
     """
 
@@ -22,7 +22,7 @@ class RECODE():
         param_estimate = True,
         ell_manual = 10,
     ):
-        """
+        """Set RECODE parameters
 
         Parameters
         ----------
@@ -47,7 +47,7 @@ class RECODE():
         Returns
         -------
         self : object
-            Returns the instance itself.aaaa
+            Returns the instance itself.aa
         """
         n,d = X.shape
         if self.acceleration:
