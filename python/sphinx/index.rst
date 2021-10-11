@@ -5,8 +5,7 @@
 
 scRECODE: A noire reduction method for single-cell data science
 ====================================
-**scRECODE** 
-(*re*solution of **c** urse **o** f **d** im **e** nsionality in **s** ingle-**c** ell data analysis) is a noire reduction method for single-cell data science.
+**scRECODE** (**re**\ solution of **c**\ urse **o**\ f **d**\ im **e**\ nsionality in **s**\ ingle-**c**\ ell data analysis) is a noire reduction method for single-cell data science.
 
 Installation
 ====================================
