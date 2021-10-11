@@ -5,7 +5,7 @@
 
 scRECODE: A noire reduction method for single-cell data science
 ====================================
-**scRECODE** (**re**solution of **c**urse **o**f **d**im**e**nsionality in single-cell data analysis) is a noire reduction method for single-cell data science.
+**scRECODE** ( **re**solution of **c**urse **o**f **d**im**e**nsionality in **s**ingle-**c**ell data analysis) is a noire reduction method for single-cell data science.
 
 Installation
 ====================================
@@ -20,10 +20,10 @@ You can also install the development version of lingam package from GitHub:
 
 .. code-block:: bash
 
-	$ pip install git+https://github.com/cdt15/lingam.git
+	$ pip install git+https://github.com/yusuke-imoto-lab/scRECODE.git
 
 
-To use scRECODE, import 'screcode'. 
+To use scRECODE, import `screcode`. 
 
 .. code-block:: python
 
@@ -34,7 +34,7 @@ To use scRECODE, import 'screcode'.
    :maxdepth: 2
    :caption: Contents:
 
-   example
+   examples
    screcode
 
 
