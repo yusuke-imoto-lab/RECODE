@@ -11,7 +11,7 @@ import warnings
 
 class RECODE():
 	""" RECODE (Resolution of curse of dimensionality). 
-	
+
 	"""
 
 	def __init__(
@@ -23,7 +23,7 @@ class RECODE():
 		ell_manual = 10,
 	):
 		"""
-		
+
 		Parameters
 		----------
 		return_param : boolean, optional (default=False)
@@ -37,13 +37,13 @@ class RECODE():
 	
 	def fit(self, X):
 		"""Fit the model to X.
-		
+
 		Parameters
 		----------
 		X : array-like, shape (n_samples, n_features)
 			Training data, where ``n_samples`` is the number of samples
 			and ``n_features`` is the number of features.
-		
+
 		Returns
 		-------
 		self : object
