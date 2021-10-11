@@ -11,6 +11,7 @@ import warnings
 
 class RECODE():
 	""" RECODE (Resolution of curse of dimensionality). 
+	
 	"""
 
 	def __init__(
@@ -149,11 +150,13 @@ class RECODE():
 	
 	def fit_transform(self,X):
 		"""Apply RECODE to X.
+
 		Parameters
 		----------
 		X : array-like of shape (n_samples, n_features)
 			Training data, where `n_samples` is the number of samples
 			and `n_features` is the number of features.
+
 		Returns
 		-------
 		X_new : ndarray of shape (n_samples, n_components)
@@ -230,13 +233,13 @@ class scRECODE():
 
 	def fit_transform(self,X):
 		"""Apply scRECODE to X.
-		
+
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features)
 			single-cell sequencing data, where `n_samples` is the number of samples
 			and `n_features` is the number of genes.
-			
+
 		Returns
 		-------
 		X_new : ndarray of shape (n_samples, n_components)
