@@ -36,9 +36,4 @@ python/poetry.toml
 # for test
 python/screcode/data/
 python/screcode/test.py
-python/screcode_work/data/
-python/screcode_work/figure/
-python/screcode_work/old/
-python/screcode_work/test.py
-python/screcode_work/test_scRECODE_HCA.ipynb
-python/screcode_work/.ipynb_checkpoints/
+*.ipynb
