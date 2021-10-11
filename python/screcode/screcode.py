@@ -36,6 +36,7 @@ class RECODE():
 	
 	def fit(self, X):
 		"""Fit the model to X.
+		
 		Parameters
 		----------
 		X : array-like, shape (n_samples, n_features)
