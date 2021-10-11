@@ -156,7 +156,7 @@ class RECODE():
 
 class scRECODE():
     """ scRECODE (Resolution of curse of dimensionality in single-cell data analysis). 
-		"""
+    """
     def __init__(
         self,
         return_param = False,
@@ -217,7 +217,7 @@ class scRECODE():
 
     def fit_transform(self,X):
         """Apply scRECODE to X. 
-    		
+        
         Parameters
         ----------
         X : ndarray of shape (n_samples, n_features)
@@ -228,7 +228,7 @@ class scRECODE():
         -------
         X_new : ndarray of shape (n_samples, n_components)
             Denoised matrix.
-    		"""
+        """
         start = time.time()
         if self.verbose:
             print('start scRECODE')
