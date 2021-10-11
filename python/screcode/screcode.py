@@ -34,15 +34,15 @@ class RECODE():
 	
 	def fit(self, X):
 	"""Fit the model to X.
-	Parameters
-	----------
+    Parameters
+    ----------
 	X : array-like, shape (n_samples, n_features)
 		Training data, where ``n_samples`` is the number of samples
 		and ``n_features`` is the number of features.
 	Returns
 	-------
 	self : object
-		Returns the instance itself.
+		Returns the instance itself.aaaa
 	"""
 		n,d = X.shape
 		if self.acceleration:
