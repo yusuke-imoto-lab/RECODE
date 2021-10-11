@@ -33,14 +33,17 @@ class RECODE():
 		self.return_log=return_log
 	
 	def fit(self, X):
-		"""Fit the model with X.
-		
-		Parameters
-		----------
-		X : ndarray of shape (n_samples, n_features)
-			Matrix data, where ``n_samples`` is the number of samples
-			and ``n_features`` is the number of features.
-		"""
+		"""Fit the model to X.
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Training data, where ``n_samples`` is the number of samples
+            and ``n_features`` is the number of features.
+        Returns
+        -------
+        self : object
+            Returns the instance itself.
+        """
 		n,d = X.shape
 		if self.acceleration:
 			self.n_pca = min(n-1,d-1,self.acceleration_ell_max)
