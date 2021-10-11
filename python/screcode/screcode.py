@@ -26,14 +26,14 @@ class RECODE():
         self.ell_manual=ell_manual
         self.return_param=return_param
     
-    def fit(self,X):
-        """ Fit the model with X.
+    def fit(self, X):
+        """Fit the model with X.
         
         Parameters
         ----------
         X : ndarray of shape (n_samples, n_features)
-            Matrix data, where `n_samples` is the number of samples
-            and `n_features` is the number of features.
+            Matrix data, where ``n_samples`` is the number of samples
+            and ``n_features`` is the number of features.
         """
         n,d = X.shape
         if self.acceleration:
