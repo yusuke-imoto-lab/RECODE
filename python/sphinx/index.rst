@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-scRECODE: A noire reduction method for single-cell data science
+scRECODE: A noire reduction method for single-cell sequencing data
 ====================================
-**scRECODE** (**re**\ solution of **c**\ urse **o**\ f **d**\ im **e**\ nsionality in **s**\ ingle-**c**\ ell data analysis) is a noire reduction method for single-cell data science.
+**scRECODE** (**re**\ solution of **c**\ urse **o**\ f **d**\ im **e**\ nsionality in **s**\ ingle-**c**\ ell data analysis) is a noire reduction method for single-cell sequencing data.
 
 Installation
 ====================================
@@ -34,7 +34,7 @@ To use scRECODE, import ``screcode``.
 	:maxdepth: 2
 	:caption: Contents:
 	
-	examples/index
+	examples
 	screcode
 
 
