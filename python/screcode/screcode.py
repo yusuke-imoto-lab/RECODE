@@ -172,6 +172,7 @@ class RECODE():
 
 class scRECODE():
 	""" scRECODE (Resolution of curse of dimensionality in single-cell data analysis). 
+
 	"""
 	def __init__(
 		self,
