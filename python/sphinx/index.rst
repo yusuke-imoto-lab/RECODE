@@ -31,11 +31,11 @@ To use scRECODE, import ``screcode``.
 
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-   examples/index
-   screcode
+	:maxdepth: 2
+	:caption: Contents:
+	
+	examples/index
+	screcode
 
 
 
