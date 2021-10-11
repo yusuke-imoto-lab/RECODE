@@ -20,6 +20,12 @@ class RECODE():
         param_estimate = True,
         ell_manual = 10,
     ):
+        """
+        Parameters
+        ----------
+        return_param : boolean, optional (default=False)
+        acceleration : boolean, optional (default=False)
+        """
         self.acceleration = acceleration
         self.acceleration_ell_max = acceleration_ell_max
         self.param_estimate=param_estimate
