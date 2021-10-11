@@ -22,6 +22,7 @@ class RECODE():
 		ell_manual = 10,
 	):
 		"""
+		
 		Parameters
 		----------
 		return_param : boolean, optional (default=False)
