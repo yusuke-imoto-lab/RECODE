@@ -14,7 +14,7 @@ class RECODE():
 	"""
 	def __init__(
 		self,
-		return_param = False,
+		return_log = False,
 		acceleration = True,
 		acceleration_ell_max = 1000,
 		param_estimate = True,
@@ -30,7 +30,7 @@ class RECODE():
 		self.acceleration_ell_max = acceleration_ell_max
 		self.param_estimate=param_estimate
 		self.ell_manual=ell_manual
-		self.return_param=return_param
+		self.return_log=return_log
 	
 	def fit(self, X):
 		"""Fit the model with X.
@@ -165,20 +165,21 @@ class scRECODE():
 	"""
 	def __init__(
 		self,
-		return_param = False,
+		return_log = False,
 		acceleration = True,
 		acceleration_ell_max = 1000,
 		verbose = True
 		):
-		self.return_param = return_param
+		self.return_log = return_log
 		self.acceleration = acceleration
 		self.acceleration_ell_max = acceleration_ell_max
 		self.verbose = verbose
+		self.log = {}
 
 	def noise_variance_stabilizing_normalization(
 		self,
 		X,
-		return_param=False
+		return_log=False
 	):
 		## scaled X
 		X_nUMI = np.sum(X,axis=1)
@@ -189,13 +190,12 @@ class scRECODE():
 		noise_var[noise_var==0] = 1
 		X_norm = (X_scaled-np.mean(X_scaled,axis=0))/np.sqrt(noise_var)
 		self.X_nUMI = X_nUMI
-		self.X_scaled = X_scaled
 		self.X_scaled_mean = X_scaled_mean
 		self.noise_var = noise_var
 		X_norm_var = np.var(X_norm,axis=0)
 		self.idx_sig = X_norm_var > 1
 		self.idx_nonsig = (X_norm_var<=1) & (X_norm_var>0)
-		if return_param == True:
+		if return_log == True:
 			n_sig = sum(self.idx_sig)
 			n_nonsig = sum(self.idx_nonsig)
 			n_silent = X.shape[1] - n_sig - n_nonsig
@@ -239,39 +239,38 @@ class scRECODE():
 		if self.verbose:
 			print('start scRECODE')
 		self.fit(X)
-		param = {}
-		X_norm,param_t = self.noise_variance_stabilizing_normalization(self.X_temp,return_param=True)
-		param.update(param_t)
-		recode = RECODE(return_param=True,param_estimate=False,acceleration=self.acceleration,acceleration_ell_max=self.acceleration_ell_max)
+		X_norm,log_t = self.noise_variance_stabilizing_normalization(self.X_temp,return_log=True)
+		self.log.update(log_t)
+		recode = RECODE(return_log=True,param_estimate=False,acceleration=self.acceleration,acceleration_ell_max=self.acceleration_ell_max)
 		X_norm_RECODE = recode.fit_transform(X_norm)
 		X_scRECODE = np.zeros(X.shape,dtype=float)
 		X_scRECODE[:,self.idx_gene] = self.inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
 		X_scRECODE = np.where(X_scRECODE>0,X_scRECODE,0)
 		elapsed_time = time.time() - start
-		param['#silent genes'] = sum(np.sum(X,axis=0)==0)
-		param['ell'] = recode.ell
-		param['elapsed_time'] = "{0}".format(np.round(elapsed_time,decimals=4
+		self.log['#silent genes'] = sum(np.sum(X,axis=0)==0)
+		self.log['ell'] = recode.ell
+		self.log['Elapsed_time'] = "{0}".format(np.round(elapsed_time,decimals=4
 		)) + "[sec]"
 		if self.verbose:
 			print('end scRECODE')
-			print('parameter:',param)
+			print('log:',self.log)
 		if recode.ell == self.acceleration_ell_max:
 			warnings.warn("Acceleration error: the ell value may not be optimal. Set 'acceleration=False' or larger acceleration_ell_max.\n"
 			"Ex. X_new = screcode.scRECODE(acceleration=False).fit_transform(X)")
 		self.X_scRECODE = X_scRECODE
-		if self.return_param:
-			return X_scRECODE, param
+		if self.return_log:
+			return X_scRECODE, self.log
 		else:
 			return X_scRECODE
 	
 	def check_applicability(
-			self,
-		  title='',
-		  figsize=(10,5),
-		  ps = 10,
-		  save = False,
-		  save_filename = 'check_applicability',
-		  save_format = 'png'
+		self,
+		title='',
+		figsize=(10,5),
+		ps = 10,
+		save = False,
+		save_filename = 'check_applicability',
+		save_format = 'png'
 	):
 		X_scaled =(self.X_temp.T/np.sum(self.X_temp,axis=1)).T
 		X_norm = self.noise_variance_stabilizing_normalization(self.X_temp)
