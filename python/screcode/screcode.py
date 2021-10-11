@@ -10,8 +10,7 @@ import warnings
 
 
 class RECODE():
-    """ add comment
-    		TEST
+    """ RECODE (Resolution of curse of dimensionality). 
     """
 
     def __init__(
@@ -29,15 +28,13 @@ class RECODE():
         self.return_param=return_param
     
     def fit(self,X):
-        """ Add description here
+        """ Fit the model with X
+        
         Parameters
         ----------
-        data: description
-        return_param: description
-
-        Returns
-        --------
-            description
+        X : ndarray of shape (n_samples, n_features)
+            Matrix data, where `n_samples` is the number of samples
+            and `n_features` is the number of features.
         """
         n,d = X.shape
         if self.acceleration:
@@ -139,6 +136,17 @@ class RECODE():
         return var
     
     def fit_transform(self,X):
+    		"""Apply RECODE to X. 
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training data, where `n_samples` is the number of samples
+            and `n_features` is the number of features.
+        Returns
+        -------
+        X_new : ndarray of shape (n_samples, n_components)
+            Denoised values.
+    		"""
         self.fit(X)
         if self.param_estimate:
             noise_var = recode_tools.noise_var_est(X)
@@ -148,6 +156,8 @@ class RECODE():
     
 
 class scRECODE():
+		""" scRECODE (Resolution of curse of dimensionality in single-cell data analysis). 
+    """
     def __init__(
         self,
         return_param = False,
@@ -207,6 +217,19 @@ class scRECODE():
         self.X_temp = X[:,self.idx_gene]
 
     def fit_transform(self,X):
+    		"""Apply scRECODE to X. 
+    		
+        Parameters
+        ----------
+        X : ndarray of shape (n_samples, n_features)
+            single-cell sequencing data, where `n_samples` is the number of samples
+            and `n_features` is the number of genes.
+            
+        Returns
+        -------
+        X_new : ndarray of shape (n_samples, n_components)
+            Denoised matrix.
+    		"""
         start = time.time()
         if self.verbose:
             print('start scRECODE')

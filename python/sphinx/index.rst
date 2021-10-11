@@ -3,10 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-scRECODE: A xYY Library
+scRECODE: A noire reduction method for single-cell data science
 ====================================
-*scRECODE* is xxxx library xxxxxxx.
-add description.
+**scRECODE** (**re**solution of **c**urse **o**f **d**im**e**nsionality in single-cell data analysis) is a noire reduction method for single-cell data science.
 
 Installation
 ====================================
@@ -16,6 +15,15 @@ scRECODE supports Python 3.* or newer. scRECODE can be installed via pip:
 
  $ pip install screcode
 
+
+You can also install the development version of lingam package from GitHub:
+
+.. code-block:: bash
+
+	$ pip install git+https://github.com/cdt15/lingam.git
+
+
+To use scRECODE, import 'screcode'. 
 
 .. code-block:: python
 
