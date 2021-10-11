@@ -12,7 +12,6 @@ import warnings
 class RECODE():
     """ RECODE (Resolution of curse of dimensionality). 
     """
-
     def __init__(
         self,
         return_param = False,
@@ -28,7 +27,7 @@ class RECODE():
         self.return_param=return_param
     
     def fit(self,X):
-        """ Fit the model with X
+        """ Fit the model with X.
         
         Parameters
         ----------
@@ -136,7 +135,7 @@ class RECODE():
         return var
     
     def fit_transform(self,X):
-    		"""Apply RECODE to X. 
+        """Apply RECODE to X.
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
@@ -146,7 +145,7 @@ class RECODE():
         -------
         X_new : ndarray of shape (n_samples, n_components)
             Denoised values.
-    		"""
+        """
         self.fit(X)
         if self.param_estimate:
             noise_var = recode_tools.noise_var_est(X)
@@ -156,8 +155,8 @@ class RECODE():
     
 
 class scRECODE():
-		""" scRECODE (Resolution of curse of dimensionality in single-cell data analysis). 
-    """
+    """ scRECODE (Resolution of curse of dimensionality in single-cell data analysis). 
+		"""
     def __init__(
         self,
         return_param = False,
@@ -217,7 +216,7 @@ class scRECODE():
         self.X_temp = X[:,self.idx_gene]
 
     def fit_transform(self,X):
-    		"""Apply scRECODE to X. 
+        """Apply scRECODE to X. 
     		
         Parameters
         ----------
