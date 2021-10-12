@@ -33,7 +33,7 @@ ENV/
 python/poetry.lock
 python/poetry.toml
 
-# for test
+# Test
 python/screcode/data
 python/screcode/figure
 python/screcode/test.py
