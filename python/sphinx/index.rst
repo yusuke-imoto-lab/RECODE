@@ -34,7 +34,7 @@ To use scRECODE, import ``screcode``.
 	:maxdepth: 2
 	:caption: Contents:
 	
-	examples
+	examples/index
 	screcode
 
 
