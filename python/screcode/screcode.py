@@ -447,7 +447,8 @@ class scRECODE():
 		  save_filename = 'noise_variance',
 		  save_format = 'png'
 	):
-		"""
+		"""Plot the transformed data by the noise variance-srabilizing normalization
+		
 		"""
 		ps = 1
 		fs_title = 16
