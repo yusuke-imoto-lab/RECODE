@@ -7,9 +7,9 @@ data/*
 tests/data
 
 # Documents
-*.rst
+#*.rst
 docs
-sphinx
+#sphinx
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
