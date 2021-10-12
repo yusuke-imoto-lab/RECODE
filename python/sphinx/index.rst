@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-scRECODE documentation
+scRECODE: Resolution of Curse of Dimensionality in Single-cell Data Analysis
 ====================================
-**scRECODE** (**re**\ solution of **c**\ urse **o**\ f **d**\ im **e**\ nsionality in **s**\ ingle-**c**\ ell data analysis) is a noire reduction method for single-cell sequencing data.
+**Re**\ solution of **c**\ urse **o**\ f **d**\ im **e**\ nsionality in **s**\ ingle-**c**\ ell data analysis (scRECODE) is a noire reduction method for single-cell sequencing data. 
 
 Installation
 ====================================
