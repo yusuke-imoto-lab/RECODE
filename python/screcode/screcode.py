@@ -11,6 +11,7 @@ import warnings
 
 class RECODE():
 	"""RECODE (Resolution of curse of dimensionality). 
+		A noise reduction method for general data. 
 
 	"""
 
@@ -29,11 +30,11 @@ class RECODE():
 		return_log : boolean, optional (default=False)
 		acceleration : boolean, optional (default=False)
 		"""
+		self.return_log=return_log
 		self.acceleration = acceleration
 		self.acceleration_ell_max = acceleration_ell_max
 		self.param_estimate=param_estimate
 		self.ell_manual=ell_manual
-		self.return_log=return_log
 	
 	def fit(self, X):
 		"""Fit the model to X.
@@ -47,7 +48,7 @@ class RECODE():
 		Returns
 		-------
 		self : object
-			Returns the instance itself.aa
+			Returns the instance itself.
 		"""
 		n,d = X.shape
 		if self.acceleration:
@@ -108,8 +109,7 @@ class RECODE():
 	def noise_var_est(
 		self,
 		X,
-		cut_low_exp=1.0e-10,
-		out_file='variance'
+		cut_low_exp=1.0e-10
 	):
 		n,d = X.shape
 		X_var = np.var(X,axis=0)
@@ -154,13 +154,13 @@ class RECODE():
 		Parameters
 		----------
 		X : array-like of shape (n_samples, n_features)
-			Training data, where `n_samples` is the number of samples
+			Training data matrix, where `n_samples` is the number of samples
 			and `n_features` is the number of features.
 
 		Returns
 		-------
 		X_new : ndarray of shape (n_samples, n_components)
-			Denoised values.
+			Denoised data matrix.
 		"""
 		self.fit(X)
 		if self.param_estimate:
@@ -192,6 +192,9 @@ class scRECODE():
 		X,
 		return_log=False
 	):
+		"""Apply the noise-variance-stabilizing normalization to X.
+		
+		"""
 		## scaled X
 		X_nUMI = np.sum(X,axis=1)
 		X_scaled = (X.T/X_nUMI).T
@@ -223,11 +226,22 @@ class scRECODE():
 		self,
 		X
 	):
+		"""Apply the inverce transformation of noise-variance-stabilizing normalization to X.
+		
+		"""
 		X_norm_inv_temp = X*np.sqrt(self.noise_var)+self.X_scaled_mean
 		X_norm_inv = (X_norm_inv_temp.T*self.X_nUMI).T
 		return X_norm_inv
 	
 	def fit(self,X):
+		"""Fit the model to X. After ``fit(X)``, ``check_applicability`` becomes applicable. 
+		
+		Parameters
+		----------
+		X : ndarray of shape (n_samples, n_features)
+			single-cell sequencing data matrix, where `n_samples` is the number of samples
+			and `n_features` is the number of features (genes).
+		"""
 		self.X = X
 		self.idx_gene = np.sum(X,axis=0) > 0
 		self.X_temp = X[:,self.idx_gene]
@@ -238,13 +252,13 @@ class scRECODE():
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features)
-			single-cell sequencing data, where `n_samples` is the number of samples
-			and `n_features` is the number of genes.
+			single-cell sequencing data matrix, where `n_samples` is the number of samples
+			and `n_features` is the number of features (genes).
 
 		Returns
 		-------
 		X_new : ndarray of shape (n_samples, n_components)
-			Denoised matrix.
+			Denoised data matrix.
 		"""
 		start = time.time()
 		if self.verbose:
@@ -283,6 +297,9 @@ class scRECODE():
 		save_filename = 'check_applicability',
 		save_format = 'png'
 	):
+		"""Check applicability of scRECODE. Before use this function, you have to conduct ``fit(X)`` or ``fit_transform(X)`` for target data matrix ``X``. 
+		
+		"""
 		X_scaled =(self.X_temp.T/np.sum(self.X_temp,axis=1)).T
 		X_norm = self.noise_variance_stabilizing_normalization(self.X_temp)
 		norm_var = np.var(X_norm,axis=0)
@@ -347,6 +364,8 @@ class scRECODE():
 		save_filename = 'compare_mean_variance_log',
 		save_format = 'png'
 	):
+		"""Plot mean vs variance of features for log-normalized data
+		"""
 		if size_factor=='median':
 			size_factor = np.median(np.sum(self.X,axis=1))
 			size_factor_scRECODE = np.median(np.sum(self.X_scRECODE,axis=1))
@@ -391,6 +410,8 @@ class scRECODE():
 		  save_filename = 'noise_variance',
 		  save_format = 'png'
 	):
+		"""Plot noise variance for each features
+		"""
 		ps = 1
 		fs_title = 16
 		fs_label = 14
@@ -425,6 +446,8 @@ class scRECODE():
 		  save_filename = 'noise_variance',
 		  save_format = 'png'
 	):
+		"""
+		"""
 		ps = 1
 		fs_title = 16
 		fs_label = 14
