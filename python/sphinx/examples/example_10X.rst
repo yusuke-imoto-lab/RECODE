@@ -7,6 +7,7 @@ The test data is directly avairable from `Feature / cell matrix HDF5 (filtered)`
 
 
 Import  ``numpy``, ``scipy``, and ``h5py`` in addlition to ``screcode``. 
+
 .. code-block:: python
 
 	import screcode
@@ -16,6 +17,7 @@ Import  ``numpy``, ``scipy``, and ``h5py`` in addlition to ``screcode``.
 
 
 Imput data. 
+
 .. code-block:: python
 
 	h5_file = 'data/500_PBMC_3p_LT_Chromium_Controller_filtered_feature_bc_matrix.h5'
@@ -26,10 +28,48 @@ Imput data.
 
 
 Apply scRECODE. 
+
 .. code-block:: python
+
 	screc = screcode.scRECODE()
 	data_scRECODE = screc.fit_transform(data)
 
+
 Check applicability. 
+
 .. code-block:: python
-	screc.check_applicability(save=True,save_filename='figure/ATAC_PBMC_applicability')
+
+	screc.check_applicability()
+	
+	
+	
+.. code-block:: python
+
+	screc.compare_mean_variance_log()
+
+
+.. code-block:: python
+
+	screc.plot_noise_variance()
+
+
+.. code-block:: python
+
+	screc.plot_normalization()
+	
+
+CHeck log. 
+.. code-block:: python
+
+	screc.log
+	
+
+.. parsed-literal::
+	{'#significant genes': 11628,
+	 '#non-significant genes': 8189,
+	 '#silent genes': 16784,
+	 'ell': 34,
+	 'Elapsed_time': '10.13[sec]',
+	 'Applicability': '(A) Strong applicable',
+	 "Rate of '0 < normalized variance < 0.9'": '0%',
+	 'Peak density of normalized variance': 1.0013721697775515}
