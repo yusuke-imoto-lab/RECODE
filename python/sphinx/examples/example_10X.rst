@@ -2,7 +2,7 @@ scRNA-seq data - 10X chromium HDF5 file
 ========
 
 We show an exmaple for scRNA-seq data produced by 10X Chromium. 
-We use a sample of `500 Human PBMCs, 3' LT v3.1, Chromium Controller` in `10X Genomics Datasets <https://www.10xgenomics.com/jp/resources/datasets>`_.  
+We use sample `10k Human PBMCs, 3' v3.1, Chromium Controller` (11,485 cells and 36,601 genes) in `10X Genomics Datasets <https://www.10xgenomics.com/jp/resources/datasets>`_.  
 The test data is directly avairable from `Feature / cell matrix HDF5 (filtered)` in `here <https://www.10xgenomics.com/jp/resources/datasets/500-human-pbm-cs-3-lt-v-3-1-chromium-controller-3-1-low-6-1-0>`_ (need register).
 
 
@@ -35,6 +35,11 @@ Apply scRECODE.
 	data_scRECODE = screc.fit_transform(data)
 
 
+.. parsed-literal::
+	start scRECODE
+	end scRECODE
+	log: {'#significant genes': 15789, '#non-significant genes': 9322, '#silent genes': 11490, 'ell': 165, 'Elapsed_time': '89.36[sec]'}
+
 Check applicability. 
 
 .. code-block:: python
@@ -44,7 +49,7 @@ Check applicability.
 .. image:: ../image/Example_10X_RNA_applicability.svg
 	
 
-Plot before and after scRECODE. 	
+Show scatter plots of mean vs variance before and after scRECODE. 	
 
 .. code-block:: python
 
@@ -52,7 +57,7 @@ Plot before and after scRECODE.
 
 .. image:: ../image/Example_10X_RNA_mean_var_log.svg
 
-Plot noise variance
+Show noise variance for each gene (sorted by mean expresion level). 
 
 .. code-block:: python
 
@@ -60,13 +65,15 @@ Plot noise variance
 
 .. image:: ../image/Example_10X_RNA_noise_variance.svg
 
+Show the variance after noise-variance-stabilizing normalization. 
+
 .. code-block:: python
 
 	screc.plot_normalization()
 
 .. image:: ../image/Example_10X_RNA_noise_normalization.svg
 
-CHeck log. 
+Check log. 
 
 .. code-block:: python
 
