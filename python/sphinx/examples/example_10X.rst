@@ -41,7 +41,7 @@ Check applicability.
 
 	screc.check_applicability()
 	
-	
+.. image:: ../image/Example_10X_RNA_applicability.png
 	
 .. code-block:: python
 
