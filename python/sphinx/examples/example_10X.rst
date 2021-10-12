@@ -41,22 +41,30 @@ Check applicability.
 
 	screc.check_applicability()
 	
-.. image:: ../image/Example_10X_RNA_applicability.png
+.. image:: ../image/Example_10X_RNA_applicability.svg
 	
+
+Plot before and after scRECODE. 	
+
 .. code-block:: python
 
 	screc.compare_mean_variance_log()
 
+.. image:: ../image/Example_10X_RNA_mean_var_log.svg
+
+Plot noise variance
 
 .. code-block:: python
 
 	screc.plot_noise_variance()
 
+.. image:: ../image/Example_10X_RNA_noise_variance.svg
 
 .. code-block:: python
 
 	screc.plot_normalization()
-	
+
+.. image:: ../image/Example_10X_RNA_noise_normalization.svg
 
 CHeck log. 
 
