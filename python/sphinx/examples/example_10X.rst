@@ -1,8 +1,7 @@
-Example for 10X chromium single-cell RNA-seq data
+scRNA-seq data - 10X chromium h5 file
 ========
 
-usage examples.
-
+We show an exmaple for scRNA-seq data ``, which was produced by 10X chromium. The test data used in this example are avairable in 10X
 
 .. code-block:: python
 

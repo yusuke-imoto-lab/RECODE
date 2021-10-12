@@ -239,8 +239,8 @@ class scRECODE():
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features)
-			single-cell sequencing data matrix, where `n_samples` is the number of samples
-			and `n_features` is the number of features (genes).
+			single-cell sequencing data matrix, where ``n_samples`` is the number of samples
+			and ``n_features`` is the number of features (genes).
 		"""
 		self.X = X
 		self.idx_gene = np.sum(X,axis=0) > 0
@@ -252,8 +252,8 @@ class scRECODE():
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features)
-			single-cell sequencing data matrix, where `n_samples` is the number of samples
-			and `n_features` is the number of features (genes).
+			single-cell sequencing data matrix, where ``n_samples`` is the number of samples
+			and ``n_features`` is the number of features (genes).
 
 		Returns
 		-------
@@ -297,7 +297,8 @@ class scRECODE():
 		save_filename = 'check_applicability',
 		save_format = 'png'
 	):
-		"""Check applicability of scRECODE. Before use this function, you have to conduct ``fit(X)`` or ``fit_transform(X)`` for target data matrix ``X``. 
+		"""Check applicability of scRECODE. 
+			Before using this function, you have to conduct ``fit(X)`` or ``fit_transform(X)`` for the target data matrix ``X``. 
 		
 		"""
 		X_scaled =(self.X_temp.T/np.sum(self.X_temp,axis=1)).T
