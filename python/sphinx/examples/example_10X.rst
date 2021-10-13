@@ -6,7 +6,7 @@ We use sample `10k Human PBMCs, 3' v3.1, Chromium Controller` (11,485 cells and 
 The test data is directly avairable from `Feature / cell matrix HDF5 (filtered)` in `here <https://www.10xgenomics.com/jp/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-controller-3-1-high>`_ (need register).
 
 
-We use ``scanpy<https://scanpy.readthedocs.io/en/stable/>``_ to read/write 10X HDF5 file. 
+We use ``scanpy <https://scanpy.readthedocs.io/en/stable/>``_ to read/write 10X HDF5 file. 
 Import  ``numpy``, ``scipy``, and ``scanpy`` in addlition to ``screcode``. 
 
 .. code-block:: python
@@ -23,6 +23,7 @@ Imput data from HDF5 (\*\*\*.h5) file.
 
 	input_filename = '10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.h5'
 	anndata = scanpy.read_10x_h5(input_filename)
+	adata.var_names_make_unique()  # to avoid error
 
 Apply scRECODE. 
 
@@ -37,14 +38,18 @@ Apply scRECODE.
 	end scRECODE
 	log: {'#significant genes': 15789, '#non-significant genes': 9322, '#silent genes': 11490, 'ell': 165, 'Elapsed_time': '54.8484[sec]'}
 	
-Write the denoised data as HDF5 file. The output filename is 
+Write the denoised data as HDF5 file. 
 
 .. code-block:: python
 
-	anndata_scRECODE = anndata
-	anndata_scRECODE.X = scipy.sparse.csc_matrix(data_scRECODE)
+	adata_scRECODE = adata.copy()
+	adata_scRECODE.X = scipy.sparse.csc_matrix(data_scRECODE)
+	adata_scRECODE.var['noise_variance'] = screc.noise_variance
+	adata_scRECODE.var['normalized_variance'] = screc.normalized_variance
+	adata_scRECODE.var['significance'] = screc.significance
+	adata_scRECODE.var_names_make_unique()
 	output_filename = '10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix_scRECODE.h5'
-	anndata_scRECODE.write(output_filename)
+	adata_scRECODE.write(output_filename)
 
 Check applicability. 
 
@@ -64,11 +69,11 @@ Show scatter plots of mean vs variance before and after scRECODE.
 
 .. code-block:: python
 
-	screc.compare_mean_variance_log()
+	screc.plot_mean_variance()
 
 .. image:: ../image/Example_10X_RNA_mean_var_log.svg
 
-Show noise variance for each gene (sorted by mean expresion level). 
+Show noise variance for genes which are sorted by mean expresion level. 
 
 .. code-block:: python
 

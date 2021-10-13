@@ -206,9 +206,9 @@ class scRECODE():
 		self.X_nUMI = X_nUMI
 		self.X_scaled_mean = X_scaled_mean
 		self.noise_var = noise_var
-		X_norm_var = np.var(X_norm,axis=0)
-		self.idx_sig = X_norm_var > 1
-		self.idx_nonsig = (X_norm_var<=1) & (X_norm_var>0)
+		self.X_norm_var = np.var(X_norm,axis=0)
+		self.idx_sig = self.X_norm_var > 1
+		self.idx_nonsig = self.idx_sig==False
 		if return_log == True:
 			n_sig = sum(self.idx_sig)
 			n_nonsig = sum(self.idx_nonsig)
@@ -283,6 +283,14 @@ class scRECODE():
 			warnings.warn("Acceleration error: the ell value may not be optimal. Set 'acceleration=False' or larger acceleration_ell_max.\n"
 			"Ex. X_new = screcode.scRECODE(acceleration=False).fit_transform(X)")
 		self.X_scRECODE = X_scRECODE
+		self.noise_variance = np.zeros(X.shape[1],dtype=float)
+		self.noise_variance[self.idx_gene] =  self.noise_var
+		self.normalized_variance = np.zeros(X.shape[1],dtype=float)
+		self.normalized_variance[self.idx_gene] =  self.X_norm_var
+		self.significance = np.empty(X.shape[1],dtype=object)
+		self.significance[self.normalized_variance==0] = 'silent'
+		self.significance[self.normalized_variance>0] = 'non-significant'
+		self.significance[self.normalized_variance>1] = 'significant'
 		if self.return_log:
 			return X_scRECODE, self.log
 		else:
@@ -355,14 +363,14 @@ class scRECODE():
 			plt.savefig('%s.%s' % (save_filename,save_format))
 		plt.show()
 	
-	def compare_mean_variance_log(
+	def plot_mean_variance(
 		self,
 		title='',
 		figsize=(15,5),
 		ps = 10,
 		size_factor='median',
 		save = False,
-		save_filename = 'compare_mean_variance_log',
+		save_filename = 'plot_mean_variance',
 		save_format = 'png'
 	):
 		"""Plot mean vs variance of features for log-normalized data
@@ -474,31 +482,6 @@ class scRECODE():
 			plt.savefig('%s.%s' % (save_filename,save_format))
 		plt.show()
 	
-	def save_h5(
-		self,
-		input_h5,
-		filename = 'scRECODE',
-		decimals = 5
-	):
-		outpur_h5 = '%s.h5' % filename
-		X_scRECODE_csc = scipy.sparse.csc_matrix(np.round(self.X_scRECODE,decimals=decimals).T)
-		with h5py.File(outpur_h5,'w') as f:
-			f.create_group('matrix')
-			for key in input_h5['matrix'].keys():
-				if key == 'data':
-					f['matrix'].create_dataset(key,data=X_scRECODE_csc.data)
-				elif key == 'indices':
-					f['matrix'].create_dataset(key,data=X_scRECODE_csc.indices)
-				elif key == 'indptr':
-					f['matrix'].create_dataset(key,data=X_scRECODE_csc.indptr)
-				elif key == 'shape':
-					f['matrix'].create_dataset(key,data=X_scRECODE_csc.shape)
-				elif type(input_h5['matrix'][key]) == h5py._hl.dataset.Dataset:
-					f['matrix'].create_dataset(key,data=input_h5['matrix'][key])
-				else:
-					f['matrix'].create_group(key)
-					for key_sub in input_h5['matrix'][key].keys():
-						f['matrix'][key].create_dataset(key_sub,data=input_h5['matrix'][key][key_sub])
 
 def scRECODE_h5(h5_file, decimals=5):
 	input_h5 = h5py.File(h5_file, 'r')
