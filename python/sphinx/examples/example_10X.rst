@@ -120,6 +120,7 @@ Show a gene rank by the normalizedd variance.
 	generank
 	 
 .. raw:: html
+
 	<div>
   <style scoped>
       .dataframe tbody tr th:only-of-type {
