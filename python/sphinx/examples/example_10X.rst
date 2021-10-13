@@ -3,49 +3,60 @@ scRNA-seq data - 10X chromium HDF5 file
 
 We show an exmaple for scRNA-seq data produced by 10X Chromium. 
 We use sample `10k Human PBMCs, 3' v3.1, Chromium Controller` (11,485 cells and 36,601 genes) in `10X Genomics Datasets <https://www.10xgenomics.com/jp/resources/datasets>`_.  
-The test data is directly avairable from `Feature / cell matrix HDF5 (filtered)` in `here <https://www.10xgenomics.com/jp/resources/datasets/500-human-pbm-cs-3-lt-v-3-1-chromium-controller-3-1-low-6-1-0>`_ (need register).
+The test data is directly avairable from `Feature / cell matrix HDF5 (filtered)` in `here <https://www.10xgenomics.com/jp/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-controller-3-1-high>`_ (need register).
 
 
-Import  ``numpy``, ``scipy``, and ``h5py`` in addlition to ``screcode``. 
+We use ``scanpy<https://scanpy.readthedocs.io/en/stable/>``_ to read/write 10X HDF5 file. 
+Import  ``numpy``, ``scipy``, and ``scanpy`` in addlition to ``screcode``. 
 
 .. code-block:: python
 
 	import screcode
 	import numpy as np
 	import scipy
-	import h5py
+	import scanpy
 
 
-Imput data from HDF5 (.h5) file. 
+Imput data from HDF5 (\*\*\*.h5) file. 
 
 .. code-block:: python
 
-	h5_file = '500_PBMC_3p_LT_Chromium_Controller_filtered_feature_bc_matrix.h5'
-	input_h5 = h5py.File(h5_file,'r')
-	data = scipy.sparse.csc_matrix((input_h5['matrix']['data'],input_h5['matrix']['indices'],input_h5['matrix']['indptr']),shape=input_h5['matrix']['shape']).toarray().T
-	gene_list = [x.decode('ascii', 'ignore') for x in input_h5['matrix']['features']['name']]
-	cell_list = np.array([x.decode('ascii', 'ignore') for x in input_h5['matrix']['barcodes']],dtype=object)
-
+	input_filename = '10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.h5'
+	anndata = scanpy.read_10x_h5(input_filename)
 
 Apply scRECODE. 
 
 .. code-block:: python
 
 	screc = screcode.scRECODE()
-	data_scRECODE = screc.fit_transform(data)
-
+	data_scRECODE = screc.fit_transform(anndata.X.toarray())
 
 .. parsed-literal::
+
 	start scRECODE
 	end scRECODE
-	log: {'#significant genes': 15789, '#non-significant genes': 9322, '#silent genes': 11490, 'ell': 165, 'Elapsed_time': '89.36[sec]'}
+	log: {'#significant genes': 15789, '#non-significant genes': 9322, '#silent genes': 11490, 'ell': 165, 'Elapsed_time': '54.8484[sec]'}
+	
+Write the denoised data as HDF5 file. The output filename is 
+
+.. code-block:: python
+
+	anndata_scRECODE = anndata
+	anndata_scRECODE.X = scipy.sparse.csc_matrix(data_scRECODE)
+	output_filename = '10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix_scRECODE.h5'
+	anndata_scRECODE.write(output_filename)
 
 Check applicability. 
 
 .. code-block:: python
 
 	screc.check_applicability()
-	
+
+
+.. parsed-literal::
+
+	applicabity: (A) Strong applicable
+
 .. image:: ../image/Example_10X_RNA_applicability.svg
 	
 
