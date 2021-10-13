@@ -6,7 +6,7 @@ We use sample `10k Human PBMCs, 3' v3.1, Chromium Controller` (11,485 cells and 
 The test data is directly avairable from `Feature / cell matrix HDF5 (filtered)` in `here <https://www.10xgenomics.com/jp/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-controller-3-1-high>`_ (need register).
 
 
-We use `scanpy <https://scanpy.readthedocs.io/en/stable/>`_ to read/write 10X HDF5 file. 
+We use `scanpy <https://scanpy.readthedocs.io/en/stable/>`_ to read/write 10X HDF5 file (\*\*\*.h5). 
 Import  ``numpy``, ``scipy``, and ``scanpy`` in addlition to ``screcode``. 
 
 .. code-block:: python
@@ -17,7 +17,7 @@ Import  ``numpy``, ``scipy``, and ``scanpy`` in addlition to ``screcode``.
 	import scanpy
 
 
-Imput data from HDF5 (\*\*\*.h5) file. 
+Imput data from HDF5 file (\*\*\*.h5). 
 
 .. code-block:: python
 
@@ -98,17 +98,17 @@ Check the log.
 
 .. parsed-literal::
 
-	{'#significant genes': 11628,
-	 '#non-significant genes': 8189,
-	 '#silent genes': 16784,
-	 'ell': 34,
-	 'Elapsed_time': '10.13[sec]',
+	{'#significant genes': 15789,
+	 '#non-significant genes': 9322,
+	 '#silent genes': 11490,
+	 'ell': 165,
+	 'Elapsed_time': '56.8615[sec]',
 	 'Applicability': '(A) Strong applicable',
 	 "Rate of '0 < normalized variance < 0.9'": '0%',
-	 'Peak density of normalized variance': 1.0013721697775515}
+	 'Peak density of normalized variance': 1.016056101497848}
 
 
-Show a gene rank by the normalizedd variance. 
+Show the gene rank given by the normalizedd variance. 
 
 .. code-block:: python
 	 

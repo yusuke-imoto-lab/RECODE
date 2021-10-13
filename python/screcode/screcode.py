@@ -189,8 +189,7 @@ class scRECODE():
 
 	def noise_variance_stabilizing_normalization(
 		self,
-		X,
-		return_log=False
+		X
 	):
 		"""Apply the noise-variance-stabilizing normalization to X.
 		
@@ -209,18 +208,10 @@ class scRECODE():
 		self.X_norm_var = np.var(X_norm,axis=0)
 		self.idx_sig = self.X_norm_var > 1
 		self.idx_nonsig = self.idx_sig==False
-		if return_log == True:
-			n_sig = sum(self.idx_sig)
-			n_nonsig = sum(self.idx_nonsig)
-			n_silent = X.shape[1] - n_sig - n_nonsig
-			param = {
-				'#significant genes':n_sig,
-				'#non-significant genes':n_nonsig,
-				'#silent genes':n_silent
-			}
-			return X_norm, param
-		else:
-			return X_norm
+		self.log['#significant genes'] = sum(self.idx_sig)
+		self.log['#non-significant genes'] = sum(self.idx_nonsig)
+		self.log['#silent genes'] = X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig)
+		return X_norm
 	
 	def inv_noise_variance_stabilizing_normalization(
 		self,
@@ -264,8 +255,7 @@ class scRECODE():
 		if self.verbose:
 			print('start scRECODE')
 		self.fit(X)
-		X_norm,log_t = self.noise_variance_stabilizing_normalization(self.X_temp,return_log=True)
-		self.log.update(log_t)
+		X_norm = self.noise_variance_stabilizing_normalization(self.X_temp)
 		recode = RECODE(return_log=True,param_estimate=False,acceleration=self.acceleration,acceleration_ell_max=self.acceleration_ell_max)
 		X_norm_RECODE = recode.fit_transform(X_norm)
 		X_scRECODE = np.zeros(X.shape,dtype=float)
@@ -366,7 +356,7 @@ class scRECODE():
 	def plot_mean_variance(
 		self,
 		title='',
-		figsize=(15,5),
+		figsize=(7,5),
 		ps = 10,
 		size_factor='median',
 		save = False,
@@ -388,8 +378,7 @@ class scRECODE():
 			size_factor_scRECODE = np.median(np.sum(self.X_scRECODE,axis=1))
 		X_ss_log = np.log2(size_factor*(self.X[:,self.idx_gene].T/np.sum(self.X,axis=1)).T+1)
 		X_scRECODE_ss_log = np.log2(size_factor_scRECODE*(self.X_scRECODE[:,self.idx_gene].T/np.sum(self.X_scRECODE,axis=1)).T+1)
-		fig = plt.figure(figsize=figsize)
-		ax0 = fig.add_subplot(1,2,1)
+		fig,ax0 = plt.subplots(figsize=figsize)
 		x,y = np.mean(X_ss_log,axis=0),np.var(X_ss_log,axis=0)
 		ax0.scatter(x[self.idx_sig],y[self.idx_sig],color='b',s=ps,label='significant genes',zorder=2)
 		ax0.scatter(x[self.idx_nonsig],y[self.idx_nonsig],color='r',s=ps,label='non-significant genes',zorder=3)
@@ -398,7 +387,9 @@ class scRECODE():
 		ax0.set_ylabel('Variance of log-scaled data',fontsize=14)
 		ax0.set_title('Original',fontsize=14)
 		ax0.legend(loc='upper left',borderaxespad=0,fontsize=14,markerscale=2).get_frame().set_alpha(0)
-		ax1 = fig.add_subplot(1,2,2)
+		if save:
+			plt.savefig('%s_Original.%s' % (save_filename,save_format))
+		fig,ax1 = plt.subplots(figsize=figsize)
 		x,y = np.mean(X_scRECODE_ss_log,axis=0),np.var(X_scRECODE_ss_log,axis=0)
 		ax1.scatter(x[self.idx_sig],y[self.idx_sig],color='b',s=ps,label='significant genes',zorder=2)
 		ax1.scatter(x[self.idx_nonsig],y[self.idx_nonsig],color='r',s=ps,label='non-significant genes',zorder=3)
@@ -409,7 +400,7 @@ class scRECODE():
 		ax1.set_title('scRECODE',fontsize=14)
 		ax1.legend(loc='upper left',borderaxespad=0,fontsize=14,markerscale=2).get_frame().set_alpha(0)
 		if save:
-			plt.savefig('%s.%s' % (save_filename,save_format))
+			plt.savefig('%s_scRECODE.%s' % (save_filename,save_format))
 		plt.show()
 	def plot_noise_variance(
 			self,
