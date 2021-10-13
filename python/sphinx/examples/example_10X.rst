@@ -89,7 +89,7 @@ Show the variance after noise-variance-stabilizing normalization.
 
 .. image:: ../image/Example_10X_RNA_noise_normalization.svg
 
-Check log. 
+Check the log. 
 
 .. code-block:: python
 
@@ -106,3 +106,92 @@ Check log.
 	 'Applicability': '(A) Strong applicable',
 	 "Rate of '0 < normalized variance < 0.9'": '0%',
 	 'Peak density of normalized variance': 1.0013721697775515}
+
+
+Show a gene rank by the normalizedd variance. 
+
+.. code-block:: python
+	 
+	import pandas as pd
+	n_show_genes = 10
+	idx = np.argsort(screc.normalized_variance)[::-1][:n_show_genes]
+	generank = pd.DataFrame({'gene':adata.var.index[idx],'normalized_variance':screc.normalized_variance[idx],'significance':screc.significance[idx]},\
+		           index=np.arange(n_show_genes)+1)
+	generank
+	 
+.. raw:: html
+	 
+	<table border="1" class="dataframe">
+		<thead>
+		  <tr style="text-align: right;">
+		    <th></th>
+		    <th>gene</th>
+		    <th>normalized_variance</th>
+		    <th>significance</th>
+		  </tr>
+		</thead>
+		<tbody>
+		  <tr>
+		    <th>1</th>
+		    <td>IGKC</td>
+		    <td>476.251373</td>
+		    <td>significant</td>
+		  </tr>
+		  <tr>
+		    <th>2</th>
+		    <td>IGLC3</td>
+		    <td>337.377136</td>
+		    <td>significant</td>
+		  </tr>
+		  <tr>
+		    <th>3</th>
+		    <td>IGHA1</td>
+		    <td>315.810333</td>
+		    <td>significant</td>
+		  </tr>
+		  <tr>
+		    <th>4</th>
+		    <td>IGLC2</td>
+		    <td>250.899536</td>
+		    <td>significant</td>
+		  </tr>
+		  <tr>
+		    <th>5</th>
+		    <td>IGHG1</td>
+		    <td>209.024307</td>
+		    <td>significant</td>
+		  </tr>
+		  <tr>
+		    <th>6</th>
+		    <td>IGLC1</td>
+		    <td>197.974701</td>
+		    <td>significant</td>
+		  </tr>
+		  <tr>
+		    <th>7</th>
+		    <td>S100A9</td>
+		    <td>144.979065</td>
+		    <td>significant</td>
+		  </tr>
+		  <tr>
+		    <th>8</th>
+		    <td>IGHG2</td>
+		    <td>123.463943</td>
+		    <td>significant</td>
+		  </tr>
+		  <tr>
+		    <th>9</th>
+		    <td>MALAT1</td>
+		    <td>98.790283</td>
+		    <td>significant</td>
+		  </tr>
+		  <tr>
+		    <th>10</th>
+		    <td>S100A8</td>
+		    <td>75.027397</td>
+		    <td>significant</td>
+		  </tr>
+		</tbody>
+	</table>
+
+
