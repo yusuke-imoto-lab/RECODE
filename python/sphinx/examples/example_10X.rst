@@ -71,7 +71,9 @@ Show scatter plots of mean vs variance before and after scRECODE.
 
 	screc.plot_mean_variance()
 
-.. image:: ../image/Example_10X_RNA_mean_var_log.svg
+.. image:: ../image/Example_10X_RNA_mean_var_log_Original.svg
+
+.. image:: ../image/Example_10X_RNA_mean_var_log_scRECODE.svg
 
 Show noise variance for genes which are sorted by mean expresion level. 
 
@@ -114,10 +116,10 @@ Show the gene rank given by the normalizedd variance.
 	 
 	import pandas as pd
 	n_show_genes = 10
-	idx = np.argsort(screc.normalized_variance)[::-1][:n_show_genes]
+	idx = np.argsort(screc.normalized_variance)[::-1]
 	generank = pd.DataFrame({'gene':adata.var.index[idx],'normalized_variance':screc.normalized_variance[idx],'significance':screc.significance[idx]},\
-		           index=np.arange(n_show_genes)+1)
-	generank
+		           index=np.arange(len(adata.var.index))+1)
+	generank.head(n_show_genes)
 	 
 .. raw:: html
 
