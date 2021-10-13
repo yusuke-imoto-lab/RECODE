@@ -6,7 +6,7 @@ We use sample `10k Human PBMCs, 3' v3.1, Chromium Controller` (11,485 cells and 
 The test data is directly avairable from `Feature / cell matrix HDF5 (filtered)` in `here <https://www.10xgenomics.com/jp/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-controller-3-1-high>`_ (need register).
 
 
-We use ``scanpy <https://scanpy.readthedocs.io/en/stable/>``_ to read/write 10X HDF5 file. 
+We use `scanpy <https://scanpy.readthedocs.io/en/stable/>`_ to read/write 10X HDF5 file. 
 Import  ``numpy``, ``scipy``, and ``scanpy`` in addlition to ``screcode``. 
 
 .. code-block:: python
