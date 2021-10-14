@@ -364,6 +364,7 @@ class scRECODE():
 		save_format = 'png'
 	):
 		"""Plot mean vs variance of features for log-normalized data
+		
 		"""
 		if size_factor=='median':
 			size_factor = np.median(np.sum(self.X,axis=1))
@@ -380,25 +381,31 @@ class scRECODE():
 		X_scRECODE_ss_log = np.log2(size_factor_scRECODE*(self.X_scRECODE[:,self.idx_gene].T/np.sum(self.X_scRECODE,axis=1)).T+1)
 		fig,ax0 = plt.subplots(figsize=figsize)
 		x,y = np.mean(X_ss_log,axis=0),np.var(X_ss_log,axis=0)
-		ax0.scatter(x[self.idx_sig],y[self.idx_sig],color='b',s=ps,label='significant genes',zorder=2)
-		ax0.scatter(x[self.idx_nonsig],y[self.idx_nonsig],color='r',s=ps,label='non-significant genes',zorder=3)
+		ax0.scatter(x,y,color='b',s=ps,label='significant genes',zorder=2)
+		#ax0.scatter(x[self.idx_sig],y[self.idx_sig],color='b',s=ps,label='significant genes',zorder=2)
+		#ax0.scatter(x[self.idx_nonsig],y[self.idx_nonsig],color='r',s=ps,label='non-significant genes',zorder=3)
 		ax0.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax0.set_xlabel('Mean of log-scaled data',fontsize=14)
 		ax0.set_ylabel('Variance of log-scaled data',fontsize=14)
 		ax0.set_title('Original',fontsize=14)
-		ax0.legend(loc='upper left',borderaxespad=0,fontsize=14,markerscale=2).get_frame().set_alpha(0)
+		#ax0.legend(loc='upper left',borderaxespad=0,fontsize=14,markerscale=2).get_frame().set_alpha(0)
+		plt.gca().spines['right'].set_visible(False)
+		plt.gca().spines['top'].set_visible(False)
 		if save:
 			plt.savefig('%s_Original.%s' % (save_filename,save_format))
 		fig,ax1 = plt.subplots(figsize=figsize)
 		x,y = np.mean(X_scRECODE_ss_log,axis=0),np.var(X_scRECODE_ss_log,axis=0)
-		ax1.scatter(x[self.idx_sig],y[self.idx_sig],color='b',s=ps,label='significant genes',zorder=2)
-		ax1.scatter(x[self.idx_nonsig],y[self.idx_nonsig],color='r',s=ps,label='non-significant genes',zorder=3)
+		ax1.scatter(x,y,color='b',s=ps,label='significant genes',zorder=2)
+		#ax1.scatter(x[self.idx_sig],y[self.idx_sig],color='b',s=ps,label='significant genes',zorder=2)
+		#ax1.scatter(x[self.idx_nonsig],y[self.idx_nonsig],color='r',s=ps,label='non-significant genes',zorder=3)
 		ax1.set_ylim(ax0.set_ylim())
 		ax1.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax1.set_xlabel('Mean of log-scaled data',fontsize=14)
 		ax1.set_ylabel('Variance of log-scaled data',fontsize=14)
 		ax1.set_title('scRECODE',fontsize=14)
-		ax1.legend(loc='upper left',borderaxespad=0,fontsize=14,markerscale=2).get_frame().set_alpha(0)
+		#ax1.legend(loc='upper left',borderaxespad=0,fontsize=14,markerscale=2).get_frame().set_alpha(0)
+		plt.gca().spines['right'].set_visible(False)
+		plt.gca().spines['top'].set_visible(False)
 		if save:
 			plt.savefig('%s_scRECODE.%s' % (save_filename,save_format))
 		plt.show()
@@ -411,6 +418,7 @@ class scRECODE():
 		  save_format = 'png'
 	):
 		"""Plot noise variance for each features
+		
 		"""
 		ps = 1
 		fs_title = 16
