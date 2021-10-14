@@ -5,4 +5,4 @@ Examples
 .. toctree::
     :maxdepth: 2
     
-    example_10X
+    example_10X_RNA

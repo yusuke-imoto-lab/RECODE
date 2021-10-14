@@ -117,8 +117,10 @@ Show the gene rank given by the normalizedd variance.
 	import pandas as pd
 	n_show_genes = 10
 	idx = np.argsort(screc.normalized_variance)[::-1]
-	generank = pd.DataFrame({'gene':adata.var.index[idx],'normalized_variance':screc.normalized_variance[idx],'significance':screc.significance[idx]},\
-		           index=np.arange(len(adata.var.index))+1)
+	generank = pd.DataFrame({'gene':adata.var.index[idx],
+                         'normalized_variance':screc.normalized_variance[idx],
+                         'significance':screc.significance[idx]},
+                        index=np.arange(len(adata.var.index))+1)
 	generank.head(n_show_genes)
 	 
 .. raw:: html
