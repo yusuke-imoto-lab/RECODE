@@ -174,7 +174,15 @@ class scRECODE():
 	""" 
 	scRECODE (Resolution of curse of dimensionality in single-cell data analysis). 
 	
-	*Attributes*
+	Parameters
+	----------
+	acceleration : boolean, optional (default=True)
+		acceleration algorism
+	acceleration_ell_max : int, optional (default=True)
+	param_estimate : boolean, optional (default=True)
+	ell_manual : 
+	
+	Attributes
   ----------
 	noise_variance_ : ndarray of shape (n_features,)
 		Noise variances of features (genes/peaks).
