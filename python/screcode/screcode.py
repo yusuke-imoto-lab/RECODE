@@ -171,28 +171,6 @@ class RECODE():
 	
 
 class scRECODE():
-	""" 
-	scRECODE (Resolution of curse of dimensionality in single-cell data analysis). 
-	
-	Parameters
-	----------
-	acceleration : boolean, optional (default=True)
-		acceleration algorism
-	acceleration_ell_max : int, optional (default=True)
-	param_estimate : boolean, optional (default=True)
-	ell_manual : 
-	
-	Attributes
-  ----------
-	noise_variance_ : ndarray of shape (n_features,)
-		Noise variances of features (genes/peaks).
-	
-	normalized_variance_ : ndarray of shape (n_features,)
-		Variances of features (genes/peaks).
-	
-	significance_ : ndarray of shape (n_features,)
-		Significance (significant/non-significant/silent) of features (genes/peaks).
-	"""
 	def __init__(
 		self,
 		acceleration = True,
@@ -200,6 +178,31 @@ class scRECODE():
 		seq_target = 'RNA',
 		verbose = True
 		):
+		""" 
+		scRECODE (Resolution of curse of dimensionality in single-cell data analysis). 
+		
+		Parameters
+		----------
+		acceleration : boolean, default=True
+			acceleration algorism
+		
+		acceleration_ell_max : int, default=True
+		
+		seq_target : {'RNA','ATAC'}, default='RNA'
+		
+		verbose : boolean, default=True
+		
+		Attributes
+		----------
+		noise_variance_ : ndarray of shape (n_features,)
+			Noise variances of features (genes/peaks).
+		
+		normalized_variance_ : ndarray of shape (n_features,)
+			Variances of features (genes/peaks).
+		
+		significance_ : ndarray of shape (n_features,)
+			Significance (significant/non-significant/silent) of features (genes/peaks).
+		"""
 		self.acceleration = acceleration
 		self.acceleration_ell_max = acceleration_ell_max
 		self.seq_target = seq_target
