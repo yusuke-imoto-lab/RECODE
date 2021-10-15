@@ -22,14 +22,14 @@ Imput data from HDF5 file (\*\*\*.h5).
 .. code-block:: python
 
 	input_filename = '10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.h5'
-	anndata = scanpy.read_10x_h5(input_filename)
+	adata = scanpy.read_10x_h5(input_filename)
 
 Apply scRECODE. 
 
 .. code-block:: python
 
 	recode = screcode.scRECODE()
-	data_scRECODE = recode.fit_transform(anndata.X.toarray())
+	data_scRECODE = recode.fit_transform(adata.X.toarray())
 
 .. parsed-literal::
 
