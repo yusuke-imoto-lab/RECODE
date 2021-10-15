@@ -186,7 +186,7 @@ class scRECODE():
 		acceleration : boolean, default=True
 			acceleration algorism
 		
-		acceleration_ell_max : int, default=True
+		acceleration_ell_max : int, default=1000
 		
 		seq_target : {'RNA','ATAC'}, default='RNA'
 		
@@ -333,52 +333,16 @@ class scRECODE():
 			warnings.warn("Acceleration error: the ell value may not be optimal. Set 'acceleration=False' or larger acceleration_ell_max.\n"
 			"Ex. X_new = screcode.scRECODE(acceleration=False).fit_transform(X)")
 		self.X_scRECODE = X_scRECODE
-		self._noise_variance = np.zeros(X.shape[1],dtype=float)
-		self._noise_variance[self.idx_gene] =  self.noise_var
-		self._normalized_variance = np.zeros(X.shape[1],dtype=float)
-		self._normalized_variance[self.idx_gene] =  self.X_norm_var
-		self._significance = np.empty(X.shape[1],dtype=object)
-		self._significance[self._normalized_variance==0] = 'silent'
-		self._significance[self._normalized_variance>0] = 'non-significant'
-		self._significance[self._normalized_variance>1] = 'significant'
+		self.noise_variance_ = np.zeros(X.shape[1],dtype=float)
+		self.noise_variance_[self.idx_gene] =  self.noise_var
+		self.normalized_variance_ = np.zeros(X.shape[1],dtype=float)
+		self.normalized_variance_[self.idx_gene] =  self.X_norm_var
+		self.significance_ = np.empty(X.shape[1],dtype=object)
+		self.significance_[self.normalized_variance_==0] = 'silent'
+		self.significance_[self.normalized_variance_>0] = 'non-significant'
+		self.significance_[self.normalized_variance_>1] = 'significant'
 		return X_scRECODE
 		
-	def noise_variance_(self):
-		"""
-		Estimated noise variances of features (genes/peaks).
-    
-    Returns
-    -------
-    noise_variance_ : array-like, shape (`n_features`)
-        The noise variances of features (genes/peaks), 
-        where ``n_features`` is the number of features.
-    """
-		return self._noise_variance
-	
-	def normalized_variance_(self):
-		"""
-		Variances of features (genes/peaks) after the noise-variance-stabilizing normalization.
-    
-    Returns
-    -------
-    normalized_variance_ : array-like, shape (`n_features`)
-        The variances of features (genes/peaks), 
-        where ``n_features`` is the number of features.
-    """
-		return self._normalized_variance
-	
-	def significance_(self):
-		"""
-		Significance of features (genes/peaks).
-    
-    Returns
-    -------
-    significance_ : array-like, shape (`n_features`)
-        Significance (significant/non-significant/silent) of features (genes/peaks), 
-        where ``n_features`` is the number of features.
-    """
-		return self._significance
-	
 	def check_applicability(
 		self,
 		title='',
