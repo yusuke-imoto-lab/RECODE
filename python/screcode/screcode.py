@@ -179,20 +179,27 @@ class scRECODE():
 		return_log = False,
 		acceleration = True,
 		acceleration_ell_max = 1000,
+		seq_target = 'RNA',
 		verbose = True
 		):
 		self.return_log = return_log
 		self.acceleration = acceleration
 		self.acceleration_ell_max = acceleration_ell_max
+		self.seq_target = seq_target
 		self.verbose = verbose
 		self.log = {}
 
-	def noise_variance_stabilizing_normalization(
+	def _noise_variance_stabilizing_normalization(
 		self,
 		X
 	):
 		"""Apply the noise-variance-stabilizing normalization to X.
 		
+		Parameters
+		----------
+		X : array-like of shape (n_samples, n_features)
+			Training data matrix, where `n_samples` is the number of samples
+			and `n_features` is the number of features.
 		"""
 		## scaled X
 		X_nUMI = np.sum(X,axis=1)
@@ -213,16 +220,41 @@ class scRECODE():
 		self.log['#silent genes'] = X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig)
 		return X_norm
 	
-	def inv_noise_variance_stabilizing_normalization(
+	def _inv_noise_variance_stabilizing_normalization(
 		self,
 		X
 	):
-		"""Apply the inverce transformation of noise-variance-stabilizing normalization to X.
+		"""Apply the inverce transformation of noise-variance-stabilizing normalization to X. 
 		
+		Parameters
+		----------
+		X : array-like of shape (n_samples, n_features)
+			Training data matrix, where `n_samples` is the number of samples
+			and `n_features` is the number of features.
 		"""
 		X_norm_inv_temp = X*np.sqrt(self.noise_var)+self.X_scaled_mean
 		X_norm_inv = (X_norm_inv_temp.T*self.X_nUMI).T
 		return X_norm_inv
+	
+	def _ATAC_preprocessing(
+		self,
+		X
+	):
+		"""Preprocessing of original ATAC-seq data (odd-even normalization data). 
+		
+		Parameters
+		----------
+		X : array-like of shape (n_samples, n_features)
+			Training data matrix, where `n_samples` is the number of samples
+			and `n_features` is the number of features.
+		
+		Returns
+		-------
+		X_new : ndarray of shape (n_samples, n_components)
+			Preprecessed data matrix.
+		"""
+		X_new = np.array((X+1)/2,dtype=int)
+		return X_new
 	
 	def fit(self,X):
 		"""Fit the model to X. After ``fit(X)``, ``check_applicability`` becomes applicable. 
@@ -255,11 +287,13 @@ class scRECODE():
 		if self.verbose:
 			print('start scRECODE')
 		self.fit(X)
-		X_norm = self.noise_variance_stabilizing_normalization(self.X_temp)
+		if self.seq_target == 'ATAC':
+			self.X_temp = self._ATAC_preprocessing(self.X_temp)
+		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
 		recode = RECODE(return_log=True,param_estimate=False,acceleration=self.acceleration,acceleration_ell_max=self.acceleration_ell_max)
 		X_norm_RECODE = recode.fit_transform(X_norm)
 		X_scRECODE = np.zeros(X.shape,dtype=float)
-		X_scRECODE[:,self.idx_gene] = self.inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
+		X_scRECODE[:,self.idx_gene] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
 		X_scRECODE = np.where(X_scRECODE>0,X_scRECODE,0)
 		elapsed_time = time.time() - start
 		self.log['#silent genes'] = sum(np.sum(X,axis=0)==0)
@@ -300,7 +334,7 @@ class scRECODE():
 		
 		"""
 		X_scaled =(self.X_temp.T/np.sum(self.X_temp,axis=1)).T
-		X_norm = self.noise_variance_stabilizing_normalization(self.X_temp)
+		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
 		norm_var = np.var(X_norm,axis=0)
 		x,y = np.mean(X_scaled,axis=0),norm_var
 		idx_nonsig, idx_sig = y <= 1, y > 1
