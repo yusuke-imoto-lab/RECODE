@@ -285,25 +285,25 @@ class scRECODE():
 		"""
 		start = time.time()
 		if self.verbose:
-			print('start scRECODE')
+			print('start scRECODE for sc%s-seq' % self.seq_target)
 		self.fit(X)
 		if self.seq_target == 'ATAC':
 			self.X_temp = self._ATAC_preprocessing(self.X_temp)
 		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
-		recode = RECODE(return_log=True,param_estimate=False,acceleration=self.acceleration,acceleration_ell_max=self.acceleration_ell_max)
-		X_norm_RECODE = recode.fit_transform(X_norm)
+		recode_ = RECODE(return_log=True,param_estimate=False,acceleration=self.acceleration,acceleration_ell_max=self.acceleration_ell_max)
+		X_norm_RECODE = recode_.fit_transform(X_norm)
 		X_scRECODE = np.zeros(X.shape,dtype=float)
 		X_scRECODE[:,self.idx_gene] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
 		X_scRECODE = np.where(X_scRECODE>0,X_scRECODE,0)
 		elapsed_time = time.time() - start
 		self.log['#silent genes'] = sum(np.sum(X,axis=0)==0)
-		self.log['ell'] = recode.ell
+		self.log['ell'] = recode_.ell
 		self.log['Elapsed_time'] = "{0}".format(np.round(elapsed_time,decimals=4
 		)) + "[sec]"
 		if self.verbose:
-			print('end scRECODE')
+			print('end scRECODE for sc%s-seq' % self.seq_target)
 			print('log:',self.log)
-		if recode.ell == self.acceleration_ell_max:
+		if recode_.ell == self.acceleration_ell_max:
 			warnings.warn("Acceleration error: the ell value may not be optimal. Set 'acceleration=False' or larger acceleration_ell_max.\n"
 			"Ex. X_new = screcode.scRECODE(acceleration=False).fit_transform(X)")
 		self.X_scRECODE = X_scRECODE
@@ -443,6 +443,7 @@ class scRECODE():
 		if save:
 			plt.savefig('%s_scRECODE.%s' % (save_filename,save_format))
 		plt.show()
+	
 	def plot_noise_variance(
 			self,
 		  title='',
@@ -513,6 +514,65 @@ class scRECODE():
 		plt.gca().spines['top'].set_visible(False)
 		if save:
 			plt.savefig('%s.%s' % (save_filename,save_format))
+		plt.show()
+	
+	def plot_ATAC_preprocessing(
+		self,
+		title='',
+		figsize=(7,5),
+		ps = 10,
+		save = False,
+		save_filename = 'plot_ATAC_preprocessing',
+		save_format = 'png'
+	):
+		"""Plot mean vs variance of features for log-normalized data
+		
+		"""
+		if self.seq_target != 'ATAC':
+			warnings.warn("Error: plot_ATAC_preprocessing is an option of scATAC-seq data")
+			return
+		ps = 1
+		fs_title = 16
+		fs_label = 14
+		fs_legend = 14
+		val,count = np.unique(self.X,return_counts=True)
+		idx_even = np.empty(len(val),dtype=bool)
+		idx_odd = np.empty(len(val),dtype=bool)
+		for i in range(len(val)):
+				if i>0 and i%2==0:
+				    idx_even[i] = True
+				else:
+				    idx_even[i] = False
+				if i>0 and i%2==1:
+				    idx_odd[i] = True
+				else:
+				    idx_odd[i] = False
+		plt.figure(figsize=figsize)
+		plt.plot(val[1:],count[1:],color='gray',zorder=1)
+		plt.scatter(val[idx_even],count[idx_even],color='r',label='even',zorder=2)
+		plt.scatter(val[idx_odd],count[idx_odd],color='b',label='odd',zorder=2)
+		plt.xscale('log')
+		plt.yscale('log')
+		plt.xlabel('value',fontsize=fs_label)
+		plt.ylabel('count',fontsize=fs_label)
+		plt.legend(fontsize=fs_legend)
+		plt.title('Before preprocessing',fontsize=fs_title)
+		plt.show()
+		if save:
+			plt.savefig('%s_Original.%s' % (save_filename,save_format))
+		
+		val,count = np.unique(self.X_temp,return_counts=True)
+		plt.figure(figsize=figsize)
+		plt.plot(val[1:],count[1:],color='gray')
+		plt.scatter(val[1:],count[1:],color='g')
+		plt.xscale('log')
+		plt.yscale('log')
+		plt.xlabel('value',fontsize=fs_label)
+		plt.ylabel('count',fontsize=fs_label)
+		plt.title('After preprocessing',fontsize=fs_title)
+		plt.show()
+		if save:
+			plt.savefig('%s_Prepocessed.%s' % (save_filename,save_format))
 		plt.show()
 	
 
