@@ -74,13 +74,13 @@ Show scatter plots of mean vs variance before and after scRECODE.
 
 .. image:: ../image/Example_10X_ATAC_mean_var_log_scRECODE.svg
 
-Show noise variance for genes which are sorted by mean expresion level. 
+Show noise variance for peaks which are sorted by mean expresion level. 
 
 .. code-block:: python
 
 	recode.plot_noise_variance()
 
-.. image:: ../image/Example_10X_ATAC_noise_variance.svg
+.. image:: ../image/Example_10X_ATAC_noise_variance.png
 
 Show the variance after noise-variance-stabilizing normalization. 
 
@@ -121,18 +121,18 @@ Check the log.
 	 'Peak density of normalized variance': 1.0792379955790716}
 
 
-Show the gene rank given by the normalizedd variance. 
+Show the peak rank given by the normalizedd variance. 
 
 .. code-block:: python
 	 
 	import pandas as pd
-	n_show_genes = 10
+	n_show_peaks = 10
 	idx = np.argsort(recode.normalized_variance)[::-1]
-	generank = pd.DataFrame({'peak':adata.var.index[idx],
+	peakrank = pd.DataFrame({'peak':adata.var.index[idx],
                          'normalized_variance':recode.normalized_variance[idx],
                          'significance':recode.significance[idx]},
                         index=np.arange(len(adata.var.index))+1)
-	generank.head(n_show_genes)
+	peakrank.head(n_show_peaks)
 	 
 .. raw:: html
 
