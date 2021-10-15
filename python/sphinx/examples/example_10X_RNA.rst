@@ -61,7 +61,7 @@ Check applicability.
 
 	applicabity: (A) Strong applicable
 
-.. image:: ../image/Example_10X_RNA_applicability.svg
+.. image:: ../image/Example_10X_RNA_applicability.png
 	
 
 Show scatter plots of mean vs variance before and after scRECODE. 	
@@ -70,9 +70,9 @@ Show scatter plots of mean vs variance before and after scRECODE.
 
 	recode.plot_mean_variance()
 
-.. image:: ../image/Example_10X_RNA_mean_var_log_Original.svg
+.. image:: ../image/Example_10X_RNA_mean_var_log_Original.png
 
-.. image:: ../image/Example_10X_RNA_mean_var_log_scRECODE.svg
+.. image:: ../image/Example_10X_RNA_mean_var_log_scRECODE.png
 
 Show noise variance for genes which are sorted by mean expresion level. 
 
@@ -80,7 +80,7 @@ Show noise variance for genes which are sorted by mean expresion level.
 
 	recode.plot_noise_variance()
 
-.. image:: ../image/Example_10X_RNA_noise_variance.svg
+.. image:: ../image/Example_10X_RNA_noise_variance.png
 
 Show the variance after noise-variance-stabilizing normalization. 
 
@@ -88,7 +88,7 @@ Show the variance after noise-variance-stabilizing normalization.
 
 	recode.plot_normalization()
 
-.. image:: ../image/Example_10X_RNA_noise_normalization.svg
+.. image:: ../image/Example_10X_RNA_noise_normalization.png
 
 Check the log. 
 
