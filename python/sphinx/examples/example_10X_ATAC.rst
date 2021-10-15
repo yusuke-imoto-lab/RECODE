@@ -61,7 +61,7 @@ Check applicability.
 
 	applicabity: (A) Strong applicable
 
-.. image:: ../image/Example_10X_ATAC_applicability.svg
+.. image:: ../image/Example_10X_ATAC_applicability.png
 	
 
 Show scatter plots of mean vs variance before and after scRECODE. 	
@@ -70,9 +70,9 @@ Show scatter plots of mean vs variance before and after scRECODE.
 
 	recode.plot_mean_variance()
 
-.. image:: ../image/Example_10X_ATAC_mean_var_log_Original.svg
+.. image:: ../image/Example_10X_ATAC_mean_var_log_Original.png
 
-.. image:: ../image/Example_10X_ATAC_mean_var_log_scRECODE.svg
+.. image:: ../image/Example_10X_ATAC_mean_var_log_scRECODE.png
 
 Show noise variance for peaks which are sorted by mean expresion level. 
 
@@ -88,7 +88,7 @@ Show the variance after noise-variance-stabilizing normalization.
 
 	recode.plot_normalization()
 
-.. image:: ../image/Example_10X_ATAC_noise_normalization.svg
+.. image:: ../image/Example_10X_ATAC_noise_normalization.png
 
 
 Show the number of values in scATAC-seq data matrix before and after preprocessing (odd-even normalization). 	
@@ -97,9 +97,9 @@ Show the number of values in scATAC-seq data matrix before and after preprocessi
 
 	recode.plot_ATAC_preprocessing()
 
-.. image:: ../image/Example_10X_ATAC_preprocessing_Original.svg
+.. image:: ../image/Example_10X_ATAC_preprocessing_Original.png
 
-.. image:: ../image/Example_10X_ATAC_preprocessing_Prepocessed.svg
+.. image:: ../image/Example_10X_ATAC_preprocessing_Prepocessed.png
 
 Check the log. 
 
