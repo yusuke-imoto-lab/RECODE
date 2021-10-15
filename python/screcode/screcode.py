@@ -173,6 +173,20 @@ class RECODE():
 class scRECODE():
 	""" 
 	scRECODE (Resolution of curse of dimensionality in single-cell data analysis). 
+	
+	Attributes
+  ----------
+	noise_variance_ : array-like, shape (`n_features`)
+		The noise variances of features (genes/peaks), 
+		where ``n_features`` is the number of features.
+      
+  normalized_variance_ : array-like, shape (`n_features`)
+		The variances of features (genes/peaks), 
+		where ``n_features`` is the number of features.
+  
+  significance_ : array-like, shape (`n_features`)
+		Significance (significant/non-significant/silent) of features (genes/peaks), 
+		where ``n_features`` is the number of features.
 	"""
 	def __init__(
 		self,
@@ -258,7 +272,8 @@ class scRECODE():
 		return X_new
 	
 	def fit(self,X):
-		"""Fit the model to X. After ``fit(X)``, ``check_applicability`` becomes applicable. 
+		"""
+		Fit the model to X. After ``fit(X)``, ``check_applicability`` becomes applicable. 
 		
 		Parameters
 		----------
@@ -271,7 +286,8 @@ class scRECODE():
 		self.X_temp = X[:,self.idx_gene]
 
 	def fit_transform(self,X):
-		"""Apply scRECODE to X.
+		"""
+		Apply scRECODE to X.
 
 		Parameters
 		----------
@@ -319,7 +335,6 @@ class scRECODE():
 		self._significance[self._normalized_variance>1] = 'significant'
 		return X_scRECODE
 		
-	@property
 	def noise_variance_(self):
 		"""
 		Estimated noise variances of features (genes/peaks).
@@ -332,7 +347,6 @@ class scRECODE():
     """
 		return self._noise_variance
 	
-	@property
 	def normalized_variance_(self):
 		"""
 		Variances of features (genes/peaks) after the noise-variance-stabilizing normalization.
@@ -345,7 +359,6 @@ class scRECODE():
     """
 		return self._normalized_variance
 	
-	@property
 	def significance_(self):
 		"""
 		Significance of features (genes/peaks).
@@ -370,7 +383,7 @@ class scRECODE():
 	):
 		"""
 		Check applicability of scRECODE. 
-			Before using this function, you have to conduct ``fit(X)`` or ``fit_transform(X)`` for the target data matrix ``X``. 
+		Before using this function, you have to conduct ``fit(X)`` or ``fit_transform(X)`` for the target data matrix ``X``. 
 		"""
 		X_scaled =(self.X_temp.T/np.sum(self.X_temp,axis=1)).T
 		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
