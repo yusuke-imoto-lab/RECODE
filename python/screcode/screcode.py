@@ -1,4 +1,3 @@
-import h5py
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -459,7 +458,7 @@ class scRECODE():
 		  dpi=None
 	):
 		"""
-		Plot noise variance for each features
+		Plot noise variance for each features.
 		"""
 		ps = 1
 		fs_title = 16
@@ -581,34 +580,3 @@ class scRECODE():
 		if save:
 			plt.savefig('%s_Prepocessed.%s' % (save_filename,save_format),dpi=dpi)
 		plt.show()
-	
-
-def scRECODE_h5(h5_file, decimals=5):
-	input_h5 = h5py.File(h5_file, 'r')
-	X = scipy.sparse.csc_matrix((input_h5['matrix']['X'], input_h5['matrix']['indices'],
-								   input_h5['matrix']['indptr']), shape=input_h5['matrix']['shape']).toarray().T
-	gene_list = [x.decode('ascii', 'ignore')
-				 for x in input_h5['matrix']['features']['name']]
-	cell_list = np.array([x.decode('ascii', 'ignore')
-						 for x in input_h5['matrix']['barcodes']], dtype=object)
-	X_scRECODE,param = scRECODE(return_param=True).fit_transform(X)
-	X_scRECODE_csc = scipy.sparse.csc_matrix(
-		np.round(X_scRECODE, decimals=decimals).T)
-	outpur_h5 = '%s_scRECODE.h5' % (h5_file[:-3])
-	with h5py.File(outpur_h5,'w') as f:
-		f.create_group('matrix')
-		for key in input_h5['matrix'].keys():
-			if key == 'data':
-				f['matrix'].create_dataset(key,data=data_scRECODE_csc.data)
-			elif key == 'indices':
-				f['matrix'].create_dataset(key,data=data_scRECODE_csc.indices)
-			elif key == 'indptr':
-				f['matrix'].create_dataset(key,data=data_scRECODE_csc.indptr)
-			elif key == 'shape':
-				f['matrix'].create_dataset(key,data=data_scRECODE_csc.shape)
-			elif type(input_h5['matrix'][key]) == h5py._hl.dataset.Dataset:
-				f['matrix'].create_dataset(key,data=input_h5['matrix'][key])
-			else:
-				f['matrix'].create_group(key)
-			for key_sub in input_h5['matrix'][key].keys():
-				f['matrix'][key].create_dataset(key_sub,data=input_h5['matrix'][key][key_sub])
