@@ -176,13 +176,13 @@ class scRECODE():
 	
 	Attributes
   ----------
-	noise_variance_ : array-like, shape (`n_features`)
+	noise_variance_ : ndarray of shape (n_features,)
 		The noise variances of features (genes/peaks).
 	
-	normalized_variance_ : array-like, shape (`n_features`)
+	normalized_variance_ : ndarray of shape (n_features,)
 		The variances of features (genes/peaks).
 	
-	significance_ : array-like, shape (`n_features`)
+	significance_ : ndarray of shape (n_features,)
 		Significance (significant/non-significant/silent) of features (genes/peaks).
 	"""
 	def __init__(
