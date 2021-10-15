@@ -33,8 +33,8 @@ Apply scRECODE.
 
 .. parsed-literal::
 
-	start scRECODE
-	end scRECODE
+	start scRECODE for scRNA-seq
+	end scRECODE for scRNA-seq
 	log: {'#significant genes': 15789, '#non-significant genes': 9322, '#silent genes': 11490, 'ell': 165, 'Elapsed_time': '54.8484[sec]'}
 	
 Write the denoised data as HDF5 file. 

@@ -1,9 +1,9 @@
-scRNA-seq data - 10X chromium HDF5 file
+scATAC-seq data - 10X chromium HDF5 file
 ========
 
-We show an exmaple for scRNA-seq data produced by 10X Chromium. 
-We use sample `10k Human PBMCs, 3' v3.1, Chromium Controller` (11,485 cells and 36,601 genes) in `10X Genomics Datasets <https://www.10xgenomics.com/jp/resources/datasets>`_.  
-The test data is directly avairable from `Feature / cell matrix HDF5 (filtered)` in `here <https://www.10xgenomics.com/jp/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-controller-3-1-high>`_ (need register).
+We show an exmaple for scATAC-seq data produced by 10X Chromium. 
+We use sample `5k Peripheral blood mononuclear cells (PBMCs) from a healthy donor (Next GEM v1.1)` (4,623 cells and 135,377 peaks) in `10X Genomics Datasets <https://www.10xgenomics.com/jp/resources/datasets>`_.  
+The test data is directly avairable from `Feature / cell matrix HDF5 (filtered)` in `here <https://www.10xgenomics.com/jp/resources/datasets/5-k-peripheral-blood-mononuclear-cells-pbm-cs-from-a-healthy-donor-next-gem-v-1-1-1-1-standard-2-0-0>`_ (need register).
 
 
 We use `scanpy <https://scanpy.readthedocs.io/en/stable/>`_ to read/write 10X HDF5 file (\*\*\*.h5). 
@@ -21,21 +21,21 @@ Imput data from HDF5 file (\*\*\*.h5).
 
 .. code-block:: python
 
-	input_filename = '10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.h5'
-	anndata = scanpy.read_10x_h5(input_filename)
+	h5_file = 'data/atac_pbmc_5k_nextgem_filtered_peak_bc_matrix.h5'
+	adata = scanpy.readwrite._read_v3_10x_h5(h5_file)
 
-Apply scRECODE. 
+Apply scRECODE with option ``seq_target='ATAC'``. 
 
 .. code-block:: python
 
-	recode = screcode.scRECODE()
-	data_scRECODE = recode.fit_transform(anndata.X.toarray())
+	recode = screcode.scRECODE(seq_target='ATAC')
+	data_scRECODE = recode.fit_transform(data)
 
 .. parsed-literal::
 
-	start scRECODE
-	end scRECODE
-	log: {'#significant genes': 15789, '#non-significant genes': 9322, '#silent genes': 11490, 'ell': 165, 'Elapsed_time': '54.8484[sec]'}
+	start scRECODE for scATAC-seq
+	end scRECODE for scATAC-seq
+	log: {'#significant genes': 128923, '#non-significant genes': 6450, '#silent genes': 4, 'ell': 94, 'Elapsed_time': '212.5028[sec]'}
 	
 Write the denoised data as HDF5 file. 
 
@@ -61,7 +61,7 @@ Check applicability.
 
 	applicabity: (A) Strong applicable
 
-.. image:: ../image/Example_10X_RNA_applicability.svg
+.. image:: ../image/Example_10X_ATAC_applicability.svg
 	
 
 Show scatter plots of mean vs variance before and after scRECODE. 	
@@ -70,9 +70,9 @@ Show scatter plots of mean vs variance before and after scRECODE.
 
 	recode.plot_mean_variance()
 
-.. image:: ../image/Example_10X_RNA_mean_var_log_Original.svg
+.. image:: ../image/Example_10X_ATAC_mean_var_log_Original.svg
 
-.. image:: ../image/Example_10X_RNA_mean_var_log_scRECODE.svg
+.. image:: ../image/Example_10X_ATAC_mean_var_log_scRECODE.svg
 
 Show noise variance for genes which are sorted by mean expresion level. 
 
@@ -80,7 +80,7 @@ Show noise variance for genes which are sorted by mean expresion level.
 
 	recode.plot_noise_variance()
 
-.. image:: ../image/Example_10X_RNA_noise_variance.svg
+.. image:: ../image/Example_10X_ATAC_noise_variance.svg
 
 Show the variance after noise-variance-stabilizing normalization. 
 
@@ -88,7 +88,18 @@ Show the variance after noise-variance-stabilizing normalization.
 
 	recode.plot_normalization()
 
-.. image:: ../image/Example_10X_RNA_noise_normalization.svg
+.. image:: ../image/Example_10X_ATAC_noise_normalization.svg
+
+
+Show the number of values in scATAC-seq data matrix before and after preprocessing (odd-even normalization). 	
+
+.. code-block:: python
+
+	recode.plot_ATAC_preprocessing()
+
+.. image:: ../image/Example_10X_ATAC_preprocessing_Original.svg
+
+.. image:: ../image/Example_10X_ATAC_preprocessing_scRECODE.svg
 
 Check the log. 
 

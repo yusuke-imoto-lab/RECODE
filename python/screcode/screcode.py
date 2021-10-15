@@ -176,13 +176,11 @@ class scRECODE():
 	"""
 	def __init__(
 		self,
-		return_log = False,
 		acceleration = True,
 		acceleration_ell_max = 1000,
 		seq_target = 'RNA',
 		verbose = True
 		):
-		self.return_log = return_log
 		self.acceleration = acceleration
 		self.acceleration_ell_max = acceleration_ell_max
 		self.seq_target = seq_target
@@ -287,6 +285,7 @@ class scRECODE():
 		if self.verbose:
 			print('start scRECODE for sc%s-seq' % self.seq_target)
 		self.fit(X)
+		self.log['seq_target'] = self.seq_target
 		if self.seq_target == 'ATAC':
 			self.X_temp = self._ATAC_preprocessing(self.X_temp)
 		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
@@ -315,10 +314,7 @@ class scRECODE():
 		self.significance[self.normalized_variance==0] = 'silent'
 		self.significance[self.normalized_variance>0] = 'non-significant'
 		self.significance[self.normalized_variance>1] = 'significant'
-		if self.return_log:
-			return X_scRECODE, self.log
-		else:
-			return X_scRECODE
+		return X_scRECODE
 	
 	def check_applicability(
 		self,
