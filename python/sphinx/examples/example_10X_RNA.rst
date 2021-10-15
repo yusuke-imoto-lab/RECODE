@@ -43,9 +43,9 @@ Write the denoised data as HDF5 file.
 
 	adata_scRECODE = adata.copy()
 	adata_scRECODE.X = scipy.sparse.csc_matrix(data_scRECODE)
-	adata_scRECODE.var['noise_variance'] = screc.noise_variance
-	adata_scRECODE.var['normalized_variance'] = screc.normalized_variance
-	adata_scRECODE.var['significance'] = screc.significance
+	adata_scRECODE.var['noise_variance'] = screc.noise_variance_
+	adata_scRECODE.var['normalized_variance'] = screc.normalized_variance_
+	adata_scRECODE.var['significance'] = screc.significance_
 	adata_scRECODE.var_names_make_unique()
 	output_filename = '10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix_scRECODE.h5'
 	adata_scRECODE.write(output_filename)
@@ -115,10 +115,10 @@ Show the gene rank given by the normalizedd variance.
 	 
 	import pandas as pd
 	n_show_genes = 10
-	idx = np.argsort(recode.normalized_variance)[::-1]
+	idx = np.argsort(recode.normalized_variance_)[::-1]
 	generank = pd.DataFrame({'gene':adata.var.index[idx],
-                         'normalized_variance':recode.normalized_variance[idx],
-                         'significance':recode.significance[idx]},
+                         'normalized_variance':recode.normalized_variance_[idx],
+                         'significance':recode.significance_[idx]},
                         index=np.arange(len(adata.var.index))+1)
 	generank.head(n_show_genes)
 	 

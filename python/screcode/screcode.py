@@ -9,28 +9,26 @@ import warnings
 
 
 class RECODE():
-	"""
-	RECODE (Resolution of curse of dimensionality). 
-		A noise reduction method for general data. 
-	"""
 
 	def __init__(
 		self,
-		return_log = False,
 		acceleration = True,
 		acceleration_ell_max = 1000,
 		param_estimate = True,
 		ell_manual = 10,
 	):
 		"""
-		Set RECODE parameters
+		RECODE (Resolution of curse of dimensionality). 
+		A noise reduction method for general data. 
 
 		Parameters
 		----------
-		return_log : boolean, optional (default=False)
-		acceleration : boolean, optional (default=False)
+		acceleration : boolean, optional (default=True)
+			acceleration algorism
+		acceleration_ell_max : int, optional (default=True)
+		param_estimate : boolean, optional (default=True)
+		ell_manual : 
 		"""
-		self.return_log=return_log
 		self.acceleration = acceleration
 		self.acceleration_ell_max = acceleration_ell_max
 		self.param_estimate=param_estimate
@@ -294,7 +292,7 @@ class scRECODE():
 		if self.seq_target == 'ATAC':
 			self.X_temp = self._ATAC_preprocessing(self.X_temp)
 		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
-		recode_ = RECODE(return_log=True,param_estimate=False,acceleration=self.acceleration,acceleration_ell_max=self.acceleration_ell_max)
+		recode_ = RECODE(param_estimate=False,acceleration=self.acceleration,acceleration_ell_max=self.acceleration_ell_max)
 		X_norm_RECODE = recode_.fit_transform(X_norm)
 		X_scRECODE = np.zeros(X.shape,dtype=float)
 		X_scRECODE[:,self.idx_gene] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
@@ -311,15 +309,54 @@ class scRECODE():
 			warnings.warn("Acceleration error: the ell value may not be optimal. Set 'acceleration=False' or larger acceleration_ell_max.\n"
 			"Ex. X_new = screcode.scRECODE(acceleration=False).fit_transform(X)")
 		self.X_scRECODE = X_scRECODE
-		self.noise_variance = np.zeros(X.shape[1],dtype=float)
-		self.noise_variance[self.idx_gene] =  self.noise_var
-		self.normalized_variance = np.zeros(X.shape[1],dtype=float)
-		self.normalized_variance[self.idx_gene] =  self.X_norm_var
-		self.significance = np.empty(X.shape[1],dtype=object)
-		self.significance[self.normalized_variance==0] = 'silent'
-		self.significance[self.normalized_variance>0] = 'non-significant'
-		self.significance[self.normalized_variance>1] = 'significant'
+		self._noise_variance = np.zeros(X.shape[1],dtype=float)
+		self._noise_variance[self.idx_gene] =  self.noise_var
+		self._normalized_variance = np.zeros(X.shape[1],dtype=float)
+		self._normalized_variance[self.idx_gene] =  self.X_norm_var
+		self._significance = np.empty(X.shape[1],dtype=object)
+		self._significance[self._normalized_variance==0] = 'silent'
+		self._significance[self._normalized_variance>0] = 'non-significant'
+		self._significance[self._normalized_variance>1] = 'significant'
 		return X_scRECODE
+		
+	@property
+	def noise_variance_(self):
+		"""
+		Estimated noise variances of features (genes/peaks).
+    
+    Returns
+    -------
+    noise_variance_ : array-like, shape (`n_features`)
+        The noise variances of features (genes/peaks), 
+        where ``n_features`` is the number of features.
+    """
+		return self._noise_variance
+	
+	@property
+	def normalized_variance_(self):
+		"""
+		Variances of features (genes/peaks) after the noise-variance-stabilizing normalization.
+    
+    Returns
+    -------
+    normalized_variance_ : array-like, shape (`n_features`)
+        The variances of features (genes/peaks), 
+        where ``n_features`` is the number of features.
+    """
+		return self._normalized_variance
+	
+	@property
+	def significance_(self):
+		"""
+		Significance of features (genes/peaks).
+    
+    Returns
+    -------
+    significance_ : array-like, shape (`n_features`)
+        Significance (significant/non-significant/silent) of features (genes/peaks), 
+        where ``n_features`` is the number of features.
+    """
+		return self._significance
 	
 	def check_applicability(
 		self,
