@@ -21,7 +21,7 @@ Imput data from HDF5 file (\*\*\*.h5).
 
 .. code-block:: python
 
-	h5_file = 'data/atac_pbmc_5k_nextgem_filtered_peak_bc_matrix.h5'
+	h5_file = 'atac_pbmc_5k_nextgem_filtered_peak_bc_matrix.h5'
 	adata = scanpy.readwrite._read_v3_10x_h5(h5_file)
 
 Apply scRECODE with option ``seq_target='ATAC'``. 
@@ -35,7 +35,7 @@ Apply scRECODE with option ``seq_target='ATAC'``.
 
 	start scRECODE for scATAC-seq
 	end scRECODE for scATAC-seq
-	log: {'#significant genes': 128923, '#non-significant genes': 6450, '#silent genes': 4, 'ell': 94, 'Elapsed_time': '212.5028[sec]'}
+	log: {'seq_target': 'ATAC', '#significant peaks': 128923, '#non-significant peaks': 6450, '#silent peaks': 4, 'ell': 94, 'Elapsed_time': '209.465[sec]'}
 	
 Write the denoised data as HDF5 file. 
 
@@ -47,7 +47,7 @@ Write the denoised data as HDF5 file.
 	adata_scRECODE.var['normalized_variance'] = screc.normalized_variance
 	adata_scRECODE.var['significance'] = screc.significance
 	adata_scRECODE.var_names_make_unique()
-	output_filename = '10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix_scRECODE.h5'
+	output_filename = 'atac_pbmc_5k_nextgem_filtered_peak_bc_matrix_scRECODE.h5'
 	adata_scRECODE.write(output_filename)
 
 Check applicability. 
@@ -110,14 +110,15 @@ Check the log.
 
 .. parsed-literal::
 
-	{'#significant genes': 15789,
-	 '#non-significant genes': 9322,
-	 '#silent genes': 11490,
-	 'ell': 165,
-	 'Elapsed_time': '56.8615[sec]',
+	{'seq_target': 'ATAC',
+	 '#significant peaks': 128923,
+	 '#non-significant peaks': 6450,
+	 '#silent peaks': 0,
+	 'ell': 94,
+	 'Elapsed_time': '209.465[sec]',
 	 'Applicability': '(A) Strong applicable',
-	 "Rate of '0 < normalized variance < 0.9'": '0%',
-	 'Peak density of normalized variance': 1.016056101497848}
+	 'Rate of 0 < normalized variance < 0.9': '0%',
+	 'Peak density of normalized variance': 1.0792379955790716}
 
 
 Show the gene rank given by the normalizedd variance. 
@@ -127,7 +128,7 @@ Show the gene rank given by the normalizedd variance.
 	import pandas as pd
 	n_show_genes = 10
 	idx = np.argsort(recode.normalized_variance)[::-1]
-	generank = pd.DataFrame({'gene':adata.var.index[idx],
+	generank = pd.DataFrame({'peak':adata.var.index[idx],
                          'normalized_variance':recode.normalized_variance[idx],
                          'significance':recode.significance[idx]},
                         index=np.arange(len(adata.var.index))+1)
@@ -153,7 +154,7 @@ Show the gene rank given by the normalizedd variance.
 		<thead>
 		  <tr style="text-align: right;">
 		    <th></th>
-		    <th>gene</th>
+		    <th>peak</th>
 		    <th>normalized_variance</th>
 		    <th>significance</th>
 		  </tr>

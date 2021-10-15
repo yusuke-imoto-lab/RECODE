@@ -44,7 +44,7 @@ class RECODE():
 		X : array-like, shape (n_samples, n_features)
 			Training data, where ``n_samples`` is the number of samples
 			and ``n_features`` is the number of features.
-
+		
 		Returns
 		-------
 		self : object
@@ -380,7 +380,7 @@ class scRECODE():
 				backcolor = 'tomato'
 		ax0.text(0.99, 0.982,applicability,va='top',ha='right', transform=ax0.transAxes,fontsize=14,backgroundcolor=backcolor)
 		self.log['Applicability'] = applicability
-		self.log['Rate of \'0 < normalized variance < 0.9\''] = "{:.0%}".format(rate_low_var)
+		self.log['Rate of 0 < normalized variance < 0.9'] = "{:.0%}".format(rate_low_var)
 		self.log['Peak density of normalized variance'] = 10**peak_val
 		if self.verbose:
 			print('applicabity:',applicability)
@@ -530,7 +530,7 @@ class scRECODE():
 		save_format = 'png',
 		dpi=None
 	):
-		"""Plot mean vs variance of features for log-normalized data
+		"""plot ATAC preprocessing
 		
 		"""
 		if self.seq_target != 'ATAC':
@@ -562,9 +562,9 @@ class scRECODE():
 		plt.ylabel('count',fontsize=fs_label)
 		plt.legend(fontsize=fs_legend)
 		plt.title('Before preprocessing',fontsize=fs_title)
-		plt.show()
 		if save:
 			plt.savefig('%s_Original.%s' % (save_filename,save_format),dpi=dpi)
+		plt.show()
 		
 		val,count = np.unique(self.X_temp,return_counts=True)
 		plt.figure(figsize=figsize)
@@ -575,7 +575,6 @@ class scRECODE():
 		plt.xlabel('value',fontsize=fs_label)
 		plt.ylabel('count',fontsize=fs_label)
 		plt.title('After preprocessing',fontsize=fs_title)
-		plt.show()
 		if save:
 			plt.savefig('%s_Prepocessed.%s' % (save_filename,save_format),dpi=dpi)
 		plt.show()
