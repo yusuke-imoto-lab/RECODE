@@ -186,6 +186,9 @@ class scRECODE():
 		self.seq_target = seq_target
 		self.verbose = verbose
 		self.log = {}
+		self.unit = 'genes'
+		if seq_target == 'ATAC':
+			self.unit = 'peaks'
 
 	def _noise_variance_stabilizing_normalization(
 		self,
@@ -213,9 +216,9 @@ class scRECODE():
 		self.X_norm_var = np.var(X_norm,axis=0)
 		self.idx_sig = self.X_norm_var > 1
 		self.idx_nonsig = self.idx_sig==False
-		self.log['#significant genes'] = sum(self.idx_sig)
-		self.log['#non-significant genes'] = sum(self.idx_nonsig)
-		self.log['#silent genes'] = X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig)
+		self.log['#significant %s' % self.unit] = sum(self.idx_sig)
+		self.log['#non-significant %s' % self.unit] = sum(self.idx_nonsig)
+		self.log['#silent %s' % self.unit] = X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig)
 		return X_norm
 	
 	def _inv_noise_variance_stabilizing_normalization(
@@ -261,7 +264,7 @@ class scRECODE():
 		----------
 		X : ndarray of shape (n_samples, n_features)
 			single-cell sequencing data matrix, where ``n_samples`` is the number of samples
-			and ``n_features`` is the number of features (genes).
+			and ``n_features`` is the number of features (genes/peaks).
 		"""
 		self.X = X
 		self.idx_gene = np.sum(X,axis=0) > 0
@@ -274,7 +277,7 @@ class scRECODE():
 		----------
 		X : ndarray of shape (n_samples, n_features)
 			single-cell sequencing data matrix, where ``n_samples`` is the number of samples
-			and ``n_features`` is the number of features (genes).
+			and ``n_features`` is the number of features (genes/peaks).
 
 		Returns
 		-------
@@ -295,7 +298,7 @@ class scRECODE():
 		X_scRECODE[:,self.idx_gene] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
 		X_scRECODE = np.where(X_scRECODE>0,X_scRECODE,0)
 		elapsed_time = time.time() - start
-		self.log['#silent genes'] = sum(np.sum(X,axis=0)==0)
+		self.log['#silent %s' % self.unit] = sum(np.sum(X,axis=0)==0)
 		self.log['ell'] = recode_.ell
 		self.log['Elapsed_time'] = "{0}".format(np.round(elapsed_time,decimals=4
 		)) + "[sec]"
@@ -323,7 +326,8 @@ class scRECODE():
 		ps = 10,
 		save = False,
 		save_filename = 'check_applicability',
-		save_format = 'png'
+		save_format = 'png',
+		dpi=None
 	):
 		"""Check applicability of scRECODE. 
 			Before using this function, you have to conduct ``fit(X)`` or ``fit_transform(X)`` for the target data matrix ``X``. 
@@ -337,8 +341,8 @@ class scRECODE():
 		fig = plt.figure(figsize=figsize)
 		spec = matplotlib.gridspec.GridSpec(ncols=2, nrows=1,width_ratios=[4, 1],wspace=0.)
 		ax0 = fig.add_subplot(spec[0])
-		ax0.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant genes',zorder=2)
-		ax0.scatter(x[idx_nonsig],y[idx_nonsig],color='r',s=ps,label='non-significant genes',zorder=3)
+		ax0.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant %s' % self.unit,zorder=2)
+		ax0.scatter(x[idx_nonsig],y[idx_nonsig],color='r',s=ps,label='non-significant %s' % self.unit,zorder=3)
 		ax0.axhline(1,color='gray',ls='--',lw=2,zorder=1)
 		ax0.set_xscale('log')
 		ax0.set_yscale('log')
@@ -357,6 +361,7 @@ class scRECODE():
 		ax1.spines['right'].set_visible(False)
 		ax1.spines['top'].set_visible(False)
 		ax1.tick_params(left=False)
+		ax1.patch.set_alpha(0)
 		#
 		x = np.linspace(ax1.set_ylim()[0],ax1.set_ylim()[1],1000)
 		dens = scipy.stats.kde.gaussian_kde(np.log10(norm_var[norm_var>0]))(x)
@@ -380,7 +385,7 @@ class scRECODE():
 		if self.verbose:
 			print('applicabity:',applicability)
 		if save:
-			plt.savefig('%s.%s' % (save_filename,save_format))
+			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
 		plt.show()
 	
 	def plot_mean_variance(
@@ -391,7 +396,8 @@ class scRECODE():
 		size_factor='median',
 		save = False,
 		save_filename = 'plot_mean_variance',
-		save_format = 'png'
+		save_format = 'png',
+		dpi=None
 	):
 		"""Plot mean vs variance of features for log-normalized data
 		
@@ -411,9 +417,9 @@ class scRECODE():
 		X_scRECODE_ss_log = np.log2(size_factor_scRECODE*(self.X_scRECODE[:,self.idx_gene].T/np.sum(self.X_scRECODE,axis=1)).T+1)
 		fig,ax0 = plt.subplots(figsize=figsize)
 		x,y = np.mean(X_ss_log,axis=0),np.var(X_ss_log,axis=0)
-		ax0.scatter(x,y,color='b',s=ps,label='significant genes',zorder=2)
-		#ax0.scatter(x[self.idx_sig],y[self.idx_sig],color='b',s=ps,label='significant genes',zorder=2)
-		#ax0.scatter(x[self.idx_nonsig],y[self.idx_nonsig],color='r',s=ps,label='non-significant genes',zorder=3)
+		ax0.scatter(x,y,color='b',s=ps,label='significant %s' % self.unit,zorder=2)
+		#ax0.scatter(x[self.idx_sig],y[self.idx_sig],color='b',s=ps,label='significant %s' % self.unit,zorder=2)
+		#ax0.scatter(x[self.idx_nonsig],y[self.idx_nonsig],color='r',s=ps,label='non-significant %s' % self.unit,zorder=3)
 		ax0.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax0.set_xlabel('Mean of log-scaled data',fontsize=14)
 		ax0.set_ylabel('Variance of log-scaled data',fontsize=14)
@@ -422,12 +428,12 @@ class scRECODE():
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
-			plt.savefig('%s_Original.%s' % (save_filename,save_format))
+			plt.savefig('%s_Original.%s' % (save_filename,save_format),dpi=dpi)
 		fig,ax1 = plt.subplots(figsize=figsize)
 		x,y = np.mean(X_scRECODE_ss_log,axis=0),np.var(X_scRECODE_ss_log,axis=0)
-		ax1.scatter(x,y,color='b',s=ps,label='significant genes',zorder=2)
-		#ax1.scatter(x[self.idx_sig],y[self.idx_sig],color='b',s=ps,label='significant genes',zorder=2)
-		#ax1.scatter(x[self.idx_nonsig],y[self.idx_nonsig],color='r',s=ps,label='non-significant genes',zorder=3)
+		ax1.scatter(x,y,color='b',s=ps,label='significant %s' % self.unit,zorder=2)
+		#ax1.scatter(x[self.idx_sig],y[self.idx_sig],color='b',s=ps,label='significant %s' % self.unit,zorder=2)
+		#ax1.scatter(x[self.idx_nonsig],y[self.idx_nonsig],color='r',s=ps,label='non-significant %s' % self.unit,zorder=3)
 		ax1.set_ylim(ax0.set_ylim())
 		ax1.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax1.set_xlabel('Mean of log-scaled data',fontsize=14)
@@ -437,7 +443,7 @@ class scRECODE():
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
-			plt.savefig('%s_scRECODE.%s' % (save_filename,save_format))
+			plt.savefig('%s_scRECODE.%s' % (save_filename,save_format),dpi=dpi)
 		plt.show()
 	
 	def plot_noise_variance(
@@ -446,7 +452,8 @@ class scRECODE():
 		  figsize=(7,5),
 		  save = False,
 		  save_filename = 'noise_variance',
-		  save_format = 'png'
+		  save_format = 'png',
+		  dpi=None
 	):
 		"""Plot noise variance for each features
 		
@@ -474,7 +481,7 @@ class scRECODE():
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
-			plt.savefig('%s.%s' % (save_filename,save_format))
+			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
 		plt.show()
 	
 	def plot_normalization(
@@ -483,7 +490,8 @@ class scRECODE():
 		  figsize=(7,5),
 		  save = False,
 		  save_filename = 'noise_variance',
-		  save_format = 'png'
+		  save_format = 'png',
+		  dpi=None
 	):
 		"""Plot the transformed data by the noise variance-srabilizing normalization
 		
@@ -509,7 +517,7 @@ class scRECODE():
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
-			plt.savefig('%s.%s' % (save_filename,save_format))
+			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
 		plt.show()
 	
 	def plot_ATAC_preprocessing(
@@ -519,7 +527,8 @@ class scRECODE():
 		ps = 10,
 		save = False,
 		save_filename = 'plot_ATAC_preprocessing',
-		save_format = 'png'
+		save_format = 'png',
+		dpi=None
 	):
 		"""Plot mean vs variance of features for log-normalized data
 		
@@ -555,7 +564,7 @@ class scRECODE():
 		plt.title('Before preprocessing',fontsize=fs_title)
 		plt.show()
 		if save:
-			plt.savefig('%s_Original.%s' % (save_filename,save_format))
+			plt.savefig('%s_Original.%s' % (save_filename,save_format),dpi=dpi)
 		
 		val,count = np.unique(self.X_temp,return_counts=True)
 		plt.figure(figsize=figsize)
@@ -568,7 +577,7 @@ class scRECODE():
 		plt.title('After preprocessing',fontsize=fs_title)
 		plt.show()
 		if save:
-			plt.savefig('%s_Prepocessed.%s' % (save_filename,save_format))
+			plt.savefig('%s_Prepocessed.%s' % (save_filename,save_format),dpi=dpi)
 		plt.show()
 	
 

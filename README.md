@@ -12,4 +12,3 @@ $ pip install screcode
 * numpy
 * scipy
 * scikit-learn
-* h5py

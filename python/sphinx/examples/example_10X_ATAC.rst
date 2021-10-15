@@ -99,7 +99,7 @@ Show the number of values in scATAC-seq data matrix before and after preprocessi
 
 .. image:: ../image/Example_10X_ATAC_preprocessing_Original.svg
 
-.. image:: ../image/Example_10X_ATAC_preprocessing_scRECODE.svg
+.. image:: ../image/Example_10X_ATAC_preprocessing_Prepocessed.svg
 
 Check the log. 
 
@@ -161,62 +161,62 @@ Show the gene rank given by the normalizedd variance.
 		<tbody>
 		  <tr>
 		    <th>1</th>
-		    <td>IGKC</td>
-		    <td>476.251373</td>
+		    <td>chr20:31068119-31068872</td>
+		    <td>6.488490</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>2</th>
-		    <td>IGLC3</td>
-		    <td>337.377136</td>
+		    <td>chr5:83895220-83895950</td>
+		    <td>5.754496</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>3</th>
-		    <td>IGHA1</td>
-		    <td>315.810333</td>
+		    <td>chr10:41881633-41882455</td>
+		    <td>5.089045</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>4</th>
-		    <td>IGLC2</td>
-		    <td>250.899536</td>
+		    <td>chr5:31478538-31479431</td>
+		    <td>4.973308</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>5</th>
-		    <td>IGHG1</td>
-		    <td>209.024307</td>
+		    <td>chr10:41883775-41884723</td>
+		    <td>4.766570</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>6</th>
-		    <td>IGLC1</td>
-		    <td>197.974701</td>
+		    <td>chr9:124295107-124295857</td>
+		    <td>4.766049</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>7</th>
-		    <td>S100A9</td>
-		    <td>144.979065</td>
+		    <td>chr8:46848825-46849745</td>
+		    <td>4.641542</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>8</th>
-		    <td>IGHG2</td>
-		    <td>123.463943</td>
+		    <td>chrX:17792533-17793425</td>
+		    <td>4.278866</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>9</th>
-		    <td>MALAT1</td>
-		    <td>98.790283</td>
+		    <td>chr9:130958244-130959166</td>
+		    <td>4.240672</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>10</th>
-		    <td>S100A8</td>
-		    <td>75.027397</td>
+		    <td>chr15:71199198-71200118</td>
+		    <td>4.166023</td>
 		    <td>significant</td>
 		  </tr>
 		</tbody>
