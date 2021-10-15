@@ -174,13 +174,13 @@ class scRECODE():
 	""" 
 	scRECODE (Resolution of curse of dimensionality in single-cell data analysis). 
 	
-	Attributes
+	*Attributes*
   ----------
 	noise_variance_ : ndarray of shape (n_features,)
-		The noise variances of features (genes/peaks).
+		Noise variances of features (genes/peaks).
 	
 	normalized_variance_ : ndarray of shape (n_features,)
-		The variances of features (genes/peaks).
+		Variances of features (genes/peaks).
 	
 	significance_ : ndarray of shape (n_features,)
 		Significance (significant/non-significant/silent) of features (genes/peaks).
