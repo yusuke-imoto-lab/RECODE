@@ -10,9 +10,9 @@ import warnings
 
 
 class RECODE():
-	"""RECODE (Resolution of curse of dimensionality). 
+	"""
+	RECODE (Resolution of curse of dimensionality). 
 		A noise reduction method for general data. 
-
 	"""
 
 	def __init__(
@@ -23,7 +23,8 @@ class RECODE():
 		param_estimate = True,
 		ell_manual = 10,
 	):
-		"""Set RECODE parameters
+		"""
+		Set RECODE parameters
 
 		Parameters
 		----------
@@ -37,14 +38,15 @@ class RECODE():
 		self.ell_manual=ell_manual
 	
 	def fit(self, X):
-		"""Fit the model to X.
+		"""
+		Fit the model to X.
 
 		Parameters
 		----------
 		X : array-like, shape (n_samples, n_features)
 			Training data, where ``n_samples`` is the number of samples
 			and ``n_features`` is the number of features.
-		
+
 		Returns
 		-------
 		self : object
@@ -149,7 +151,8 @@ class RECODE():
 		return var
 	
 	def fit_transform(self,X):
-		"""Apply RECODE to X.
+		"""
+		Apply RECODE to X.
 
 		Parameters
 		----------
@@ -171,8 +174,8 @@ class RECODE():
 	
 
 class scRECODE():
-	""" scRECODE (Resolution of curse of dimensionality in single-cell data analysis). 
-
+	""" 
+	scRECODE (Resolution of curse of dimensionality in single-cell data analysis). 
 	"""
 	def __init__(
 		self,
@@ -194,8 +197,9 @@ class scRECODE():
 		self,
 		X
 	):
-		"""Apply the noise-variance-stabilizing normalization to X.
-		
+		"""
+		Apply the noise-variance-stabilizing normalization to X.
+
 		Parameters
 		----------
 		X : array-like of shape (n_samples, n_features)
@@ -225,7 +229,8 @@ class scRECODE():
 		self,
 		X
 	):
-		"""Apply the inverce transformation of noise-variance-stabilizing normalization to X. 
+		"""
+		Apply the inverce transformation of noise-variance-stabilizing normalization to X. 
 		
 		Parameters
 		----------
@@ -237,11 +242,9 @@ class scRECODE():
 		X_norm_inv = (X_norm_inv_temp.T*self.X_nUMI).T
 		return X_norm_inv
 	
-	def _ATAC_preprocessing(
-		self,
-		X
-	):
-		"""Preprocessing of original ATAC-seq data (odd-even normalization data). 
+	def _ATAC_preprocessing(self,X):
+		"""
+		Preprocessing of original ATAC-seq data (odd-even normalization data). 
 		
 		Parameters
 		----------
