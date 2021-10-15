@@ -332,9 +332,9 @@ class scRECODE():
 		save_format = 'png',
 		dpi=None
 	):
-		"""Check applicability of scRECODE. 
+		"""
+		Check applicability of scRECODE. 
 			Before using this function, you have to conduct ``fit(X)`` or ``fit_transform(X)`` for the target data matrix ``X``. 
-		
 		"""
 		X_scaled =(self.X_temp.T/np.sum(self.X_temp,axis=1)).T
 		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
@@ -402,8 +402,8 @@ class scRECODE():
 		save_format = 'png',
 		dpi=None
 	):
-		"""Plot mean vs variance of features for log-normalized data
-		
+		"""
+		Plot mean vs variance of features for log-normalized data
 		"""
 		if size_factor=='median':
 			size_factor = np.median(np.sum(self.X,axis=1))
@@ -458,8 +458,8 @@ class scRECODE():
 		  save_format = 'png',
 		  dpi=None
 	):
-		"""Plot noise variance for each features
-		
+		"""
+		Plot noise variance for each features
 		"""
 		ps = 1
 		fs_title = 16
@@ -496,8 +496,8 @@ class scRECODE():
 		  save_format = 'png',
 		  dpi=None
 	):
-		"""Plot the transformed data by the noise variance-srabilizing normalization
-		
+		"""
+		Plot the transformed data by the noise variance-srabilizing normalization.
 		"""
 		ps = 1
 		fs_title = 16
@@ -533,8 +533,8 @@ class scRECODE():
 		save_format = 'png',
 		dpi=None
 	):
-		"""plot ATAC preprocessing
-		
+		"""
+		Plot the number of values in scATAC-seq data matrix with and without preprocessing (odd-even normalization).
 		"""
 		if self.seq_target != 'ATAC':
 			warnings.warn("Error: plot_ATAC_preprocessing is an option of scATAC-seq data")
