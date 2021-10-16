@@ -28,8 +28,10 @@ class scRECODE():
 		fast_algorithm_ell_max : int, default=1000
 		
 		seq_target : {'RNA','ATAC'}, default='RNA'
+			Sequencing target. If 'ATAC', the preprocessing (odd-even normalization) is conducted before general algorithm. 
 		
 		verbose : boolean, default=True
+			If False, all running messages are not displayed. 
 		
 		Attributes
 		----------
@@ -457,10 +459,8 @@ class RECODE():
 		Parameters
 		----------
 		solver : {'variance','manual'}
-			If variance :
-				Regular variance-based algorithm. 
-			If manual :
-				Parameter ell, which identifies essential and noise parts in the PCA space, is manually set. The manual parameter is given by ``ell_manual``. 
+		If 'variance', regular variance-based algorithm. 
+		If 'manual', parameter ell, which identifies essential and noise parts in the PCA space, is manually set. The manual parameter is given by ``ell_manual``. 
 		
 		variance_estimate : boolean, default=True
 			If True and ``solver='variance'``, the parameter estimation method will be conducted. 
