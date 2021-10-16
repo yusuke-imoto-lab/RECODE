@@ -124,9 +124,7 @@ class scRECODE():
 		
 		Parameters
 		----------
-		X : ndarray of shape (n_samples, n_features)
-			single-cell sequencing data matrix, where ``n_samples`` is the number of samples
-			and ``n_features`` is the number of features (genes/peaks).
+		X : ndarray of shape (n_samples, n_features).
 		"""
 		self.X = X
 		self.idx_gene = np.sum(X,axis=0) > 0
@@ -155,7 +153,7 @@ class scRECODE():
 		if self.seq_target == 'ATAC':
 			self.X_temp = self._ATAC_preprocessing(self.X_temp)
 		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
-		recode_ = RECODE(param_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_max=self.fast_algorithm_ell_max)
+		recode_ = RECODE(variance_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_max=self.fast_algorithm_ell_max)
 		X_norm_RECODE = recode_.fit_transform(X_norm)
 		X_scRECODE = np.zeros(X.shape,dtype=float)
 		X_scRECODE[:,self.idx_gene] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
@@ -446,10 +444,11 @@ class RECODE():
 
 	def __init__(
 		self,
+		solver = 'variance',
+		variance_estimate = True,
 		fast_algorithm = True,
 		fast_algorithm_ell_max = 1000,
-		param_estimate = True,
-		ell_manual = 10,
+		ell_manual = None,
 	):
 		"""
 		RECODE (Resolution of curse of dimensionality). 
@@ -457,21 +456,30 @@ class RECODE():
 
 		Parameters
 		----------
+		solver : {'variance','manual'}
+			If variance :
+				Regular variance-based algorithm. 
+			If manual :
+				Parameter ell, which identifies essential and noise parts in the PCA space, is manually set. The manual parameter is given by ``ell_manual``. 
+		
+		variance_estimate : boolean, default=True
+			If True and ``solver='variance'``, the parameter estimation method will be conducted. 
+		
 		fast_algorithm : boolean, default=True
 			If True, the fast algorithm is conducted. The upper bound of parameter ell is set in ``fast_algorithm_ell_max``.
 		
 		fast_algorithm_ell_max : int, default=1000
-			The upper bound of parameter ell for the fast algorithm. 
+			Upper bound of parameter ell for the fast algorithm. Must be of range [1, infinity).
 		
-		param_estimate : boolean, default=True
-			If True, the parameter estimation method will be conducted. 
 		
 		ell_manual : int, default=10
+			Manual parameter computed by ``solver='ell'``. Must be of range [1, infinity).
 		
 		"""
+		self.solver = solver
+		self.variance_estimate = variance_estimate
 		self.fast_algorithm = fast_algorithm
 		self.fast_algorithm_ell_max = fast_algorithm_ell_max
-		self.param_estimate=param_estimate
 		self.ell_manual=ell_manual
 	
 	def fit(self, X):
@@ -529,7 +537,7 @@ class RECODE():
 		L_ell = L[:ell,:ell]
 		return np.dot(np.dot(np.dot(X-Xmean,U_ell.T),L_ell),U_ell)+Xmean
 	
-	def noise_reduct_noise_var(
+	def _noise_reduct_noise_var(
 		self,
 		noise_var = 1,
 		ell_min = 3
@@ -545,7 +553,7 @@ class RECODE():
 		X_RECODE = self._noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
 		return X_RECODE
 	
-	def noise_var_est(
+	def _noise_var_est(
 		self,
 		X,
 		cut_low_exp=1.0e-10
@@ -603,10 +611,15 @@ class RECODE():
 			Denoised data matrix.
 		"""
 		self.fit(X)
-		if self.param_estimate:
-			noise_var = recode_tools.noise_var_est(X)
-		else:
-			noise_var = 1
-		return self.noise_reduct_noise_var(noise_var)
+		if self.solver=='variance':
+			if self.variance_estimate:
+				noise_var = self._noise_var_est(X)
+				return self._noise_reduct_noise_var(noise_var)
+			else:
+				return self._noise_reduct_noise_var()
+		elif self.solver=='manual':
+			self.ell = self.ell_manual
+			self.X_RECODE = _noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
+			return self.X_RECODE
 	
 
