@@ -24,7 +24,7 @@ Imput data from HDF5 file (\*\*\*.h5).
 	input_filename = '10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.h5'
 	adata = scanpy.read_10x_h5(input_filename)
 
-Apply scRECODE. 
+Apply scRECODE. The denoised data is created in ``data_scRECODE``.
 
 .. code-block:: python
 
@@ -35,7 +35,7 @@ Apply scRECODE.
 
 	start scRECODE for scRNA-seq
 	end scRECODE for scRNA-seq
-	log: {'#significant genes': 15789, '#non-significant genes': 9322, '#silent genes': 11490, 'ell': 165, 'Elapsed_time': '54.8484[sec]'}
+	log: {'seq_target': 'RNA', '#significant genes': 15789, '#non-significant genes': 9322, '#silent genes': 11490, 'ell': 165, 'Elapsed_time': '53.9133[sec]'}
 	
 Write the denoised data as HDF5 file. 
 

@@ -24,7 +24,7 @@ Imput data from HDF5 file (\*\*\*.h5).
 	h5_file = 'atac_pbmc_5k_nextgem_filtered_peak_bc_matrix.h5'
 	adata = scanpy.readwrite._read_v3_10x_h5(h5_file)
 
-Apply scRECODE with option ``seq_target='ATAC'``. 
+Apply scRECODE with option ``seq_target='ATAC'``. The denoised data is created in ``data_scRECODE``.
 
 .. code-block:: python
 

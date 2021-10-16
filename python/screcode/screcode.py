@@ -8,173 +8,12 @@ import time
 import warnings
 
 
-class RECODE():
-
-	def __init__(
-		self,
-		acceleration = True,
-		acceleration_ell_max = 1000,
-		param_estimate = True,
-		ell_manual = 10,
-	):
-		"""
-		RECODE (Resolution of curse of dimensionality). 
-		A noise reduction method for general data. 
-
-		Parameters
-		----------
-		acceleration : boolean, optional (default=True)
-			acceleration algorism
-		acceleration_ell_max : int, optional (default=True)
-		param_estimate : boolean, optional (default=True)
-		ell_manual : 
-		"""
-		self.acceleration = acceleration
-		self.acceleration_ell_max = acceleration_ell_max
-		self.param_estimate=param_estimate
-		self.ell_manual=ell_manual
-	
-	def fit(self, X):
-		"""
-		Fit the model to X.
-
-		Parameters
-		----------
-		X : array-like, shape (n_samples, n_features)
-			Training data, where ``n_samples`` is the number of samples
-			and ``n_features`` is the number of features.
-
-		Returns
-		-------
-		self : object
-			Returns the instance itself.
-		"""
-		n,d = X.shape
-		if self.acceleration:
-			self.n_pca = min(n-1,d-1,self.acceleration_ell_max)
-		else:
-			self.n_pca = min(n-1,d-1)
-		X_svd = X
-		n_svd,d = X_svd.shape
-		X_mean = np.mean(X,axis=0)
-		X_svd_mean = np.mean(X_svd,axis=0)
-		svd = sklearn.decomposition.TruncatedSVD(n_components=self.n_pca).fit(X_svd-X_svd_mean)
-		SVD_Sv = svd.singular_values_
-		self.PCA_Ev = (SVD_Sv**2)/(n_svd-1)
-		self.U = svd.components_
-		PCA_Ev_sum_all = np.sum(np.var(X,axis=0))
-		PCA_Ev_NRM = np.array(self.PCA_Ev,dtype=float)
-		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(self.PCA_Ev)
-		n_Ev_all = min(n,d)
-		for i in range(len(PCA_Ev_NRM)-1):
-			PCA_Ev_NRM[i] -= (np.sum(self.PCA_Ev[i+1:])+PCA_Ev_sum_diff)/(n_Ev_all-i-1)
-		self.PCA_Ev_NRM = PCA_Ev_NRM
-		self.ell_max = np.sum(self.PCA_Ev>1.0e-10)
-		self.L = np.diag(np.sqrt(self.PCA_Ev_NRM[:self.ell_max]/self.PCA_Ev[:self.ell_max]))
-		self.X = X
-		self.X_mean = np.mean(X,axis=0)
-		self.PCA_Ev_sum_all = PCA_Ev_sum_all
-	
-	def noise_reduct_param(
-		self,
-		delta = 0.05
-	):
-		comp = max(np.sum(self.PCA_Ev_NRM>delta*self.PCA_Ev_NRM[0]),3)
-		self.ell = min(self.ell_max,comp)
-		self.X_RECODE = noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
-		return self.X_RECODE
-		
-	def noise_reductor(self,X,L,U,Xmean,ell):
-		U_ell = U[:ell,:]
-		L_ell = L[:ell,:ell]
-		return np.dot(np.dot(np.dot(X-Xmean,U_ell.T),L_ell),U_ell)+Xmean
-	
-	def noise_reduct_noise_var(
-		self,
-		noise_var = 1,
-		ell_min = 3
-	):
-		PCA_Ev_sum_diff = self.PCA_Ev_sum_all - np.sum(self.PCA_Ev)
-		PCA_Ev_sum = np.array([np.sum(self.PCA_Ev[i:]) for i in range(self.n_pca)])+PCA_Ev_sum_diff
-		d_act = sum(np.var(self.X,axis=0)>0)
-		X_var  = np.var(self.X,axis=0)
-		dim = np.sum(X_var>0)
-		thrshold = (dim-np.arange(self.n_pca))*noise_var
-		comp = np.sum(PCA_Ev_sum-thrshold>0)
-		self.ell = max(min(self.ell_max,comp),ell_min)
-		X_RECODE = self.noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
-		return X_RECODE
-	
-	def noise_var_est(
-		self,
-		X,
-		cut_low_exp=1.0e-10
-	):
-		n,d = X.shape
-		X_var = np.var(X,axis=0)
-		idx_var_p = np.where(X_var>cut_low_exp)[0]
-		X_var_sub = X_var[idx_var_p]
-		X_var_min = np.min(X_var_sub)-1.0e-10
-		X_var_max = np.max(X_var_sub)+1.0e-10
-		X_var_range = X_var_max-X_var_min
-		
-		div_max = 1000
-		num_div_max = int(min(0.1*d,div_max))
-		error = np.empty(num_div_max)
-		for i in range(num_div_max):
-				num_div = i+1
-				delta = X_var_range/num_div
-				k = np.empty([num_div],dtype=int)
-				for j in range(num_div):
-					div_min = j*delta+X_var_min
-					div_max = (j+1)*delta+X_var_min
-					k[j] = len(np.where((X_var_sub<div_max) & (X_var_sub>div_min))[0])
-				error[i] = (2*np.mean(k)-np.var(k))/delta/delta
-		
-		opt_div = int(np.argmin(error)+1)
-
-		k = np.empty([opt_div],dtype=int)
-		k_index = np.empty([opt_div],dtype=list)
-		delta = X_var_range/opt_div
-		for j in range(opt_div):
-				div_min = j*delta+X_var_min
-				div_max = (j+1)*delta+X_var_min
-				k[j] = len(np.where((X_var_sub<=div_max) & (X_var_sub>div_min))[0])
-		idx_k_max = np.argmax(k)
-		div_min = idx_k_max*delta+X_var_min
-		div_max = (idx_k_max+1)*delta+X_var_min
-		idx_set_k_max = np.where((X_var_sub<div_max) & (X_var_sub>div_min))[0]
-		var = np.mean(X_var_sub[idx_set_k_max])
-		return var
-	
-	def fit_transform(self,X):
-		"""
-		Apply RECODE to X.
-
-		Parameters
-		----------
-		X : array-like of shape (n_samples, n_features)
-			Training data matrix, where `n_samples` is the number of samples
-			and `n_features` is the number of features.
-
-		Returns
-		-------
-		X_new : ndarray of shape (n_samples, n_components)
-			Denoised data matrix.
-		"""
-		self.fit(X)
-		if self.param_estimate:
-			noise_var = recode_tools.noise_var_est(X)
-		else:
-			noise_var = 1
-		return self.noise_reduct_noise_var(noise_var)
-	
 
 class scRECODE():
 	def __init__(
 		self,
-		acceleration = True,
-		acceleration_ell_max = 1000,
+		fast_algorithm = True,
+		fast_algorithm_ell_max = 1000,
 		seq_target = 'RNA',
 		verbose = True
 		):
@@ -183,10 +22,10 @@ class scRECODE():
 		
 		Parameters
 		----------
-		acceleration : boolean, default=True
-			acceleration algorism
+		fast_algorithm : boolean, default=True
+			fast_algorithm algorism
 		
-		acceleration_ell_max : int, default=1000
+		fast_algorithm_ell_max : int, default=1000
 		
 		seq_target : {'RNA','ATAC'}, default='RNA'
 		
@@ -203,8 +42,8 @@ class scRECODE():
 		significance_ : ndarray of shape (n_features,)
 			Significance (significant/non-significant/silent) of features (genes/peaks).
 		"""
-		self.acceleration = acceleration
-		self.acceleration_ell_max = acceleration_ell_max
+		self.fast_algorithm = fast_algorithm
+		self.fast_algorithm_ell_max = fast_algorithm_ell_max
 		self.seq_target = seq_target
 		self.verbose = verbose
 		self.log = {}
@@ -316,7 +155,7 @@ class scRECODE():
 		if self.seq_target == 'ATAC':
 			self.X_temp = self._ATAC_preprocessing(self.X_temp)
 		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
-		recode_ = RECODE(param_estimate=False,acceleration=self.acceleration,acceleration_ell_max=self.acceleration_ell_max)
+		recode_ = RECODE(param_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_max=self.fast_algorithm_ell_max)
 		X_norm_RECODE = recode_.fit_transform(X_norm)
 		X_scRECODE = np.zeros(X.shape,dtype=float)
 		X_scRECODE[:,self.idx_gene] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
@@ -329,9 +168,9 @@ class scRECODE():
 		if self.verbose:
 			print('end scRECODE for sc%s-seq' % self.seq_target)
 			print('log:',self.log)
-		if recode_.ell == self.acceleration_ell_max:
-			warnings.warn("Acceleration error: the ell value may not be optimal. Set 'acceleration=False' or larger acceleration_ell_max.\n"
-			"Ex. X_new = screcode.scRECODE(acceleration=False).fit_transform(X)")
+		if recode_.ell == self.fast_algorithm_ell_max:
+			warnings.warn("Acceleration error: the ell value may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_max.\n"
+			"Ex. X_new = screcode.scRECODE(fast_algorithm=False).fit_transform(X)")
 		self.X_scRECODE = X_scRECODE
 		self.noise_variance_ = np.zeros(X.shape[1],dtype=float)
 		self.noise_variance_[self.idx_gene] =  self.noise_var
@@ -602,3 +441,172 @@ class scRECODE():
 		if save:
 			plt.savefig('%s_Prepocessed.%s' % (save_filename,save_format),dpi=dpi)
 		plt.show()
+
+class RECODE():
+
+	def __init__(
+		self,
+		fast_algorithm = True,
+		fast_algorithm_ell_max = 1000,
+		param_estimate = True,
+		ell_manual = 10,
+	):
+		"""
+		RECODE (Resolution of curse of dimensionality). 
+		A noise reduction method for general data. 
+
+		Parameters
+		----------
+		fast_algorithm : boolean, default=True
+			If True, the fast algorithm is conducted. The upper bound of parameter ell is set in ``fast_algorithm_ell_max``.
+		
+		fast_algorithm_ell_max : int, default=1000
+			The upper bound of parameter ell for the fast algorithm. 
+		
+		param_estimate : boolean, default=True
+			If True, the parameter estimation method will be conducted. 
+		
+		ell_manual : int, default=10
+		
+		"""
+		self.fast_algorithm = fast_algorithm
+		self.fast_algorithm_ell_max = fast_algorithm_ell_max
+		self.param_estimate=param_estimate
+		self.ell_manual=ell_manual
+	
+	def fit(self, X):
+		"""
+		Fit the model to X.
+
+		Parameters
+		----------
+		X : array-like, shape (n_samples, n_features)
+			Training data, where ``n_samples`` is the number of samples
+			and ``n_features`` is the number of features.
+
+		Returns
+		-------
+		self : object
+			Returns the instance itself.
+		"""
+		n,d = X.shape
+		if self.fast_algorithm:
+			self.n_pca = min(n-1,d-1,self.fast_algorithm_ell_max)
+		else:
+			self.n_pca = min(n-1,d-1)
+		X_svd = X
+		n_svd,d = X_svd.shape
+		X_mean = np.mean(X,axis=0)
+		X_svd_mean = np.mean(X_svd,axis=0)
+		svd = sklearn.decomposition.TruncatedSVD(n_components=self.n_pca).fit(X_svd-X_svd_mean)
+		SVD_Sv = svd.singular_values_
+		self.PCA_Ev = (SVD_Sv**2)/(n_svd-1)
+		self.U = svd.components_
+		PCA_Ev_sum_all = np.sum(np.var(X,axis=0))
+		PCA_Ev_NRM = np.array(self.PCA_Ev,dtype=float)
+		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(self.PCA_Ev)
+		n_Ev_all = min(n,d)
+		for i in range(len(PCA_Ev_NRM)-1):
+			PCA_Ev_NRM[i] -= (np.sum(self.PCA_Ev[i+1:])+PCA_Ev_sum_diff)/(n_Ev_all-i-1)
+		self.PCA_Ev_NRM = PCA_Ev_NRM
+		self.ell_max = np.sum(self.PCA_Ev>1.0e-10)
+		self.L = np.diag(np.sqrt(self.PCA_Ev_NRM[:self.ell_max]/self.PCA_Ev[:self.ell_max]))
+		self.X = X
+		self.X_mean = np.mean(X,axis=0)
+		self.PCA_Ev_sum_all = PCA_Ev_sum_all
+	
+	def _noise_reduct_param(
+		self,
+		delta = 0.05
+	):
+		comp = max(np.sum(self.PCA_Ev_NRM>delta*self.PCA_Ev_NRM[0]),3)
+		self.ell = min(self.ell_max,comp)
+		self.X_RECODE = _noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
+		return self.X_RECODE
+		
+	def _noise_reductor(self,X,L,U,Xmean,ell):
+		U_ell = U[:ell,:]
+		L_ell = L[:ell,:ell]
+		return np.dot(np.dot(np.dot(X-Xmean,U_ell.T),L_ell),U_ell)+Xmean
+	
+	def noise_reduct_noise_var(
+		self,
+		noise_var = 1,
+		ell_min = 3
+	):
+		PCA_Ev_sum_diff = self.PCA_Ev_sum_all - np.sum(self.PCA_Ev)
+		PCA_Ev_sum = np.array([np.sum(self.PCA_Ev[i:]) for i in range(self.n_pca)])+PCA_Ev_sum_diff
+		d_act = sum(np.var(self.X,axis=0)>0)
+		X_var  = np.var(self.X,axis=0)
+		dim = np.sum(X_var>0)
+		thrshold = (dim-np.arange(self.n_pca))*noise_var
+		comp = np.sum(PCA_Ev_sum-thrshold>0)
+		self.ell = max(min(self.ell_max,comp),ell_min)
+		X_RECODE = self._noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
+		return X_RECODE
+	
+	def noise_var_est(
+		self,
+		X,
+		cut_low_exp=1.0e-10
+	):
+		n,d = X.shape
+		X_var = np.var(X,axis=0)
+		idx_var_p = np.where(X_var>cut_low_exp)[0]
+		X_var_sub = X_var[idx_var_p]
+		X_var_min = np.min(X_var_sub)-1.0e-10
+		X_var_max = np.max(X_var_sub)+1.0e-10
+		X_var_range = X_var_max-X_var_min
+		
+		div_max = 1000
+		num_div_max = int(min(0.1*d,div_max))
+		error = np.empty(num_div_max)
+		for i in range(num_div_max):
+				num_div = i+1
+				delta = X_var_range/num_div
+				k = np.empty([num_div],dtype=int)
+				for j in range(num_div):
+					div_min = j*delta+X_var_min
+					div_max = (j+1)*delta+X_var_min
+					k[j] = len(np.where((X_var_sub<div_max) & (X_var_sub>div_min))[0])
+				error[i] = (2*np.mean(k)-np.var(k))/delta/delta
+		
+		opt_div = int(np.argmin(error)+1)
+
+		k = np.empty([opt_div],dtype=int)
+		k_index = np.empty([opt_div],dtype=list)
+		delta = X_var_range/opt_div
+		for j in range(opt_div):
+				div_min = j*delta+X_var_min
+				div_max = (j+1)*delta+X_var_min
+				k[j] = len(np.where((X_var_sub<=div_max) & (X_var_sub>div_min))[0])
+		idx_k_max = np.argmax(k)
+		div_min = idx_k_max*delta+X_var_min
+		div_max = (idx_k_max+1)*delta+X_var_min
+		idx_set_k_max = np.where((X_var_sub<div_max) & (X_var_sub>div_min))[0]
+		var = np.mean(X_var_sub[idx_set_k_max])
+		return var
+	
+	def fit_transform(self,X):
+		"""
+		Apply RECODE to X.
+
+		Parameters
+		----------
+		X : array-like of shape (n_samples, n_features)
+			Training data matrix, where `n_samples` is the number of samples
+			and `n_features` is the number of features.
+
+		Returns
+		-------
+		X_new : ndarray of shape (n_samples, n_components)
+			Denoised data matrix.
+		"""
+		self.fit(X)
+		if self.param_estimate:
+			noise_var = recode_tools.noise_var_est(X)
+		else:
+			noise_var = 1
+		return self.noise_reduct_noise_var(noise_var)
+	
+
