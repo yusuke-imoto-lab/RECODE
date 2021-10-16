@@ -459,8 +459,8 @@ class RECODE():
 		Parameters
 		----------
 		solver : {'variance','manual'}
-		If 'variance', regular variance-based algorithm. 
-		If 'manual', parameter ell, which identifies essential and noise parts in the PCA space, is manually set. The manual parameter is given by ``ell_manual``. 
+			If 'variance', regular variance-based algorithm. 
+			If 'manual', parameter ell, which identifies essential and noise parts in the PCA space, is manually set. The manual parameter is given by ``ell_manual``. 
 		
 		variance_estimate : boolean, default=True
 			If True and ``solver='variance'``, the parameter estimation method will be conducted. 
@@ -470,7 +470,6 @@ class RECODE():
 		
 		fast_algorithm_ell_max : int, default=1000
 			Upper bound of parameter ell for the fast algorithm. Must be of range [1, infinity).
-		
 		
 		ell_manual : int, default=10
 			Manual parameter computed by ``solver='ell'``. Must be of range [1, infinity).
