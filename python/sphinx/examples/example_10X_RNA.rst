@@ -29,7 +29,7 @@ Apply scRECODE.
 .. code-block:: python
 
 	recode = screcode.scRECODE()
-	data_scRECODE = recode.fit_transform(adata.X.toarray())
+	data_scRECODE = recode.fit_transform(anndata.X.toarray())
 
 .. parsed-literal::
 
@@ -43,9 +43,9 @@ Write the denoised data as HDF5 file.
 
 	adata_scRECODE = adata.copy()
 	adata_scRECODE.X = scipy.sparse.csc_matrix(data_scRECODE)
-	adata_scRECODE.var['noise_variance'] = screc.noise_variance_
-	adata_scRECODE.var['normalized_variance'] = screc.normalized_variance_
-	adata_scRECODE.var['significance'] = screc.significance_
+	adata_scRECODE.var['noise_variance'] = recode.noise_variance_
+	adata_scRECODE.var['normalized_variance'] = recode.normalized_variance_
+	adata_scRECODE.var['significance'] = recode.significance_
 	adata_scRECODE.var_names_make_unique()
 	output_filename = '10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix_scRECODE.h5'
 	adata_scRECODE.write(output_filename)
