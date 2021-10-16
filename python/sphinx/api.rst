@@ -4,7 +4,7 @@ API
 scRECODE
 -----
 
-.. automodule:: screcode.scRECODE
+.. automodule:: screcode.screcode
     :members:
     :inherited-members:
     :show-inheritance:
