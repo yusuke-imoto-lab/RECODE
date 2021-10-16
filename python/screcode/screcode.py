@@ -23,12 +23,13 @@ class scRECODE():
 		Parameters
 		----------
 		fast_algorithm : boolean, default=True
-			fast_algorithm algorism
+			If True, the fast algorithm is conducted. The upper bound of parameter ell is set in ``fast_algorithm_ell_max``.
 		
 		fast_algorithm_ell_max : int, default=1000
+			Upper bound of parameter ell for the fast algorithm. Must be of range [1, infinity).
 		
 		seq_target : {'RNA','ATAC'}, default='RNA'
-			Sequencing target. If 'ATAC', the preprocessing (odd-even normalization) is conducted before general algorithm. 
+			Sequencing target. If 'ATAC', the preprocessing (odd-even normalization) is conducted before the general algorithm. 
 		
 		verbose : boolean, default=True
 			If False, all running messages are not displayed. 
@@ -43,12 +44,15 @@ class scRECODE():
 		
 		significance_ : ndarray of shape (n_features,)
 			Significance (significant/non-significant/silent) of features (genes/peaks).
+			
+		log_ : dict
+			Running log.
 		"""
 		self.fast_algorithm = fast_algorithm
 		self.fast_algorithm_ell_max = fast_algorithm_ell_max
 		self.seq_target = seq_target
 		self.verbose = verbose
-		self.log = {}
+		self.log_ = {}
 		self.unit = 'genes'
 		if seq_target == 'ATAC':
 			self.unit = 'peaks'
@@ -80,9 +84,9 @@ class scRECODE():
 		self.X_norm_var = np.var(X_norm,axis=0)
 		self.idx_sig = self.X_norm_var > 1
 		self.idx_nonsig = self.idx_sig==False
-		self.log['#significant %s' % self.unit] = sum(self.idx_sig)
-		self.log['#non-significant %s' % self.unit] = sum(self.idx_nonsig)
-		self.log['#silent %s' % self.unit] = X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig)
+		self.log_['#significant %s' % self.unit] = sum(self.idx_sig)
+		self.log_['#non-significant %s' % self.unit] = sum(self.idx_nonsig)
+		self.log_['#silent %s' % self.unit] = X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig)
 		return X_norm
 	
 	def _inv_noise_variance_stabilizing_normalization(
@@ -114,7 +118,7 @@ class scRECODE():
 		
 		Returns
 		-------
-		X_new : ndarray of shape (n_samples, n_components)
+		X_new : ndarray of shape (n_samples, n_features)
 			Preprecessed data matrix.
 		"""
 		X_new = np.array((X+1)/2,dtype=int)
@@ -144,14 +148,14 @@ class scRECODE():
 
 		Returns
 		-------
-		X_new : ndarray of shape (n_samples, n_components)
+		X_new : ndarray of shape (n_samples, n_features)
 			Denoised data matrix.
 		"""
 		start = time.time()
 		if self.verbose:
 			print('start scRECODE for sc%s-seq' % self.seq_target)
 		self.fit(X)
-		self.log['seq_target'] = self.seq_target
+		self.log_['seq_target'] = self.seq_target
 		if self.seq_target == 'ATAC':
 			self.X_temp = self._ATAC_preprocessing(self.X_temp)
 		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
@@ -161,13 +165,13 @@ class scRECODE():
 		X_scRECODE[:,self.idx_gene] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
 		X_scRECODE = np.where(X_scRECODE>0,X_scRECODE,0)
 		elapsed_time = time.time() - start
-		self.log['#silent %s' % self.unit] = sum(np.sum(X,axis=0)==0)
-		self.log['ell'] = recode_.ell
-		self.log['Elapsed_time'] = "{0}".format(np.round(elapsed_time,decimals=4
+		self.log_['#silent %s' % self.unit] = sum(np.sum(X,axis=0)==0)
+		self.log_['ell'] = recode_.ell
+		self.log_['Elapsed_time'] = "{0}".format(np.round(elapsed_time,decimals=4
 		)) + "[sec]"
 		if self.verbose:
 			print('end scRECODE for sc%s-seq' % self.seq_target)
-			print('log:',self.log)
+			print('log:',self.log_)
 		if recode_.ell == self.fast_algorithm_ell_max:
 			warnings.warn("Acceleration error: the ell value may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_max.\n"
 			"Ex. X_new = screcode.scRECODE(fast_algorithm=False).fit_transform(X)")
@@ -242,9 +246,9 @@ class scRECODE():
 				applicability = '(C) Inapplicabile'
 				backcolor = 'tomato'
 		ax0.text(0.99, 0.982,applicability,va='top',ha='right', transform=ax0.transAxes,fontsize=14,backgroundcolor=backcolor)
-		self.log['Applicability'] = applicability
-		self.log['Rate of 0 < normalized variance < 0.9'] = "{:.0%}".format(rate_low_var)
-		self.log['Peak density of normalized variance'] = 10**peak_val
+		self.log_['Applicability'] = applicability
+		self.log_['Rate of 0 < normalized variance < 0.9'] = "{:.0%}".format(rate_low_var)
+		self.log_['Peak density of normalized variance'] = 10**peak_val
 		if self.verbose:
 			print('applicabity:',applicability)
 		if save:

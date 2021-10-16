@@ -105,7 +105,7 @@ Check the log.
 
 .. code-block:: python
 
-	recode.log
+	recode.log_
 	
 
 .. parsed-literal::

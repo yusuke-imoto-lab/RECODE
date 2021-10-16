@@ -94,16 +94,17 @@ Check the log.
 
 .. code-block:: python
 
-	recode.log
+	recode.log_
 	
 
 .. parsed-literal::
 
-	{'#significant genes': 15789,
+	{'seq_target': 'RNA',
+	 '#significant genes': 15789,
 	 '#non-significant genes': 9322,
-	 '#silent genes': 11490,
+	 '#silent genes': 0,
 	 'ell': 165,
-	 'Elapsed_time': '56.8615[sec]',
+	 'Elapsed_time': '53.9133[sec]',
 	 'Applicability': '(A) Strong applicable',
 	 'Rate of 0 < normalized variance < 0.9': '0%',
 	 'Peak density of normalized variance': 1.016056101497848}
