@@ -36,6 +36,7 @@ To use scRECODE, import ``screcode``.
 	
 	examples/index
 	screcode
+	api
 
 
 

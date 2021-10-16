@@ -3,7 +3,7 @@ scATAC-seq data - 10X chromium HDF5 file
 
 We show an exmaple for scATAC-seq data produced by 10X Chromium. 
 We use sample `5k Peripheral blood mononuclear cells (PBMCs) from a healthy donor (Next GEM v1.1)` (4,623 cells and 135,377 peaks) in `10X Genomics Datasets <https://www.10xgenomics.com/jp/resources/datasets>`_.  
-The test data is directly avairable from `Feature / cell matrix HDF5 (filtered)` in `here <https://www.10xgenomics.com/jp/resources/datasets/5-k-peripheral-blood-mononuclear-cells-pbm-cs-from-a-healthy-donor-next-gem-v-1-1-1-1-standard-2-0-0>`_ (need register).
+The test data is directly avairable from `Feature / cell matrix HDF5 (filtered)` in `here <https://www.10xgenomics.com/jp/resources/datasets/5-k-peripheral-blood-mononuclear-cells-pbm-cs-from-a-healthy-donor-next-gem-v-1-1-1-1-standard-2-0-0>`_ (registration required).
 
 
 We use `scanpy <https://scanpy.readthedocs.io/en/stable/>`_ to read/write 10X HDF5 file (\*\*\*.h5). 
