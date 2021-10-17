@@ -125,7 +125,7 @@ Show the gene rank based on the CV (detection rate>1%).
 .. code-block:: python
 	 
 	import pandas as pd
-n_show_genes = 10
+	n_show_genes = 10
 	detection_rate_ = np.sum(np.where(adata.X.toarray()>0,1,0),axis=0)/adata.shape[0]
 	idx_dr = detection_rate_>0.01
 	idx_rank = np.argsort(recode.cv_[idx_dr])[::-1]

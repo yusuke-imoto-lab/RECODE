@@ -132,17 +132,21 @@ Check the log.
 	 'Peak density of normalized variance': 1.0792379955790716}
 
 
-Show the peak rank given by the normalizedd variance. 
+Show the peak rank based on the CV (detection rate>1%). 
 
 .. code-block:: python
 	 
 	import pandas as pd
 	n_show_peaks = 10
-	idx = np.argsort(recode.normalized_variance_)[::-1]
-	peakrank = pd.DataFrame({'peak':adata.var.index[idx],
-                         'normalized_variance':recode.normalized_variance_[idx],
-                         'significance':recode.significance_[idx]},
-                        index=np.arange(len(adata.var.index))+1)
+	detection_rate_ = np.sum(np.where(adata.X.toarray()>0,1,0),axis=0)/adata.shape[0]
+	idx_dr = detection_rate_>0.01
+	idx_rank = np.argsort(recode.cv_[idx_dr])[::-1]
+	peakrank = pd.DataFrame({'peak':adata.var.index[idx_dr][idx_rank],
+		                       'cv':recode.cv_[idx_dr][idx_rank],
+		                       'normalized_variance':recode.normalized_variance_[idx_dr][idx_rank],
+		                       'detection_rate':detection_rate_[idx_dr][idx_rank],
+		                       'significance':recode.significance_[idx_dr][idx_rank]},
+		                      index=np.arange(len(adata.var.index[idx_dr]))+1)
 	peakrank.head(n_show_peaks)
 	 
 .. raw:: html
@@ -166,69 +170,91 @@ Show the peak rank given by the normalizedd variance.
 		  <tr style="text-align: right;">
 		    <th></th>
 		    <th>peak</th>
+		    <th>cv</th>
 		    <th>normalized_variance</th>
+		    <th>detection_rate</th>
 		    <th>significance</th>
 		  </tr>
 		</thead>
 		<tbody>
 		  <tr>
 		    <th>1</th>
-		    <td>chr20:31068119-31068872</td>
-		    <td>6.488490</td>
+		    <td>chr12:56537100-56538049</td>
+		    <td>22.385567</td>
+		    <td>1.950203</td>
+		    <td>0.012330</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>2</th>
-		    <td>chr5:83895220-83895950</td>
-		    <td>5.754496</td>
+		    <td>chr5:172085397-172086190</td>
+		    <td>21.785703</td>
+		    <td>1.925941</td>
+		    <td>0.013628</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>3</th>
-		    <td>chr10:41881633-41882455</td>
-		    <td>5.089045</td>
+		    <td>chr5:142849473-142850355</td>
+		    <td>20.746717</td>
+		    <td>1.912967</td>
+		    <td>0.013195</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>4</th>
-		    <td>chr5:31478538-31479431</td>
-		    <td>4.973308</td>
+		    <td>chr15:65211823-65212691</td>
+		    <td>19.731178</td>
+		    <td>1.941612</td>
+		    <td>0.013628</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>5</th>
-		    <td>chr10:41883775-41884723</td>
-		    <td>4.766570</td>
+		    <td>chr12:55983356-55984183</td>
+		    <td>19.309734</td>
+		    <td>2.739442</td>
+		    <td>0.021847</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>6</th>
-		    <td>chr9:124295107-124295857</td>
-		    <td>4.766049</td>
+		    <td>chr8:145026449-145027358</td>
+		    <td>18.900971</td>
+		    <td>1.880035</td>
+		    <td>0.016223</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>7</th>
-		    <td>chr8:46848825-46849745</td>
-		    <td>4.641542</td>
+		    <td>chr6:146878018-146878580</td>
+		    <td>18.015273</td>
+		    <td>1.003125</td>
+		    <td>0.010599</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>8</th>
-		    <td>chrX:17792533-17793425</td>
-		    <td>4.278866</td>
+		    <td>chrX:23844287-23845208</td>
+		    <td>17.899955</td>
+		    <td>2.794661</td>
+		    <td>0.024876</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>9</th>
-		    <td>chr9:130958244-130959166</td>
-		    <td>4.240672</td>
+		    <td>chr3:184305351-184306241</td>
+		    <td>17.598467</td>
+		    <td>1.009926</td>
+		    <td>0.010383</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>10</th>
-		    <td>chr15:71199198-71200118</td>
-		    <td>4.166023</td>
+		    <td>chr12:56288643-56289492</td>
+		    <td>17.502620</td>
+		    <td>1.026666</td>
+		    <td>0.010167</td>
 		    <td>significant</td>
 		  </tr>
 		</tbody>
