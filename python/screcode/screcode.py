@@ -67,8 +67,7 @@ class scRECODE():
 		Parameters
 		----------
 		X : array-like of shape (n_samples, n_features)
-			Training data matrix, where `n_samples` is the number of samples
-			and `n_features` is the number of features.
+			Data matrix
 		"""
 		## scaled X
 		X_nUMI = np.sum(X,axis=1)
@@ -99,8 +98,7 @@ class scRECODE():
 		Parameters
 		----------
 		X : array-like of shape (n_samples, n_features)
-			Training data matrix, where `n_samples` is the number of samples
-			and `n_features` is the number of features.
+			Data matrix
 		"""
 		X_norm_inv_temp = X*np.sqrt(self.noise_var)+self.X_scaled_mean
 		X_norm_inv = (X_norm_inv_temp.T*self.X_nUMI).T
@@ -113,8 +111,7 @@ class scRECODE():
 		Parameters
 		----------
 		X : array-like of shape (n_samples, n_features)
-			Training data matrix, where `n_samples` is the number of samples
-			and `n_features` is the number of features.
+			Data matrix (scATAC-seq data)
 		
 		Returns
 		-------
@@ -131,6 +128,8 @@ class scRECODE():
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features).
+			single-cell sequencing data matrix (row:cell, culumn:gene/peak).
+
 		"""
 		self.X = X
 		self.idx_gene = np.sum(X,axis=0) > 0
@@ -143,8 +142,7 @@ class scRECODE():
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features)
-			single-cell sequencing data matrix, where ``n_samples`` is the number of samples
-			and ``n_features`` is the number of features (genes/peaks).
+			single-cell sequencing data matrix (row:cell, culumn:gene/peak).
 
 		Returns
 		-------
@@ -188,17 +186,40 @@ class scRECODE():
 		
 	def check_applicability(
 		self,
-		title='',
-		figsize=(10,5),
+		title = '',
+		figsize 2-tuple of floats, =(10,5),
 		ps = 10,
 		save = False,
 		save_filename = 'check_applicability',
 		save_format = 'png',
-		dpi=None
+		dpi = None
 	):
 		"""
 		Check applicability of scRECODE. 
 		Before using this function, you have to conduct ``fit(X)`` or ``fit_transform(X)`` for the target data matrix ``X``. 
+		
+		Parameters
+		----------
+		title : str, default=''
+			Figure title.
+		
+		figsize : 2-tuple of floats, default=(10,5)
+			Figure dimension ``(width, height)`` in inches.
+		
+		ps : float, default=10,
+			Point size. 
+		
+		save : bool, default=False
+			If True, save the figure. 
+		
+		save_filename : str, default= 'check_applicability',
+			File name (path) of save figure. 
+		
+		save_format : {'png', 'pdf', 'svg'}, default= 'png',
+			File format of save figure. 
+		
+		dpi: float or None, default=None
+			Dots per inch.
 		"""
 		X_scaled =(self.X_temp.T/np.sum(self.X_temp,axis=1)).T
 		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
@@ -260,7 +281,7 @@ class scRECODE():
 		title='',
 		figsize=(7,5),
 		ps = 10,
-		size_factor='median',
+		size_factor = 'median',
 		save = False,
 		save_filename = 'plot_mean_variance',
 		save_format = 'png',
@@ -268,6 +289,32 @@ class scRECODE():
 	):
 		"""
 		Plot mean vs variance of features for log-normalized data
+		
+		Parameters
+		----------
+		title : str, default=''
+			Figure title.
+		
+		figsize : 2-tuple of floats, default=(7,5)
+			Figure dimension ``(width, height)`` in inches.
+		
+		ps : float, default=10,
+			Point size. 
+		
+		size_factor : float or {'median','mean'}, default='median',
+			Size factor (total count constant of each cell before the log-normalization). 
+		
+		save : bool, default=False
+			If True, save the figure. 
+		
+		save_filename : str, default= 'check_applicability',
+			File name (path) of save figure. 
+		
+		save_format : {'png', 'pdf', 'svg'}, default= 'png',
+			File format of save figure. 
+		
+		dpi: float or None, default=None
+			Dots per inch.
 		"""
 		if size_factor=='median':
 			size_factor = np.median(np.sum(self.X,axis=1))
@@ -324,6 +371,29 @@ class scRECODE():
 	):
 		"""
 		Plot noise variance for each features.
+		
+		Parameters
+		----------
+		title : str, default=''
+			Figure title.
+		
+		figsize : 2-tuple of floats, default=(7,5)
+			Figure dimension ``(width, height)`` in inches.
+		
+		ps : float, default=10,
+			Point size. 
+		
+		save : bool, default=False
+			If True, save the figure. 
+		
+		save_filename : str, default= 'noise_variance',
+			File name (path) of save figure. 
+		
+		save_format : {'png', 'pdf', 'svg'}, default= 'png',
+			File format of save figure. 
+		
+		dpi: float or None, default=None
+			Dots per inch.
 		"""
 		ps = 1
 		fs_title = 16
@@ -362,6 +432,29 @@ class scRECODE():
 	):
 		"""
 		Plot the transformed data by the noise variance-srabilizing normalization.
+		
+		Parameters
+		----------
+		title : str, default=''
+			Figure title.
+		
+		figsize : 2-tuple of floats, default=(7,5)
+			Figure dimension ``(width, height)`` in inches.
+		
+		ps : float, default=10,
+			Point size. 
+		
+		save : bool, default=False
+			If True, save the figure. 
+		
+		save_filename : str, default= 'noise_variance',
+			File name (path) of save figure. 
+		
+		save_format : {'png', 'pdf', 'svg'}, default= 'png',
+			File format of save figure. 
+		
+		dpi: float or None, default=None
+			Dots per inch.
 		"""
 		ps = 1
 		fs_title = 16
@@ -399,6 +492,29 @@ class scRECODE():
 	):
 		"""
 		Plot the number of values in scATAC-seq data matrix with and without preprocessing (odd-even normalization).
+		
+		Parameters
+		----------
+		title : str, default=''
+			Figure title.
+		
+		figsize : 2-tuple of floats, default=(7,5)
+			Figure dimension ``(width, height)`` in inches.
+		
+		ps : float, default=10,
+			Point size. 
+		
+		save : bool, default=False
+			If True, save the figure. 
+		
+		save_filename : str, default= 'plot_ATAC_preprocessing',
+			File name (path) of save figure. 
+		
+		save_format : {'png', 'pdf', 'svg'}, default= 'png',
+			File format of save figure. 
+		
+		dpi: float or None, default=None
+			Dots per inch.
 		"""
 		if self.seq_target != 'ATAC':
 			warnings.warn("Error: plot_ATAC_preprocessing is an option of scATAC-seq data")
