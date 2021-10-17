@@ -24,10 +24,10 @@ class scRECODE():
 		Parameters
 		----------
 		fast_algorithm : boolean, default=True
-			If True, the fast algorithm is conducted. The upper bound of parameter ell is set in ``fast_algorithm_ell_max``.
+			If True, the fast algorithm is conducted. The upper bound of parameter :math:`ell` is set in ``fast_algorithm_ell_max``.
 		
 		fast_algorithm_ell_max : int, default=1000
-			Upper bound of parameter ell for the fast algorithm. Must be of range [1, infinity).
+			Upper bound of parameter :math:`ell` for the fast algorithm. Must be of range [1, infinity).
 		
 		seq_target : {'RNA','ATAC'}, default='RNA'
 			Sequencing target. If 'ATAC', the preprocessing (odd-even normalization) is conducted before the general algorithm. 
@@ -175,7 +175,7 @@ class scRECODE():
 			print('end scRECODE for sc%s-seq' % self.seq_target)
 			print('log:',self.log_)
 		if recode_.ell == self.fast_algorithm_ell_max:
-			warnings.warn("Acceleration error: the ell value may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_max.\n"
+			warnings.warn("Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_max.\n"
 			"Ex. X_new = screcode.scRECODE(fast_algorithm=False).fit_transform(X)")
 		self.X_scRECODE = X_scRECODE
 		self.noise_variance_ = np.zeros(X.shape[1],dtype=float)
@@ -695,10 +695,10 @@ class RECODE():
 			If True and ``solver='variance'``, the parameter estimation method will be conducted. 
 		
 		fast_algorithm : boolean, default=True
-			If True, the fast algorithm is conducted. The upper bound of parameter ell is set in ``fast_algorithm_ell_max``.
+			If True, the fast algorithm is conducted. The upper bound of parameter :math:`ell` is set in ``fast_algorithm_ell_max``.
 		
 		fast_algorithm_ell_max : int, default=1000
-			Upper bound of parameter ell for the fast algorithm. Must be of range [1, infinity).
+			Upper bound of parameter :math:`ell` for the fast algorithm. Must be of range [1, infinity).
 		
 		ell_manual : int, default=10
 			Manual parameter computed by ``solver='ell'``. Must be of range [1, infinity).
