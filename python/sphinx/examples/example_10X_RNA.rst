@@ -120,17 +120,21 @@ Check the log.
 	 'Peak density of normalized variance': 1.016056101497848}
 
 
-Show the gene rank given by the normalizedd variance. 
+Show the gene rank based on the CV (detection rate>1%). 
 
 .. code-block:: python
 	 
 	import pandas as pd
-	n_show_genes = 10
-	idx = np.argsort(recode.normalized_variance_)[::-1]
-	generank = pd.DataFrame({'gene':adata.var.index[idx],
-                         'normalized_variance':recode.normalized_variance_[idx],
-                         'significance':recode.significance_[idx]},
-                        index=np.arange(len(adata.var.index))+1)
+n_show_genes = 10
+	detection_rate_ = np.sum(np.where(adata.X.toarray()>0,1,0),axis=0)/adata.shape[0]
+	idx_dr = detection_rate_>0.01
+	idx_rank = np.argsort(recode.cv_[idx_dr])[::-1]
+	generank = pd.DataFrame({'gene':adata.var.index[idx_dr][idx_rank],
+		                       'cv':recode.cv_[idx_dr][idx_rank],
+		                       'normalized_variance':recode.normalized_variance_[idx_dr][idx_rank],
+		                       'detection_rate':detection_rate_[idx_dr][idx_rank],
+		                       'significance':recode.significance_[idx_dr][idx_rank]},
+		                      index=np.arange(len(adata.var.index[idx_dr]))+1)
 	generank.head(n_show_genes)
 	 
 .. raw:: html
@@ -154,69 +158,91 @@ Show the gene rank given by the normalizedd variance.
 		  <tr style="text-align: right;">
 		    <th></th>
 		    <th>gene</th>
+		    <th>cv</th>
 		    <th>normalized_variance</th>
+		    <th>detection_rate</th>
 		    <th>significance</th>
 		  </tr>
 		</thead>
 		<tbody>
 		  <tr>
 		    <th>1</th>
-		    <td>IGKC</td>
-		    <td>476.251373</td>
+		    <td>IGHG1</td>
+		    <td>31.339773</td>
+		    <td>209.024307</td>
+		    <td>0.024118</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>2</th>
-		    <td>IGLC3</td>
-		    <td>337.377136</td>
+		    <td>IGHG2</td>
+		    <td>30.394784</td>
+		    <td>123.463943</td>
+		    <td>0.016195</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>3</th>
 		    <td>IGHA1</td>
+		    <td>23.738953</td>
 		    <td>315.810333</td>
+		    <td>0.053548</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>4</th>
-		    <td>IGLC2</td>
-		    <td>250.899536</td>
+		    <td>IGLC3</td>
+		    <td>21.770362</td>
+		    <td>337.377136</td>
+		    <td>0.079843</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>5</th>
-		    <td>IGHG1</td>
-		    <td>209.024307</td>
+		    <td>IGLC1</td>
+		    <td>19.827121</td>
+		    <td>197.974701</td>
+		    <td>0.028733</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>6</th>
-		    <td>IGLC1</td>
-		    <td>197.974701</td>
+		    <td>IGHG3</td>
+		    <td>16.210985</td>
+		    <td>18.944107</td>
+		    <td>0.019939</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>7</th>
-		    <td>S100A9</td>
-		    <td>144.979065</td>
+		    <td>PPBP</td>
+		    <td>15.890957</td>
+		    <td>49.453533</td>
+		    <td>0.014541</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>8</th>
-		    <td>IGHG2</td>
-		    <td>123.463943</td>
+		    <td>IGLC2</td>
+		    <td>15.122184</td>
+		    <td>250.899536</td>
+		    <td>0.048150</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>9</th>
-		    <td>MALAT1</td>
-		    <td>98.790283</td>
+		    <td>PF4</td>
+		    <td>13.637751</td>
+		    <td>18.597492</td>
+		    <td>0.010623</td>
 		    <td>significant</td>
 		  </tr>
 		  <tr>
 		    <th>10</th>
-		    <td>S100A8</td>
-		    <td>75.027397</td>
+		    <td>GNG11</td>
+		    <td>12.970961</td>
+		    <td>9.343362</td>
+		    <td>0.012364</td>
 		    <td>significant</td>
 		  </tr>
 		</tbody>
