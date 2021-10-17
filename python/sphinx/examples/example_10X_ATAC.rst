@@ -74,6 +74,17 @@ Show scatter plots of mean vs variance before and after scRECODE.
 
 .. image:: ../image/Example_10X_ATAC_mean_var_log_scRECODE.png
 
+Show scatter plots of mean vs cv (coefficient of variation) before and after scRECODE. 	
+
+.. code-block:: python
+
+	recode.plot_mean_cv()
+
+.. image:: ../image/Example_10X_ATAC_mean_cv_Original.png
+
+.. image:: ../image/Example_10X_ATAC_mean_cv_scRECODE.png
+
+
 Show noise variance for peaks which are sorted by mean expresion level. 
 
 .. code-block:: python

@@ -373,15 +373,15 @@ class scRECODE():
 		self,
 		title='',
 		figsize=(7,5),
-		ps = 10,
+		ps = 5,
 		save = False,
 		save_filename = 'plot_mean_cv',
 		save_format = 'png',
 		dpi=None,
 		show_features = False,
 		n_show_features = 10,
+		cut_detect_rate = 0.005,
 		index = None,
-		cut_detect_rate = 0.005
 	):
 		"""
 		Plot mean vs variance of features for log-normalized data
@@ -406,8 +406,19 @@ class scRECODE():
 		save_format : {'png', 'pdf', 'svg'}, default= 'png',
 			File format of save figure. 
 		
-		dpi: float or None, default=None
+		dpi : float or None, default=None
 			Dots per inch.
+		
+		show_features : float or None, default=False,
+			If True
+		
+		n_show_features : float, default=10,
+		
+		cut_detect_rate : float, default=0.005,
+		
+		index : array-like of shape (n_features,) or None, default=None,
+			
+		
 		"""
 		X_ss = (np.median(np.sum(self.X[:,self.idx_gene],axis=1))*self.X[:,self.idx_gene].T/np.sum(self.X[:,self.idx_gene],axis=1)).T
 		fig,ax0 = plt.subplots(figsize=figsize)
@@ -444,8 +455,8 @@ class scRECODE():
 			detect_rate = np.sum(np.where(self.X>0,1,0),axis=0)[self.idx_gene]/self.X.shape[0]
 			idx_detect_rate_n = detect_rate <= cut_detect_rate
 			idx_detect_rate_p = detect_rate >  cut_detect_rate
-			ax1.scatter(x[idx_detect_rate_n],cv[idx_detect_rate_n],color='gray',s=ps,label='detection rate <= {:.2%}'.format(cut_detect_rate))
-			ax1.scatter(x[idx_detect_rate_p],cv[idx_detect_rate_p],color='b',s=ps,label='detection rate > {:.2%}'.format(cut_detect_rate))
+			ax1.scatter(x[idx_detect_rate_n],cv[idx_detect_rate_n],color='gray',s=ps,label='detection rate <= {:.2%}'.format(cut_detect_rate),alpha=0.5)
+			ax1.scatter(x[idx_detect_rate_p],cv[idx_detect_rate_p],color='b',s=ps,label='detection rate > {:.2%}'.format(cut_detect_rate),alpha=0.5)
 			ax1.legend(loc='upper center',bbox_to_anchor=(0.5, -0.15),ncol=2,fontsize=12,markerscale=2)
 			idx_rank_cv = np.argsort(cv[idx_detect_rate_p])[::-1]
 			texts = [plt.text(x[idx_detect_rate_p][idx_rank_cv[i]],cv[idx_detect_rate_p][idx_rank_cv[i]],index[self.idx_gene][idx_detect_rate_p][idx_rank_cv[i]],color='red') for i in range(n_show_features)]
