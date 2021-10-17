@@ -37,6 +37,12 @@ class scRECODE():
 		
 		Attributes
 		----------
+		cv_ : ndarray of shape (n_features,)
+			Coefficient of variation of features (genes/peaks).
+			
+		log_ : dict
+			Running log.
+		
 		noise_variance_ : ndarray of shape (n_features,)
 			Noise variances of features (genes/peaks).
 		
@@ -45,9 +51,6 @@ class scRECODE():
 		
 		significance_ : ndarray of shape (n_features,)
 			Significance (significant/non-significant/silent) of features (genes/peaks).
-			
-		log_ : dict
-			Running log.
 		"""
 		self.fast_algorithm = fast_algorithm
 		self.fast_algorithm_ell_max = fast_algorithm_ell_max
@@ -179,6 +182,11 @@ class scRECODE():
 		self.noise_variance_[self.idx_gene] =  self.noise_var
 		self.normalized_variance_ = np.zeros(X.shape[1],dtype=float)
 		self.normalized_variance_[self.idx_gene] =  self.X_norm_var
+		
+		X_scRECODE_ss = (np.median(np.sum(X_scRECODE[:,self.idx_gene],axis=1))*X_scRECODE[:,self.idx_gene].T/np.sum(X_scRECODE[:,self.idx_gene],axis=1)).T
+		self.cv_ = np.zeros(X.shape[1],dtype=float)
+		self.cv_[self.idx_gene] =  np.std(X_scRECODE_ss,axis=0)/np.mean(X_scRECODE_ss,axis=0)
+		
 		self.significance_ = np.empty(X.shape[1],dtype=object)
 		self.significance_[self.normalized_variance_==0] = 'silent'
 		self.significance_[self.normalized_variance_>0] = 'non-significant'
@@ -440,7 +448,6 @@ class scRECODE():
 			ax1.scatter(x[idx_detect_rate_p],cv[idx_detect_rate_p],color='b',s=ps,label='detection rate > {:.2%}'.format(cut_detect_rate))
 			ax1.legend(loc='upper center',bbox_to_anchor=(0.5, -0.15),ncol=2,fontsize=12,markerscale=2)
 			idx_rank_cv = np.argsort(cv[idx_detect_rate_p])[::-1]
-			n_show_features = 10
 			texts = [plt.text(x[idx_detect_rate_p][idx_rank_cv[i]],cv[idx_detect_rate_p][idx_rank_cv[i]],index[self.idx_gene][idx_detect_rate_p][idx_rank_cv[i]],color='red') for i in range(n_show_features)]
 			adjustText.adjust_text(texts,arrowprops=dict(arrowstyle='->', color='k'))
 		else:
