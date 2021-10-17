@@ -1,3 +1,4 @@
+import adjustText
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -187,7 +188,7 @@ class scRECODE():
 	def check_applicability(
 		self,
 		title = '',
-		figsize 2-tuple of floats, =(10,5),
+		figsize=(10,5),
 		ps = 10,
 		save = False,
 		save_filename = 'check_applicability',
@@ -356,6 +357,95 @@ class scRECODE():
 		#ax1.legend(loc='upper left',borderaxespad=0,fontsize=14,markerscale=2).get_frame().set_alpha(0)
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
+		if save:
+			plt.savefig('%s_scRECODE.%s' % (save_filename,save_format),dpi=dpi)
+		plt.show()
+	
+	def plot_mean_cv(
+		self,
+		title='',
+		figsize=(7,5),
+		ps = 10,
+		save = False,
+		save_filename = 'plot_mean_cv',
+		save_format = 'png',
+		dpi=None,
+		show_features = False,
+		n_show_features = 10,
+		index = None,
+		cut_detect_rate = 0.005
+	):
+		"""
+		Plot mean vs variance of features for log-normalized data
+		
+		Parameters
+		----------
+		title : str, default=''
+			Figure title.
+		
+		figsize : 2-tuple of floats, default=(7,5)
+			Figure dimension ``(width, height)`` in inches.
+		
+		ps : float, default=10,
+			Point size. 
+		
+		save : bool, default=False
+			If True, save the figure. 
+		
+		save_filename : str, default= 'check_applicability',
+			File name (path) of save figure. 
+		
+		save_format : {'png', 'pdf', 'svg'}, default= 'png',
+			File format of save figure. 
+		
+		dpi: float or None, default=None
+			Dots per inch.
+		"""
+		X_ss = (np.median(np.sum(self.X[:,self.idx_gene],axis=1))*self.X[:,self.idx_gene].T/np.sum(self.X[:,self.idx_gene],axis=1)).T
+		fig,ax0 = plt.subplots(figsize=figsize)
+		x = np.mean(X_ss,axis=0)
+		cv = np.std(X_ss,axis=0)/np.mean(X_ss,axis=0)
+		ax0.scatter(x,cv,color='b',s=ps,zorder=2)
+		ax0.axhline(0,color='gray',ls='--',lw=2,zorder=1)
+		ax0.set_xscale('log')
+		ax0.set_xlabel('Mean',fontsize=14)
+		ax0.set_ylabel('Coefficient of variation',fontsize=14)
+		ax0.set_title('Original',fontsize=14)
+		plt.gca().spines['right'].set_visible(False)
+		plt.gca().spines['top'].set_visible(False)
+		if save:
+			plt.savefig('%s_Original.%s' % (save_filename,save_format),dpi=dpi)
+		
+		X_scRECODE_ss = (np.median(np.sum(self.X_scRECODE[:,self.idx_gene],axis=1))*self.X_scRECODE[:,self.idx_gene].T/np.sum(self.X_scRECODE[:,self.idx_gene],axis=1)).T
+		fig,ax1 = plt.subplots(figsize=figsize)
+		x = np.mean(X_scRECODE_ss,axis=0)
+		cv = np.std(X_scRECODE_ss,axis=0)/np.mean(X_scRECODE_ss,axis=0)
+		ax1.set_ylim(ax0.set_ylim())
+		ax1.axhline(0,color='gray',ls='--',lw=2,zorder=1)
+		ax1.set_xscale('log')
+		ax1.set_xlabel('Mean',fontsize=14)
+		ax1.set_ylabel('Coefficient of variation',fontsize=14)
+		ax1.set_title('scRECODE',fontsize=14)
+		plt.gca().spines['right'].set_visible(False)
+		plt.gca().spines['top'].set_visible(False)
+		
+		if show_features:
+			if len(index) != self.X.shape[1]:
+				warnings.warn("Warning: no index opotion or length of index did not fit X.shape[1]. Use feature numbers")
+				index = np.arange(self.X.shape[1])+1
+			detect_rate = np.sum(np.where(self.X>0,1,0),axis=0)[self.idx_gene]/self.X.shape[0]
+			idx_detect_rate_n = detect_rate <= cut_detect_rate
+			idx_detect_rate_p = detect_rate >  cut_detect_rate
+			ax1.scatter(x[idx_detect_rate_n],cv[idx_detect_rate_n],color='gray',s=ps,label='detection rate <= {:.2%}'.format(cut_detect_rate))
+			ax1.scatter(x[idx_detect_rate_p],cv[idx_detect_rate_p],color='b',s=ps,label='detection rate > {:.2%}'.format(cut_detect_rate))
+			ax1.legend()
+			idx_rank_cv = np.argsort(cv[idx_detect_rate_p])[::-1]
+			n_show_features = 10
+			texts = [plt.text(x[idx_detect_rate_p][idx_rank_cv[i]],cv[idx_detect_rate_p][idx_rank_cv[i]],index[self.idx_gene][idx_detect_rate_p][idx_rank_cv[i]]) for i in range(n_show_features)]
+			adjustText.adjust_text(texts,arrowprops=dict(arrowstyle='->', color='gray'))
+		else:
+			ax1.scatter(x,cv,color='b',s=ps,zorder=2)
+			
 		if save:
 			plt.savefig('%s_scRECODE.%s' % (save_filename,save_format),dpi=dpi)
 		plt.show()
@@ -561,6 +651,7 @@ class scRECODE():
 		if save:
 			plt.savefig('%s_Prepocessed.%s' % (save_filename,save_format),dpi=dpi)
 		plt.show()
+	
 
 class RECODE():
 

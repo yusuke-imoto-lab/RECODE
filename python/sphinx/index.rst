@@ -9,11 +9,12 @@ scRECODE: Resolution of Curse of Dimensionality in Single-cell Data Analysis
 
 Installation
 ====================================
-scRECODE supports Python 3.* or newer. scRECODE can be installed via pip:
+scRECODE package supports PyPI install. 
 
 .. code-block:: bash
 
  $ pip install screcode
+
 
 
 You can also install the development version of lingam package from GitHub:
