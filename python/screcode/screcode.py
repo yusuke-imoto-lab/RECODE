@@ -420,7 +420,7 @@ class scRECODE():
 		fig,ax1 = plt.subplots(figsize=figsize)
 		x = np.mean(X_scRECODE_ss,axis=0)
 		cv = np.std(X_scRECODE_ss,axis=0)/np.mean(X_scRECODE_ss,axis=0)
-		ax1.set_ylim(ax0.set_ylim())
+		#ax1.set_ylim(ax0.set_ylim())
 		ax1.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax1.set_xscale('log')
 		ax1.set_xlabel('Mean',fontsize=14)
@@ -438,11 +438,11 @@ class scRECODE():
 			idx_detect_rate_p = detect_rate >  cut_detect_rate
 			ax1.scatter(x[idx_detect_rate_n],cv[idx_detect_rate_n],color='gray',s=ps,label='detection rate <= {:.2%}'.format(cut_detect_rate))
 			ax1.scatter(x[idx_detect_rate_p],cv[idx_detect_rate_p],color='b',s=ps,label='detection rate > {:.2%}'.format(cut_detect_rate))
-			ax1.legend()
+			ax1.legend(loc='upper center',bbox_to_anchor=(0.5, -0.15),ncol=2,fontsize=12,markerscale=2)
 			idx_rank_cv = np.argsort(cv[idx_detect_rate_p])[::-1]
 			n_show_features = 10
-			texts = [plt.text(x[idx_detect_rate_p][idx_rank_cv[i]],cv[idx_detect_rate_p][idx_rank_cv[i]],index[self.idx_gene][idx_detect_rate_p][idx_rank_cv[i]]) for i in range(n_show_features)]
-			adjustText.adjust_text(texts,arrowprops=dict(arrowstyle='->', color='gray'))
+			texts = [plt.text(x[idx_detect_rate_p][idx_rank_cv[i]],cv[idx_detect_rate_p][idx_rank_cv[i]],index[self.idx_gene][idx_detect_rate_p][idx_rank_cv[i]],color='red') for i in range(n_show_features)]
+			adjustText.adjust_text(texts,arrowprops=dict(arrowstyle='->', color='k'))
 		else:
 			ax1.scatter(x,cv,color='b',s=ps,zorder=2)
 			
