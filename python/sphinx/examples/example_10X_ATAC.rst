@@ -74,7 +74,7 @@ Show scatter plots of mean vs variance before and after scRECODE.
 
 .. image:: ../image/Example_10X_ATAC_mean_var_log_scRECODE.png
 
-Show scatter plots of mean vs cv (coefficient of variation) before and after scRECODE. 	
+Show scatter plots of mean vs CV (coefficient of variation) before and after scRECODE. 	
 
 .. code-block:: python
 
@@ -142,11 +142,11 @@ Show the peak rank based on the CV (detection rate>1%).
 	idx_dr = detection_rate_>0.01
 	idx_rank = np.argsort(recode.cv_[idx_dr])[::-1]
 	peakrank = pd.DataFrame({'peak':adata.var.index[idx_dr][idx_rank],
-		                       'cv':recode.cv_[idx_dr][idx_rank],
-		                       'normalized_variance':recode.normalized_variance_[idx_dr][idx_rank],
-		                       'detection_rate':detection_rate_[idx_dr][idx_rank],
-		                       'significance':recode.significance_[idx_dr][idx_rank]},
-		                      index=np.arange(len(adata.var.index[idx_dr]))+1)
+                       'cv':recode.cv_[idx_dr][idx_rank],
+                       'normalized_variance':recode.normalized_variance_[idx_dr][idx_rank],
+                       'detection_rate':detection_rate_[idx_dr][idx_rank],
+                       'significance':recode.significance_[idx_dr][idx_rank]},
+                      index=np.arange(len(adata.var.index[idx_dr]))+1)
 	peakrank.head(n_show_peaks)
 	 
 .. raw:: html
