@@ -12,6 +12,7 @@
 #
 import os
 import sys
+
 # sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../screcode/'))
 
@@ -54,3 +55,26 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 autoclass_content = 'both'
 
+
+from sphinx.ext.autodoc import ClassDocumenter, _
+add_line = ClassDocumenter.add_line
+line_to_delete = _(u'Bases: %s') % u':class:`object`'
+
+def add_line_no_object_base(self, text, *args, **kwargs):
+    if text.strip() == line_to_delete:
+        return
+
+    add_line(self, text, *args, **kwargs)
+
+add_directive_header = ClassDocumenter.add_directive_header
+
+def add_directive_header_no_object_base(self, *args, **kwargs):
+    self.add_line = add_line_no_object_base.__get__(self)
+
+    result = add_directive_header(self, *args, **kwargs)
+
+    del self.add_line
+
+    return result
+
+ClassDocumenter.add_directive_header = add_directive_header_no_object_base
