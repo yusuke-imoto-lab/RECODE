@@ -3,6 +3,7 @@
 scRECODE
 =============
 
-.. autoclass:: scRECODE
-    :members:
-    :inherited-members:
+.. automodule:: screcode
+   :members:
+   :undoc-members:
+   :show-inheritance:
