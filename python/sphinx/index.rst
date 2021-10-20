@@ -36,7 +36,7 @@ To use scRECODE, import ``screcode``.
 	:caption: Contents:
 	
 	examples/index
-	screcode
+	reference/index
 
 
 Indices and tables
