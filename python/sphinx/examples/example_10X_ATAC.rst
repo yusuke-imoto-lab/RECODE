@@ -85,9 +85,9 @@ Show scatter plots of mean vs variance before and after scRECODE.
 
 	recode.plot_mean_variance()
 
-.. image:: ../image/Example_10X_ATAC_mean_var_log_Original.png
+.. image:: ../image/Example_10X_ATAC_mean_var_Original.png
 
-.. image:: ../image/Example_10X_ATAC_mean_var_log_scRECODE.png
+.. image:: ../image/Example_10X_ATAC_mean_var_scRECODE.png
 
 Show scatter plots of mean vs CV (coefficient of variation) before and after scRECODE. 	
 
