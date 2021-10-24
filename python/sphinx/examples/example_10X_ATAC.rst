@@ -62,7 +62,22 @@ Check applicability.
 	applicabity: (A) Strong applicable
 
 .. image:: ../image/Example_10X_ATAC_applicability.png
-	
+
+Show preprocessing of scATAC-seq data and 5 procedures of scRECODE. 
+
+.. code-block:: python
+
+	recode.plot_procedures()
+
+.. image:: ../image/Example_10X_ATAC_1_Original.png
+
+.. image:: ../image/Example_10X_ATAC_2_Normalized.png
+
+.. image:: ../image/Example_10X_ATAC_3_Projected.png
+
+.. image:: ../image/Example_10X_ATAC_4_Variance-modified.png
+
+.. image:: ../image/Example_10X_ATAC_5_Denoised.png
 
 Show scatter plots of mean vs variance before and after scRECODE. 	
 
@@ -84,33 +99,6 @@ Show scatter plots of mean vs CV (coefficient of variation) before and after scR
 
 .. image:: ../image/Example_10X_ATAC_mean_cv_scRECODE.png
 
-
-Show noise variance for peaks which are sorted by mean expresion level. 
-
-.. code-block:: python
-
-	recode.plot_noise_variance()
-
-.. image:: ../image/Example_10X_ATAC_noise_variance.png
-
-Show the variance after noise-variance-stabilizing normalization. 
-
-.. code-block:: python
-
-	recode.plot_normalization()
-
-.. image:: ../image/Example_10X_ATAC_noise_normalization.png
-
-
-Show the number of values in scATAC-seq data matrix before and after preprocessing (odd-even normalization). 	
-
-.. code-block:: python
-
-	recode.plot_ATAC_preprocessing()
-
-.. image:: ../image/Example_10X_ATAC_preprocessing_Original.png
-
-.. image:: ../image/Example_10X_ATAC_preprocessing_Prepocessed.png
 
 Check the log. 
 

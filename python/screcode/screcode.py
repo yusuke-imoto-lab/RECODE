@@ -57,9 +57,11 @@ class scRECODE():
 		self.seq_target = seq_target
 		self.verbose = verbose
 		self.log_ = {}
-		self.unit = 'genes'
+		self.unit = 'gene'
+		self.Unit = 'Gene'
 		if seq_target == 'ATAC':
-			self.unit = 'peaks'
+			self.unit = 'peak'
+			self.Unit = 'Peak'
 
 	def _noise_variance_stabilizing_normalization(
 		self,
@@ -87,9 +89,9 @@ class scRECODE():
 		self.X_norm_var = np.var(X_norm,axis=0)
 		self.idx_sig = self.X_norm_var > 1
 		self.idx_nonsig = self.idx_sig==False
-		self.log_['#significant %s' % self.unit] = sum(self.idx_sig)
-		self.log_['#non-significant %s' % self.unit] = sum(self.idx_nonsig)
-		self.log_['#silent %s' % self.unit] = X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig)
+		self.log_['#significant %ss' % self.unit] = sum(self.idx_sig)
+		self.log_['#non-significant %ss' % self.unit] = sum(self.idx_nonsig)
+		self.log_['#silent %ss' % self.unit] = X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig)
 		return X_norm
 	
 	def _inv_noise_variance_stabilizing_normalization(
@@ -136,8 +138,10 @@ class scRECODE():
 
 		"""
 		self.X = X
-		self.idx_gene = np.sum(X,axis=0) > 0
-		self.X_temp = X[:,self.idx_gene]
+		self.idx_nonsilent = np.sum(X,axis=0) > 0
+		self.X_temp = X[:,self.idx_nonsilent]
+		if self.seq_target == 'ATAC':
+			self.X_temp = self._ATAC_preprocessing(self.X_temp)
 
 	def fit_transform(self,X):
 		"""
@@ -158,17 +162,15 @@ class scRECODE():
 			print('start scRECODE for sc%s-seq' % self.seq_target)
 		self.fit(X)
 		self.log_['seq_target'] = self.seq_target
-		if self.seq_target == 'ATAC':
-			self.X_temp = self._ATAC_preprocessing(self.X_temp)
 		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
 		recode_ = RECODE(variance_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_max=self.fast_algorithm_ell_max)
 		X_norm_RECODE = recode_.fit_transform(X_norm)
 		X_scRECODE = np.zeros(X.shape,dtype=float)
-		X_scRECODE[:,self.idx_gene] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
+		X_scRECODE[:,self.idx_nonsilent] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
 		X_scRECODE = np.where(X_scRECODE>0,X_scRECODE,0)
 		elapsed_time = time.time() - start
 		self.recode_ = recode_
-		self.log_['#silent %s' % self.unit] = sum(np.sum(X,axis=0)==0)
+		self.log_['#silent %ss' % self.unit] = sum(np.sum(X,axis=0)==0)
 		self.log_['ell'] = recode_.ell
 		self.log_['Elapsed_time'] = "{0}".format(np.round(elapsed_time,decimals=4
 		)) + "[sec]"
@@ -180,13 +182,13 @@ class scRECODE():
 			"Ex. X_new = screcode.scRECODE(fast_algorithm=False).fit_transform(X)")
 		self.X_scRECODE = X_scRECODE
 		self.noise_variance_ = np.zeros(X.shape[1],dtype=float)
-		self.noise_variance_[self.idx_gene] =  self.noise_var
+		self.noise_variance_[self.idx_nonsilent] =  self.noise_var
 		self.normalized_variance_ = np.zeros(X.shape[1],dtype=float)
-		self.normalized_variance_[self.idx_gene] =  self.X_norm_var
+		self.normalized_variance_[self.idx_nonsilent] =  self.X_norm_var
 		
-		X_scRECODE_ss = (np.median(np.sum(X_scRECODE[:,self.idx_gene],axis=1))*X_scRECODE[:,self.idx_gene].T/np.sum(X_scRECODE[:,self.idx_gene],axis=1)).T
+		X_scRECODE_ss = (np.median(np.sum(X_scRECODE[:,self.idx_nonsilent],axis=1))*X_scRECODE[:,self.idx_nonsilent].T/np.sum(X_scRECODE[:,self.idx_nonsilent],axis=1)).T
 		self.cv_ = np.zeros(X.shape[1],dtype=float)
-		self.cv_[self.idx_gene] =  np.std(X_scRECODE_ss,axis=0)/np.mean(X_scRECODE_ss,axis=0)
+		self.cv_[self.idx_nonsilent] =  np.std(X_scRECODE_ss,axis=0)/np.mean(X_scRECODE_ss,axis=0)
 		
 		self.significance_ = np.empty(X.shape[1],dtype=object)
 		self.significance_[self.normalized_variance_==0] = 'silent'
@@ -289,20 +291,21 @@ class scRECODE():
 	
 	def plot_procedures(
 			self,
-		  titles=('Original data','Normalized data','Projected data','Variance-modified data','Denoised data'),
+		  titles = ('Original data','Normalized data','Projected data','Variance-modified data','Denoised data'),
 		  figsize=(7,5),
 		  save = False,
 		  save_filename = 'scRECODE_procedures',
+		  save_filename_foots = ('1_Original','2_Normalized','3_Projected','4_Variance-modified','5_Denoised'),
 		  save_format = 'png',
 		  dpi=None
 	):
 		"""
-		Plot noise variance for each features.
+		Plot procedures of scRECODE. The vertical axes of feature are sorted by the mean. 
 		
 		Parameters
 		----------
-		title : str, default=''
-			Figure title.
+		titles : 5-tuple of str, default=('Original data','Normalized data','Projected data','Variance-modified data','Denoised data')
+			Figure titles.
 		
 		figsize : 2-tuple of floats, default=(7,5)
 			Figure dimension ``(width, height)`` in inches.
@@ -313,8 +316,11 @@ class scRECODE():
 		save : bool, default=False
 			If True, save the figure. 
 		
-		save_filename : str, default= 'noise_variance',
-			File name (path) of save figure. 
+		save_filename : str, default='scRECODE_procedures',
+			File name (path) of save figure (head). 
+			
+		save_filename_foots : 5-tuple of str, default=('1_Original','2_Normalized','3_Projected','4_Variance-modified','5_Denoised'),
+			File name (path) of save figure (foot). 
 		
 		save_format : {'png', 'pdf', 'svg'}, default= 'png',
 			File format of save figure. 
@@ -322,25 +328,32 @@ class scRECODE():
 		dpi: float or None, default=None
 			Dots per inch.
 		"""
+		
+		if self.seq_target=='ATAC':
+			title = 'ATAC preprocessing'
+			foot = '0_ATAC_preprocessing'
+			self.plot_ATAC_preprocessing(title=title,figsize=figsize,
+				save = save,save_filename = '%s_%s' % (save_filename,foot),
+				save_format = save_format,dpi=dpi)
 
 		self.plot_original_data(title=titles[0],figsize=figsize,
-			save = save,save_filename = '%s_1_%s' % (save_filename,titles[0]),
+			save = save,save_filename = '%s_%s' % (save_filename,save_filename_foots[0]),
 			save_format = save_format,dpi=dpi)
 		 
 		self.plot_normalized_data(title=titles[1],figsize=figsize,
-			save = save,save_filename = '%s_2_%s' % (save_filename,titles[1]),
+			save = save,save_filename = '%s_%s' % (save_filename,save_filename_foots[1]),
 			save_format = save_format,dpi=dpi)
 		
 		self.plot_projected_data(title=titles[2],figsize=figsize,
-			save = save,save_filename = '%s_3_%s' % (save_filename,titles[0]),
+			save = save,save_filename = '%s_%s' % (save_filename,save_filename_foots[2]),
 			save_format = save_format,dpi=dpi)
 		
 		self.plot_variance_modified_data(title=titles[3],figsize=figsize,
-			save = save,save_filename = '%s_4_%s' % (save_filename,titles[0]),
+			save = save,save_filename = '%s_%s' % (save_filename,save_filename_foots[3]),
 			save_format = save_format,dpi=dpi)
 		
 		self.plot_denoised_data(title=titles[4],figsize=figsize,
-			save = save,save_filename = '%s_5_%s' % (save_filename,titles[0]),
+			save = save,save_filename = '%s_%s' % (save_filename,save_filename_foots[4]),
 			save_format = save_format,dpi=dpi)
 	
 	
@@ -391,10 +404,13 @@ class scRECODE():
 		fig,ax = plt.subplots(figsize=figsize)
 		idx_sort = np.argsort(np.mean(X_scaled,axis=0))
 		x = np.arange(X_scaled.shape[1])
-		plt1 = ax.scatter(x,np.var(X_scaled,axis=0)[idx_sort],color='k',s=ps,label='Original',zorder=1)
-		plt2 = ax.scatter(x,noise_var[idx_sort],color='r',s=ps,label='Noise',zorder=2,marker='x')
+		y1 = np.var(X_scaled,axis=0)[idx_sort]
+		y2 = noise_var[idx_sort]
+		plt1 = ax.scatter(x,y1,color='k',s=ps,label='Original',zorder=1)
+		plt2 = ax.scatter(x,y2,color='r',s=ps,label='Noise',zorder=2,marker='x')
 		ax.axhline(0,color='gray',ls='--',lw=2,zorder=1)
-		ax.set_xlabel('Gene',fontsize=fs_label)
+		ax.set_ylim([min(min(y1),min(y2))*0.5,max(max(y1),max(y2))])
+		ax.set_xlabel(self.Unit,fontsize=fs_label)
 		ax.set_ylabel('Variance',fontsize=fs_label)
 		ax.set_yscale('log')
 		ax.legend(loc='upper left',borderaxespad=0,fontsize=14,markerscale=5,handletextpad=0.).get_frame().set_alpha(0)
@@ -456,7 +472,7 @@ class scRECODE():
 		x = np.arange(X_scaled.shape[1])
 		ax.scatter(x,np.var(X_norm,axis=0)[idx_sort],color='k',s=ps,zorder=2)
 		ax.axhline(1,color='r',ls='--')
-		ax.set_xlabel('Gene',fontsize=fs_label)
+		ax.set_xlabel(self.Unit,fontsize=fs_label)
 		ax.set_ylabel('Variance',fontsize=fs_label)
 		ax.set_yscale('log')
 		ax.set_title(title,fontsize=fs_title)
@@ -631,15 +647,19 @@ class scRECODE():
 		fs_title = 16
 		fs_label = 14
 		X_scaled = (self.X_temp.T/np.sum(self.X_temp,axis=1)).T
-		X_scRECODE_scaled = (self.X_scRECODE[:,self.idx_gene].T/np.sum(self.X_scRECODE,axis=1)).T
+		X_scRECODE_scaled = (self.X_scRECODE[:,self.idx_nonsilent].T/np.sum(self.X_scRECODE,axis=1)).T
 		idx_sort = np.argsort(np.mean(X_scaled,axis=0))
 		fig,ax = plt.subplots(figsize=figsize)
 		x = np.arange(X_scaled.shape[1])
-		y1 = np.log10(np.var(X_scaled,axis=0)[idx_sort])
-		y2 = np.log10(np.var(X_scRECODE_scaled,axis=0)[idx_sort])
+		#y1 = np.log10(np.var(X_scaled,axis=0)[idx_sort])
+		#y2 = np.log10(np.var(X_scRECODE_scaled,axis=0)[idx_sort])
+		y1 = np.var(X_scaled,axis=0)[idx_sort]
+		y2 = np.var(X_scRECODE_scaled,axis=0)[idx_sort]
 		plt1 = ax.scatter(x,y1,color='lightblue',s=ps,label='Original',zorder=1,marker='^')
 		plt2 = ax.scatter(x,y2,color='k',s=ps,label='Denoised',zorder=2,marker='o')
-		ax.set_xlabel('Gene',fontsize=fs_label)
+		ax.set_ylim([min(min(y1),min(y2))*0.5,max(max(y1),max(y2))])
+		ax.set_yscale('log')
+		ax.set_xlabel(self.Unit,fontsize=fs_label)
 		ax.set_ylabel('Variance',fontsize=fs_label)
 		ax.legend(loc='upper left',borderaxespad=0,fontsize=14,markerscale=7,handletextpad=0.).get_frame().set_alpha(0)
 		plt1.set_alpha(0.05)
@@ -704,8 +724,8 @@ class scRECODE():
 		else:
 			size_factor = np.median(np.sum(self.X,axis=1))
 			size_factor_scRECODE = np.median(np.sum(self.X_scRECODE,axis=1))
-		X_ss_log = np.log2(size_factor*(self.X[:,self.idx_gene].T/np.sum(self.X,axis=1)).T+1)
-		X_scRECODE_ss_log = np.log2(size_factor_scRECODE*(self.X_scRECODE[:,self.idx_gene].T/np.sum(self.X_scRECODE,axis=1)).T+1)
+		X_ss_log = np.log2(size_factor*(self.X[:,self.idx_nonsilent].T/np.sum(self.X,axis=1)).T+1)
+		X_scRECODE_ss_log = np.log2(size_factor_scRECODE*(self.X_scRECODE[:,self.idx_nonsilent].T/np.sum(self.X_scRECODE,axis=1)).T+1)
 		fig,ax0 = plt.subplots(figsize=figsize)
 		x,y = np.mean(X_ss_log,axis=0),np.var(X_ss_log,axis=0)
 		ax0.scatter(x,y,color='b',s=ps,label='significant %s' % self.unit,zorder=2)
@@ -783,7 +803,7 @@ class scRECODE():
 			
 		
 		"""
-		X_ss = (np.median(np.sum(self.X[:,self.idx_gene],axis=1))*self.X[:,self.idx_gene].T/np.sum(self.X[:,self.idx_gene],axis=1)).T
+		X_ss = (np.median(np.sum(self.X[:,self.idx_nonsilent],axis=1))*self.X[:,self.idx_nonsilent].T/np.sum(self.X[:,self.idx_nonsilent],axis=1)).T
 		fig,ax0 = plt.subplots(figsize=figsize)
 		x = np.mean(X_ss,axis=0)
 		cv = np.std(X_ss,axis=0)/np.mean(X_ss,axis=0)
@@ -797,7 +817,7 @@ class scRECODE():
 		if save:
 			plt.savefig('%s_Original.%s' % (save_filename,save_format),dpi=dpi)
 		
-		X_scRECODE_ss = (np.median(np.sum(self.X_scRECODE[:,self.idx_gene],axis=1))*self.X_scRECODE[:,self.idx_gene].T/np.sum(self.X_scRECODE[:,self.idx_gene],axis=1)).T
+		X_scRECODE_ss = (np.median(np.sum(self.X_scRECODE[:,self.idx_nonsilent],axis=1))*self.X_scRECODE[:,self.idx_nonsilent].T/np.sum(self.X_scRECODE[:,self.idx_nonsilent],axis=1)).T
 		fig,ax1 = plt.subplots(figsize=figsize)
 		x = np.mean(X_scRECODE_ss,axis=0)
 		cv = np.std(X_scRECODE_ss,axis=0)/np.mean(X_scRECODE_ss,axis=0)
@@ -819,14 +839,14 @@ class scRECODE():
 			if len(index) != self.X.shape[1]:
 				warnings.warn("Warning: no index opotion or length of index did not fit X.shape[1]. Use feature numbers")
 				index = np.arange(self.X.shape[1])+1
-			detect_rate = np.sum(np.where(self.X>0,1,0),axis=0)[self.idx_gene]/self.X.shape[0]
+			detect_rate = np.sum(np.where(self.X>0,1,0),axis=0)[self.idx_nonsilent]/self.X.shape[0]
 			idx_detect_rate_n = detect_rate <= cut_detect_rate
 			idx_detect_rate_p = detect_rate >  cut_detect_rate
 			ax1.scatter(x[idx_detect_rate_n],cv[idx_detect_rate_n],color='gray',s=ps,label='detection rate <= {:.2%}'.format(cut_detect_rate),alpha=0.5)
 			ax1.scatter(x[idx_detect_rate_p],cv[idx_detect_rate_p],color='b',s=ps,label='detection rate > {:.2%}'.format(cut_detect_rate),alpha=0.5)
 			ax1.legend(loc='upper center',bbox_to_anchor=(0.5, -0.15),ncol=2,fontsize=12,markerscale=2)
 			idx_rank_cv = np.argsort(cv[idx_detect_rate_p])[::-1]
-			texts = [plt.text(x[idx_detect_rate_p][idx_rank_cv[i]],cv[idx_detect_rate_p][idx_rank_cv[i]],index[self.idx_gene][idx_detect_rate_p][idx_rank_cv[i]],color='red') for i in range(n_show_features)]
+			texts = [plt.text(x[idx_detect_rate_p][idx_rank_cv[i]],cv[idx_detect_rate_p][idx_rank_cv[i]],index[self.idx_nonsilent][idx_detect_rate_p][idx_rank_cv[i]],color='red') for i in range(n_show_features)]
 			adjustText.adjust_text(texts,arrowprops=dict(arrowstyle='->', color='k'))
 		else:
 			ax1.scatter(x,cv,color='b',s=ps,zorder=2)
@@ -837,7 +857,7 @@ class scRECODE():
 	
 	def plot_ATAC_preprocessing(
 		self,
-		title=None,
+		title='ATAC preprocessing',
 		figsize=(7,5),
 		ps = 10,
 		save = False,
@@ -850,7 +870,7 @@ class scRECODE():
 		
 		Parameters
 		----------
-		title : str, default=''
+		title : str, default='ATAC preprocessing'
 			Figure title.
 		
 		figsize : 2-tuple of floats, default=(7,5)
@@ -891,36 +911,22 @@ class scRECODE():
 				else:
 				    idx_odd[i] = False
 		plt.figure(figsize=figsize)
-		plt.plot(val[1:],count[1:],color='gray',zorder=1)
-		plt.scatter(val[idx_even],count[idx_even],color='r',label='even',zorder=2)
-		plt.scatter(val[idx_odd],count[idx_odd],color='b',label='odd',zorder=2)
-		plt.xscale('log')
-		plt.yscale('log')
-		plt.xlabel('value',fontsize=fs_label)
-		plt.ylabel('count',fontsize=fs_label)
-		plt.legend(fontsize=fs_legend)
-		if title == None:
-			plt.title('Before preprocessing',fontsize=fs_title)
-		else:
-			plt.title(title,fontsize=fs_title)
-		if save:
-			plt.savefig('%s_Original.%s' % (save_filename,save_format),dpi=dpi)
-		plt.show()
-		
+		plt.plot(val[1:],count[1:],color='lightblue',zorder=1,marker='^',label='Original')
+		#plt.scatter(val[idx_even],count[idx_even],color='r',marker='^',zorder=2)
+		#plt.scatter(val[idx_odd],count[idx_odd],color='b',zorder=2)
 		val,count = np.unique(self.X_temp,return_counts=True)
-		plt.figure(figsize=figsize)
-		plt.plot(val[1:],count[1:],color='gray')
-		plt.scatter(val[1:],count[1:],color='g')
+		plt.plot(val[1:],count[1:],color='gray',marker='o',label='Preprpcessed',zorder=3)
+		#plt.scatter(val[1:],count[1:],color='g',zorder=3)
 		plt.xscale('log')
 		plt.yscale('log')
 		plt.xlabel('value',fontsize=fs_label)
 		plt.ylabel('count',fontsize=fs_label)
-		if title == None:
-			plt.title('After preprocessing',fontsize=fs_title)
-		else:
-			plt.title(title,fontsize=fs_title)
+		plt.title(title,fontsize=fs_title)
+		plt.gca().spines['right'].set_visible(False)
+		plt.gca().spines['top'].set_visible(False)
+		plt.legend(fontsize=fs_legend)
 		if save:
-			plt.savefig('%s_Prepocessed.%s' % (save_filename,save_format),dpi=dpi)
+			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
 		plt.show()
 	
 

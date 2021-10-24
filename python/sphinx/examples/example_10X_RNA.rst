@@ -56,6 +56,21 @@ Check applicability.
 
 	recode.check_applicability()
 
+Show 5 procedures of scRECODE. 
+
+.. code-block:: python
+
+	recode.plot_procedures()
+
+.. image:: ../image/Example_10X_RNA_1_Original.png
+
+.. image:: ../image/Example_10X_RNA_2_Normalized.png
+
+.. image:: ../image/Example_10X_RNA_3_Projected.png
+
+.. image:: ../image/Example_10X_RNA_4_Variance-modified.png
+
+.. image:: ../image/Example_10X_RNA_5_Denoised.png
 
 .. parsed-literal::
 
@@ -83,22 +98,6 @@ Show scatter plots of mean vs CV (coefficient of variation) before and after scR
 .. image:: ../image/Example_10X_RNA_mean_cv_Original.png
 
 .. image:: ../image/Example_10X_RNA_mean_cv_scRECODE.png
-
-Show noise variance for genes which are sorted by mean expresion level. 
-
-.. code-block:: python
-
-	recode.plot_noise_variance()
-
-.. image:: ../image/Example_10X_RNA_noise_variance.png
-
-Show the variance after noise-variance-stabilizing normalization. 
-
-.. code-block:: python
-
-	recode.plot_normalization()
-
-.. image:: ../image/Example_10X_RNA_noise_normalization.png
 
 Check the log. 
 
