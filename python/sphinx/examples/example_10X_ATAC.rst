@@ -79,7 +79,7 @@ Show preprocessing of scATAC-seq data and 5 procedures of scRECODE.
 
 .. image:: ../image/Example_10X_ATAC_5_Denoised.png
 
-Show scatter plots of mean vs variance before and after scRECODE. 	
+Show scatter plots of mean versus variance of log-scaled data before and after scRECODE. 
 
 .. code-block:: python
 
@@ -89,7 +89,7 @@ Show scatter plots of mean vs variance before and after scRECODE.
 
 .. image:: ../image/Example_10X_ATAC_mean_var_scRECODE.png
 
-Show scatter plots of mean vs CV (coefficient of variation) before and after scRECODE. 	
+Show scatter plots of mean versus CV (coefficient of variation) before and after scRECODE. 	
 
 .. code-block:: python
 

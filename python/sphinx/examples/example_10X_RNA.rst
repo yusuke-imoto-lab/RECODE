@@ -79,7 +79,7 @@ Show 5 procedures of scRECODE.
 .. image:: ../image/Example_10X_RNA_applicability.png
 	
 
-Show scatter plots of mean vs variance before and after scRECODE. 	
+Show scatter plots of mean versus variance of log-scaled data before and after scRECODE. 
 
 .. code-block:: python
 
