@@ -270,10 +270,10 @@ class scRECODE():
 		applicability = 'Unknown'
 		backcolor = 'w'
 		if (rate_low_var < 0.01) and (np.abs(peak_val)<0.1):
-				applicability = '(A) Strong applicable'
+				applicability = '(A) Strongly applicable'
 				backcolor = 'lightgreen'
 		elif rate_low_var < 0.01:
-				applicability = '(B) Weak applicable'
+				applicability = '(B) Weakly applicable'
 				backcolor = 'yellow'
 		else:
 				applicability = '(C) Inapplicabile'
@@ -362,7 +362,7 @@ class scRECODE():
 		  title='',
 		  figsize=(7,5),
 		  save = False,
-		  save_filename = 'noise_variance',
+		  save_filename = 'original_data',
 		  save_format = 'png',
 		  dpi=None
 	):
@@ -383,7 +383,7 @@ class scRECODE():
 		save : bool, default=False
 			If True, save the figure. 
 		
-		save_filename : str, default= 'noise_variance',
+		save_filename : str, default='original_data',
 			File name (path) of save figure. 
 		
 		save_format : {'png', 'pdf', 'svg'}, default= 'png',

@@ -5,7 +5,7 @@
 
 scRECODE: Resolution of Curse of Dimensionality in Single-cell Data Analysis
 ====================================
-**Re**\ solution of **c**\ urse **o**\ f **d**\ im **e**\ nsionality in **s**\ ingle-**c**\ ell data analysis (scRECODE) is a noire reduction method for single-cell sequencing data. `github <https://github.com/yusuke-imoto-lab/screcode>`_
+**Re**\ solution of **c**\ urse **o**\ f **d**\ im**e**\ nsionality in **s**\ ingle-**c**\ ell data analysis (scRECODE) is a noire reduction method for single-cell sequencing data. `github <https://github.com/yusuke-imoto-lab/screcode>`_
 
 Installation
 ====================================
