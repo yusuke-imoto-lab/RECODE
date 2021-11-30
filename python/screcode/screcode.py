@@ -14,7 +14,7 @@ class scRECODE():
 	def __init__(
 		self,
 		fast_algorithm = True,
-		fast_algorithm_ell_max = 1000,
+		fast_algorithm_ell_ub = 1000,
 		seq_target = 'RNA',
 		verbose = True
 		):
@@ -24,10 +24,10 @@ class scRECODE():
 		Parameters
 		----------
 		fast_algorithm : boolean, default=True
-			If True, the fast algorithm is conducted. The upper bound of parameter :math:`\ell` is set in ``fast_algorithm_ell_max``.
+			If True, the fast algorithm is conducted. The upper bound of parameter :math:`\ell` is set in ``fast_algorithm_ell_ub``.
 		
-		fast_algorithm_ell_max : int, default=1000
-			Upper bound of parameter :math:`\ell` for the fast algorithm. Must be of range [1, infinity).
+		fast_algorithm_ell_ub : int, default=1000
+			Upper bound of parameter :math:`\ell` for the fast algorithm. Must be of range [1,:math:`\infity`).
 		
 		seq_target : {'RNA','ATAC'}, default='RNA'
 			Sequencing target. If 'ATAC', the preprocessing (odd-even normalization) will be performed before the regular algorithm. 
@@ -53,7 +53,7 @@ class scRECODE():
 			Significance (significant/non-significant/silent) of features (genes/peaks).
 		"""
 		self.fast_algorithm = fast_algorithm
-		self.fast_algorithm_ell_max = fast_algorithm_ell_max
+		self.fast_algorithm_ell_ub = fast_algorithm_ell_ub
 		self.seq_target = seq_target
 		self.verbose = verbose
 		self.log_ = {}
@@ -86,7 +86,7 @@ class scRECODE():
 		self.X_nUMI = X_nUMI
 		self.X_scaled_mean = X_scaled_mean
 		self.noise_var = noise_var
-		self.X_norm_var = np.var(X_norm,axis=0)
+		self.X_norm_var = np.var(X_norm,axis=0,ddof=1)
 		self.idx_sig = self.X_norm_var > 1
 		self.idx_nonsig = self.idx_sig==False
 		self.log_['#significant %ss' % self.unit] = sum(self.idx_sig)
@@ -163,7 +163,7 @@ class scRECODE():
 		self.fit(X)
 		self.log_['seq_target'] = self.seq_target
 		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
-		recode_ = RECODE(variance_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_max=self.fast_algorithm_ell_max)
+		recode_ = RECODE(variance_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_ub=self.fast_algorithm_ell_ub)
 		X_norm_RECODE = recode_.fit_transform(X_norm)
 		X_scRECODE = np.zeros(X.shape,dtype=float)
 		X_scRECODE[:,self.idx_nonsilent] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
@@ -177,8 +177,8 @@ class scRECODE():
 		if self.verbose:
 			print('end scRECODE for sc%s-seq' % self.seq_target)
 			print('log:',self.log_)
-		if recode_.ell == self.fast_algorithm_ell_max:
-			warnings.warn("Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_max.\n"
+		if recode_.ell == self.fast_algorithm_ell_ub:
+			warnings.warn("Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_ub.\n"
 			"Ex. X_new = screcode.scRECODE(fast_algorithm=False).fit_transform(X)")
 		self.X_scRECODE = X_scRECODE
 		self.noise_variance_ = np.zeros(X.shape[1],dtype=float)
@@ -200,7 +200,7 @@ class scRECODE():
 		self,
 		title = '',
 		figsize=(10,5),
-		ps = 10,
+		ps = 2,
 		save = False,
 		save_filename = 'check_applicability',
 		save_format = 'png',
@@ -235,10 +235,12 @@ class scRECODE():
 		"""
 		X_scaled =(self.X_temp.T/np.sum(self.X_temp,axis=1)).T
 		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
-		norm_var = np.var(X_norm,axis=0)
+		norm_var = np.var(X_norm,axis=0,ddof=1)
 		x,y = np.mean(X_scaled,axis=0),norm_var
 		idx_nonsig, idx_sig = y <= 1, y > 1
 		fig = plt.figure(figsize=figsize)
+		plt.rcParams['xtick.direction'] = 'in'
+		plt.rcParams['ytick.direction'] = 'in'
 		spec = matplotlib.gridspec.GridSpec(ncols=2, nrows=1,width_ratios=[4, 1],wspace=0.)
 		ax0 = fig.add_subplot(spec[0])
 		ax0.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant %s' % self.unit,zorder=2)
@@ -402,9 +404,11 @@ class scRECODE():
 		noise_var[noise_var==0] = 1
 		X_norm = (X_scaled-np.mean(X_scaled,axis=0))/np.sqrt(noise_var)
 		fig,ax = plt.subplots(figsize=figsize)
+		plt.rcParams['xtick.direction'] = 'in'
+		plt.rcParams['ytick.direction'] = 'in'
 		idx_sort = np.argsort(np.mean(X_scaled,axis=0))
 		x = np.arange(X_scaled.shape[1])
-		y1 = np.var(X_scaled,axis=0)[idx_sort]
+		y1 = np.var(X_scaled,axis=0,ddof=1)[idx_sort]
 		y2 = noise_var[idx_sort]
 		plt1 = ax.scatter(x,y1,color='k',s=ps,label='Original',zorder=1)
 		plt2 = ax.scatter(x,y2,color='r',s=ps,label='Noise',zorder=2,marker='x')
@@ -468,9 +472,11 @@ class scRECODE():
 		noise_var[noise_var==0] = 1
 		X_norm = (X_scaled-np.mean(X_scaled,axis=0))/np.sqrt(noise_var)
 		fig,ax = plt.subplots(figsize=figsize)
+		plt.rcParams['xtick.direction'] = 'in'
+		plt.rcParams['ytick.direction'] = 'in'
 		idx_sort = np.argsort(np.mean(X_scaled,axis=0))
 		x = np.arange(X_scaled.shape[1])
-		ax.scatter(x,np.var(X_norm,axis=0)[idx_sort],color='k',s=ps,zorder=2)
+		ax.scatter(x,np.var(X_norm,axis=0,ddof=1)[idx_sort],color='k',s=ps,zorder=2)
 		ax.axhline(1,color='r',ls='--')
 		ax.set_xlabel(self.Unit,fontsize=fs_label)
 		ax.set_ylabel('Variance',fontsize=fs_label)
@@ -527,6 +533,8 @@ class scRECODE():
 		idx_sort = np.argsort(np.mean(X_scaled,axis=0))
 
 		fig,ax = plt.subplots(figsize=figsize)
+		plt.rcParams['xtick.direction'] = 'in'
+		plt.rcParams['ytick.direction'] = 'in'
 		idx_sort = np.argsort(np.mean(X_scaled,axis=0))
 		x = np.arange(X_scaled.shape[1])
 		ax.scatter(np.arange(n_EV)+1,plot_EV,color='k',label='Original',s=ps,zorder=1)
@@ -589,6 +597,8 @@ class scRECODE():
 		idx_sort = np.argsort(np.mean(X_scaled,axis=0))
 		
 		fig,ax = plt.subplots(figsize=figsize)
+		plt.rcParams['xtick.direction'] = 'in'
+		plt.rcParams['ytick.direction'] = 'in'
 		idx_sort = np.argsort(np.mean(X_scaled,axis=0))
 		x = np.arange(X_scaled.shape[1])
 		ax.scatter(np.arange(n_EV)+1,plot_EV,color='lightblue',label='Original',marker='^',s=ps,zorder=1)
@@ -650,11 +660,11 @@ class scRECODE():
 		X_scRECODE_scaled = (self.X_scRECODE[:,self.idx_nonsilent].T/np.sum(self.X_scRECODE,axis=1)).T
 		idx_sort = np.argsort(np.mean(X_scaled,axis=0))
 		fig,ax = plt.subplots(figsize=figsize)
+		plt.rcParams['xtick.direction'] = 'in'
+		plt.rcParams['ytick.direction'] = 'in'
 		x = np.arange(X_scaled.shape[1])
-		#y1 = np.log10(np.var(X_scaled,axis=0)[idx_sort])
-		#y2 = np.log10(np.var(X_scRECODE_scaled,axis=0)[idx_sort])
-		y1 = np.var(X_scaled,axis=0)[idx_sort]
-		y2 = np.var(X_scRECODE_scaled,axis=0)[idx_sort]
+		y1 = np.var(X_scaled,axis=0,ddof=1)[idx_sort]
+		y2 = np.var(X_scRECODE_scaled,axis=0,ddof=1)[idx_sort]
 		plt1 = ax.scatter(x,y1,color='lightblue',s=ps,label='Original',zorder=1,marker='^')
 		plt2 = ax.scatter(x,y2,color='k',s=ps,label='Denoised',zorder=2,marker='o')
 		ax.set_ylim([min(min(y1),min(y2))*0.5,max(max(y1),max(y2))])
@@ -675,7 +685,7 @@ class scRECODE():
 		self,
 		titles=('Original','scRECODE'),
 		figsize=(7,5),
-		ps = 10,
+		ps = 2,
 		size_factor = 'median',
 		save = False,
 		save_filename = 'plot_mean_variance',
@@ -727,7 +737,9 @@ class scRECODE():
 		X_ss_log = np.log2(size_factor*(self.X[:,self.idx_nonsilent].T/np.sum(self.X,axis=1)).T+1)
 		X_scRECODE_ss_log = np.log2(size_factor_scRECODE*(self.X_scRECODE[:,self.idx_nonsilent].T/np.sum(self.X_scRECODE,axis=1)).T+1)
 		fig,ax0 = plt.subplots(figsize=figsize)
-		x,y = np.mean(X_ss_log,axis=0),np.var(X_ss_log,axis=0)
+		plt.rcParams['xtick.direction'] = 'in'
+		plt.rcParams['ytick.direction'] = 'in'
+		x,y = np.mean(X_ss_log,axis=0),np.var(X_ss_log,axis=0,ddof=1)
 		ax0.scatter(x,y,color='b',s=ps,label='significant %s' % self.unit,zorder=2)
 		ax0.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax0.set_xlabel('Mean of log-scaled data',fontsize=fs_label)
@@ -738,7 +750,7 @@ class scRECODE():
 		if save:
 			plt.savefig('%s_Original.%s' % (save_filename,save_format),dpi=dpi)
 		fig,ax1 = plt.subplots(figsize=figsize)
-		x,y = np.mean(X_scRECODE_ss_log,axis=0),np.var(X_scRECODE_ss_log,axis=0)
+		x,y = np.mean(X_scRECODE_ss_log,axis=0),np.var(X_scRECODE_ss_log,axis=0,ddof=1)
 		ax1.scatter(x,y,color='b',s=ps,label='significant %s' % self.unit,zorder=2)
 		ax1.set_ylim(ax0.set_ylim())
 		ax1.axhline(0,color='gray',ls='--',lw=2,zorder=1)
@@ -756,7 +768,7 @@ class scRECODE():
 		self,
 		title=None,
 		figsize=(7,5),
-		ps = 5,
+		ps = 2,
 		save = False,
 		save_filename = 'plot_mean_cv',
 		save_format = 'png',
@@ -805,6 +817,8 @@ class scRECODE():
 		"""
 		X_ss = (np.median(np.sum(self.X[:,self.idx_nonsilent],axis=1))*self.X[:,self.idx_nonsilent].T/np.sum(self.X[:,self.idx_nonsilent],axis=1)).T
 		fig,ax0 = plt.subplots(figsize=figsize)
+		plt.rcParams['xtick.direction'] = 'in'
+		plt.rcParams['ytick.direction'] = 'in'
 		x = np.mean(X_ss,axis=0)
 		cv = np.std(X_ss,axis=0)/np.mean(X_ss,axis=0)
 		ax0.scatter(x,cv,color='b',s=ps,zorder=2)
@@ -911,6 +925,8 @@ class scRECODE():
 				else:
 				    idx_odd[i] = False
 		plt.figure(figsize=figsize)
+		plt.rcParams['xtick.direction'] = 'in'
+		plt.rcParams['ytick.direction'] = 'in'
 		plt.plot(val[1:],count[1:],color='lightblue',zorder=1,marker='^',label='Original')
 		#plt.scatter(val[idx_even],count[idx_even],color='r',marker='^',zorder=2)
 		#plt.scatter(val[idx_odd],count[idx_odd],color='b',zorder=2)
@@ -937,7 +953,7 @@ class RECODE():
 		solver = 'variance',
 		variance_estimate = True,
 		fast_algorithm = True,
-		fast_algorithm_ell_max = 1000,
+		fast_algorithm_ell_ub = 1000,
 		ell_manual = None,
 	):
 		"""
@@ -954,9 +970,9 @@ class RECODE():
 			If True and ``solver='variance'``, the parameter estimation method will be conducted. 
 		
 		fast_algorithm : boolean, default=True
-			If True, the fast algorithm is conducted. The upper bound of parameter :math:`\ell` is set in ``fast_algorithm_ell_max``.
+			If True, the fast algorithm is conducted. The upper bound of parameter :math:`\ell` is set in ``fast_algorithm_ell_ub``.
 		
-		fast_algorithm_ell_max : int, default=1000
+		fast_algorithm_ell_ub : int, default=1000
 			Upper bound of parameter :math:`\ell` for the fast algorithm. Must be of range [1, infinity).
 		
 		ell_manual : int, default=10
@@ -966,7 +982,7 @@ class RECODE():
 		self.solver = solver
 		self.variance_estimate = variance_estimate
 		self.fast_algorithm = fast_algorithm
-		self.fast_algorithm_ell_max = fast_algorithm_ell_max
+		self.fast_algorithm_ell_ub = fast_algorithm_ell_ub
 		self.ell_manual=ell_manual
 	
 	def fit(self, X):
@@ -986,7 +1002,7 @@ class RECODE():
 		"""
 		n,d = X.shape
 		if self.fast_algorithm:
-			self.n_pca = min(n-1,d-1,self.fast_algorithm_ell_max)
+			self.n_pca = min(n-1,d-1,self.fast_algorithm_ell_ub)
 		else:
 			self.n_pca = min(n-1,d-1)
 		X_svd = X
@@ -997,7 +1013,7 @@ class RECODE():
 		SVD_Sv = svd.singular_values_
 		self.PCA_Ev = (SVD_Sv**2)/(n_svd-1)
 		self.U = svd.components_
-		PCA_Ev_sum_all = np.sum(np.var(X,axis=0))
+		PCA_Ev_sum_all = np.sum(np.var(X,axis=0,ddof=1))
 		PCA_Ev_NRM = np.array(self.PCA_Ev,dtype=float)
 		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(self.PCA_Ev)
 		n_Ev_all = min(n,d)
@@ -1031,8 +1047,8 @@ class RECODE():
 	):
 		PCA_Ev_sum_diff = self.PCA_Ev_sum_all - np.sum(self.PCA_Ev)
 		PCA_Ev_sum = np.array([np.sum(self.PCA_Ev[i:]) for i in range(self.n_pca)])+PCA_Ev_sum_diff
-		d_act = sum(np.var(self.X,axis=0)>0)
-		X_var  = np.var(self.X,axis=0)
+		d_act = sum(np.var(self.X,axis=0,ddof=1)>0)
+		X_var  = np.var(self.X,axis=0,ddof=1)
 		dim = np.sum(X_var>0)
 		thrshold = (dim-np.arange(self.n_pca))*noise_var
 		comp = np.sum(PCA_Ev_sum-thrshold>0)
@@ -1046,7 +1062,7 @@ class RECODE():
 		cut_low_exp=1.0e-10
 	):
 		n,d = X.shape
-		X_var = np.var(X,axis=0)
+		X_var = np.var(X,axis=0,ddof=1)
 		idx_var_p = np.where(X_var>cut_low_exp)[0]
 		X_var_sub = X_var[idx_var_p]
 		X_var_min = np.min(X_var_sub)-1.0e-10

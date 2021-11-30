@@ -29,7 +29,7 @@ Apply scRECODE with option ``seq_target='ATAC'``. The denoised data is created i
 .. code-block:: python
 
 	recode = screcode.scRECODE(seq_target='ATAC')
-	data_scRECODE = recode.fit_transform(data)
+	data_scRECODE = recode.fit_transform(adata.X.toarray())
 
 .. parsed-literal::
 
@@ -56,10 +56,9 @@ Check applicability.
 
 	recode.check_applicability()
 
-
 .. parsed-literal::
 
-	applicabity: (A) Strong applicable
+	applicabity: (A) Strongly applicable
 
 .. image:: ../image/Example_10X_ATAC_applicability.png
 

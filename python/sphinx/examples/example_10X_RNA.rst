@@ -29,7 +29,7 @@ Apply scRECODE. The denoised data is created in ``data_scRECODE``.
 .. code-block:: python
 
 	recode = screcode.scRECODE()
-	data_scRECODE = recode.fit_transform(anndata.X.toarray())
+	data_scRECODE = recode.fit_transform(adata.X.toarray())
 
 .. parsed-literal::
 
@@ -55,6 +55,12 @@ Check applicability.
 .. code-block:: python
 
 	recode.check_applicability()
+
+.. parsed-literal::
+
+	applicabity: (A) Strongly applicable
+
+.. image:: ../image/Example_10X_RNA_applicability.png
 
 Show 5 procedures of scRECODE. 
 
