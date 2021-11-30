@@ -1,0 +1,10 @@
+Package: scRECODE
+Type: Package
+Title: Resolution of curse of dimensionality
+Version: 1.0.0
+Author: Yusuke Imoto
+Maintainer: Yusuke Imoto <imoto.yusuke.4e@kyoto-u.ac.jp>
+Description: Denoising single-cell RNA-sequencung data. 
+Imports: irlba
+License: MIT + file LICENSE
+
