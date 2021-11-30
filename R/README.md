@@ -1,5 +1,5 @@
 # scRECOCE for R code
-The current virsion is not fast because the PCA algorithm on R is slow. We reccomend to use the python code for large scale data. 
+The current version of the R code is not fast because the PCA algorithm on R is slow. We recommend using the python code for large-scale data. 
 
 ## Installation
 
@@ -11,7 +11,7 @@ devtools::install_github("yusuke-imoto-lab/scRECODE/R")
 
 
 ## Example
-For the single cell data *X* (rows:genes, columns:cells), we can apply scRECODE as follows. 
+For the single-cell data *X* (rows: genes, columns: cells), we can apply scRECODE as follows. 
 
 
 ``` r
