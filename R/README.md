@@ -2,7 +2,7 @@
 
 ## Installation
 
-You can install the alpha version of `scRECODE_R` with:
+You can install `scRECODE` on R with:
 
 ``` r
 devtools::install_github("yusuke-imoto-lab/scRECODE/R")
