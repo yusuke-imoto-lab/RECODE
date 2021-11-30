@@ -1,4 +1,5 @@
 # scRECOCE for R code
+The current virsion is not fast because the PCA algorithm on R is slow. We reccomend to use the python code for large scale data. 
 
 ## Installation
 
