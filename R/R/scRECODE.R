@@ -1,7 +1,5 @@
 scRECODE <- function(
-  X,
-  fast_algorithm_ell_max = 1000,
-  maxit = 10000 
+  X
 ){
   message('--START scRECODE--')
   message(' I. Normalizing')
@@ -16,18 +14,16 @@ scRECODE <- function(
   X_norm <- t((t(X_prob)-X_prob_mean)/sqrt(noise_var))
   message(' II. Projecting to PCA space')
   n_pca = min(fast_algorithm_ell_max,n-1,d)
-  pca = irlba::prcomp_irlba(X_norm,n=n_pca,scale.=FALSE,maxit=maxit)
+  pca = prcomp(X_norm,scale=F)
   message(' III. Modifiying eigenvalues')
   eigval = pca$sdev**2
+  n_eigval = length(eigval)
   U = pca$rotation
-  eigval_sum_all = sum(apply(X_norm,2,var))
-  eigval_sum_diff = eigval_sum_all - sum(eigval)
-  n_eigval_all = min(n,d)
   eigval_mod <- eigval
-  for (i in 1:length(eigval)-1) eigval_mod[i] <- eigval[i]-(sum(eigval[(i+1):length(eigval)])+eigval_sum_diff)/(n_eigval_all-i-1)
+  for (i in 1:length(eigval)-1) eigval_mod[i] <- eigval[i]-mean(eigval[(i+1):length(eigval)])
   eigval_mod[length(eigval_mod)] = 0
   eigval_sum <- eigval
-  for (i in 1:length(eigval)) eigval_sum[i] <- sum(eigval[i:length(eigval)])+eigval_sum_diff
+  for (i in 1:length(eigval)) eigval_sum[i] <- sum(eigval[i:length(eigval)])
   threshold = sum(X_prob_mean>0)-0:(length(eigval)-1)
   ell_func = eigval_sum - threshold
   ell = sum(ell_func>0)+1
