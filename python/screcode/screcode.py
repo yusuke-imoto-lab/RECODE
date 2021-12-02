@@ -1051,7 +1051,8 @@ class RECODE():
 		X_var  = np.var(self.X,axis=0,ddof=1)
 		dim = np.sum(X_var>0)
 		thrshold = (dim-np.arange(self.n_pca))*noise_var
-		comp = np.sum(PCA_Ev_sum-thrshold>0)
+		#comp = np.sum(PCA_Ev_sum-thrshold>0)
+		comp = min(np.arange(self.n_pca)[PCA_Ev_sum-thrshold<0])
 		self.ell = max(min(self.ell_max,comp),ell_min)
 		X_RECODE = self._noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
 		return X_RECODE
