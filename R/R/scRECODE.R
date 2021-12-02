@@ -2,7 +2,7 @@ scRECODE <- function(
   X
 ){
   message('--START scRECODE--')
-  message(' I. Normalizing')
+  message(' I.   Normalizing')
   X_clean <- t(as.matrix(X))[,apply(X,1,sum)>0]
   n <- nrow(X_clean)
   d <- ncol(X_clean)
@@ -12,10 +12,10 @@ scRECODE <- function(
   noise_var <- apply(X_clean/X_nUMI/X_nUMI,2,mean)
   noise_var[noise_var==0] = 1
   X_norm <- t((t(X_prob)-X_prob_mean)/sqrt(noise_var))
-  message(' II. Projecting to PCA space')
+  message(' II.  Projecting to PCA space')
   n_pca = min(fast_algorithm_ell_max,n-1,d)
   pca = prcomp(X_norm,scale=F)
-  message(' III. Modifiying eigenvalues')
+  message(' III. Modifying eigenvalues')
   eigval = pca$sdev**2
   n_eigval = length(eigval)
   U = pca$rotation
@@ -31,7 +31,7 @@ scRECODE <- function(
   Lam = diag(sqrt(eigval_mod[1:ell]/eigval[1:ell]))
   message('   Reducing noise')
   X_norm_RECODE <- X_norm %*% U[,1:ell] %*% Lam %*% t(U[,1:ell])
-  message(' VI. Transforming to original space')
+  message(' VI.  Reversing to original space')
   X_prob_RECODE <- t(t(X_norm_RECODE)*sqrt(noise_var)+X_prob_mean)
   X_RECODE_clean = X_prob_RECODE*X_nUMI
   X_RECODE_clean[X_RECODE_clean<0] = 0
