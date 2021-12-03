@@ -13,7 +13,6 @@ scRECODE <- function(
   noise_var[noise_var==0] = 1
   X_norm <- t((t(X_prob)-X_prob_mean)/sqrt(noise_var))
   message(' II.  Projecting to PCA space')
-  n_pca = min(fast_algorithm_ell_max,n-1,d)
   pca = prcomp(X_norm,scale=F)
   message(' III. Modifying eigenvalues')
   eigval = pca$sdev**2
