@@ -10,7 +10,7 @@ import warnings
 
 
 
-class scRECODE():
+class RECODE():
 	def __init__(
 		self,
 		fast_algorithm = True,
@@ -19,7 +19,7 @@ class scRECODE():
 		verbose = True
 		):
 		""" 
-		scRECODE (Resolution of curse of dimensionality in single-cell data analysis). A noise reduction method for single-cell sequencing data. 
+		RECODE (Resolution of curse of dimensionality in single-cell data analysis). A noise reduction method for single-cell sequencing data. 
 		
 		Parameters
 		----------
@@ -145,7 +145,7 @@ class scRECODE():
 
 	def fit_transform(self,X):
 		"""
-		Fit the model with X and apply scRECODE on X.
+		Fit the model with X and apply RECODE on X.
 
 		Parameters
 		----------
@@ -159,15 +159,15 @@ class scRECODE():
 		"""
 		start = time.time()
 		if self.verbose:
-			print('start scRECODE for sc%s-seq' % self.seq_target)
+			print('start RECODE for sc%s-seq' % self.seq_target)
 		self.fit(X)
 		self.log_['seq_target'] = self.seq_target
 		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
-		recode_ = RECODE(variance_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_ub=self.fast_algorithm_ell_ub)
+		recode_ = RECODE_core(variance_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_ub=self.fast_algorithm_ell_ub)
 		X_norm_RECODE = recode_.fit_transform(X_norm)
-		X_scRECODE = np.zeros(X.shape,dtype=float)
-		X_scRECODE[:,self.idx_nonsilent] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
-		X_scRECODE = np.where(X_scRECODE>0,X_scRECODE,0)
+		X_RECODE = np.zeros(X.shape,dtype=float)
+		X_RECODE[:,self.idx_nonsilent] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
+		X_RECODE = np.where(X_RECODE>0,X_RECODE,0)
 		elapsed_time = time.time() - start
 		self.recode_ = recode_
 		self.log_['#silent %ss' % self.unit] = sum(np.sum(X,axis=0)==0)
@@ -175,26 +175,26 @@ class scRECODE():
 		self.log_['Elapsed_time'] = "{0}".format(np.round(elapsed_time,decimals=4
 		)) + "[sec]"
 		if self.verbose:
-			print('end scRECODE for sc%s-seq' % self.seq_target)
+			print('end RECODE for sc%s-seq' % self.seq_target)
 			print('log:',self.log_)
 		if recode_.ell == self.fast_algorithm_ell_ub:
 			warnings.warn("Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_ub.\n"
-			"Ex. X_new = screcode.scRECODE(fast_algorithm=False).fit_transform(X)")
-		self.X_scRECODE = X_scRECODE
+			"Ex. X_new = screcode.RECODE(fast_algorithm=False).fit_transform(X)")
+		self.X_RECODE = X_RECODE
 		self.noise_variance_ = np.zeros(X.shape[1],dtype=float)
 		self.noise_variance_[self.idx_nonsilent] =  self.noise_var
 		self.normalized_variance_ = np.zeros(X.shape[1],dtype=float)
 		self.normalized_variance_[self.idx_nonsilent] =  self.X_norm_var
 		
-		X_scRECODE_ss = (np.median(np.sum(X_scRECODE[:,self.idx_nonsilent],axis=1))*X_scRECODE[:,self.idx_nonsilent].T/np.sum(X_scRECODE[:,self.idx_nonsilent],axis=1)).T
+		X_RECODE_ss = (np.median(np.sum(X_RECODE[:,self.idx_nonsilent],axis=1))*X_RECODE[:,self.idx_nonsilent].T/np.sum(X_RECODE[:,self.idx_nonsilent],axis=1)).T
 		self.cv_ = np.zeros(X.shape[1],dtype=float)
-		self.cv_[self.idx_nonsilent] =  np.std(X_scRECODE_ss,axis=0)/np.mean(X_scRECODE_ss,axis=0)
+		self.cv_[self.idx_nonsilent] =  np.std(X_RECODE_ss,axis=0)/np.mean(X_RECODE_ss,axis=0)
 		
 		self.significance_ = np.empty(X.shape[1],dtype=object)
 		self.significance_[self.normalized_variance_==0] = 'silent'
 		self.significance_[self.normalized_variance_>0] = 'non-significant'
 		self.significance_[self.normalized_variance_>1] = 'significant'
-		return X_scRECODE
+		return X_RECODE
 		
 	def check_applicability(
 		self,
@@ -207,7 +207,7 @@ class scRECODE():
 		dpi = None
 	):
 		"""
-		Check applicability of scRECODE. 
+		Check applicability of RECODE. 
 		Before using this function, you have to conduct ``fit(X)`` or ``fit_transform(X)`` for the target data matrix ``X``. 
 		
 		Parameters
@@ -296,13 +296,13 @@ class scRECODE():
 		  titles = ('Original data','Normalized data','Projected data','Variance-modified data','Denoised data'),
 		  figsize=(7,5),
 		  save = False,
-		  save_filename = 'scRECODE_procedures',
+		  save_filename = 'RECODE_procedures',
 		  save_filename_foots = ('1_Original','2_Normalized','3_Projected','4_Variance-modified','5_Denoised'),
 		  save_format = 'png',
 		  dpi=None
 	):
 		"""
-		Plot procedures of scRECODE. The vertical axes of feature are sorted by the mean. 
+		Plot procedures of RECODE. The vertical axes of feature are sorted by the mean. 
 		
 		Parameters
 		----------
@@ -318,7 +318,7 @@ class scRECODE():
 		save : bool, default=False
 			If True, save the figure. 
 		
-		save_filename : str, default='scRECODE_procedures',
+		save_filename : str, default='RECODE_procedures',
 			File name (path) of save figure (head). 
 			
 		save_filename_foots : 5-tuple of str, default=('1_Original','2_Normalized','3_Projected','4_Variance-modified','5_Denoised'),
@@ -657,14 +657,14 @@ class scRECODE():
 		fs_title = 16
 		fs_label = 14
 		X_scaled = (self.X_temp.T/np.sum(self.X_temp,axis=1)).T
-		X_scRECODE_scaled = (self.X_scRECODE[:,self.idx_nonsilent].T/np.sum(self.X_scRECODE,axis=1)).T
+		X_RECODE_scaled = (self.X_RECODE[:,self.idx_nonsilent].T/np.sum(self.X_RECODE,axis=1)).T
 		idx_sort = np.argsort(np.mean(X_scaled,axis=0))
 		fig,ax = plt.subplots(figsize=figsize)
 		plt.rcParams['xtick.direction'] = 'in'
 		plt.rcParams['ytick.direction'] = 'in'
 		x = np.arange(X_scaled.shape[1])
 		y1 = np.var(X_scaled,axis=0,ddof=1)[idx_sort]
-		y2 = np.var(X_scRECODE_scaled,axis=0,ddof=1)[idx_sort]
+		y2 = np.var(X_RECODE_scaled,axis=0,ddof=1)[idx_sort]
 		plt1 = ax.scatter(x,y1,color='lightblue',s=ps,label='Original',zorder=1,marker='^')
 		plt2 = ax.scatter(x,y2,color='k',s=ps,label='Denoised',zorder=2,marker='o')
 		ax.set_ylim([min(min(y1),min(y2))*0.5,max(max(y1),max(y2))])
@@ -683,7 +683,7 @@ class scRECODE():
 	
 	def plot_mean_variance(
 		self,
-		titles=('Original','scRECODE'),
+		titles=('Original','RECODE'),
 		figsize=(7,5),
 		ps = 2,
 		size_factor = 'median',
@@ -697,7 +697,7 @@ class scRECODE():
 		
 		Parameters
 		----------
-		titles : str, default=('Original','scRECODE')
+		titles : str, default=('Original','RECODE')
 			Figure title.
 		
 		figsize : 2-tuple of floats, default=(7,5)
@@ -725,17 +725,17 @@ class scRECODE():
 		fs_title = 14
 		if size_factor=='median':
 			size_factor = np.median(np.sum(self.X,axis=1))
-			size_factor_scRECODE = np.median(np.sum(self.X_scRECODE,axis=1))
+			size_factor_RECODE = np.median(np.sum(self.X_RECODE,axis=1))
 		elif size_factor=='mean':
 			size_factor = np.mean(np.sum(self.X,axis=1))
-			size_factor_scRECODE = np.mean(np.sum(self.X_scRECODE,axis=1))
+			size_factor_RECODE = np.mean(np.sum(self.X_sECODE,axis=1))
 		elif (type(size_factor) == int) | (type(size_factor) == float):
-			size_factor_scRECODE = size_factor
+			size_factor_RECODE = size_factor
 		else:
 			size_factor = np.median(np.sum(self.X,axis=1))
-			size_factor_scRECODE = np.median(np.sum(self.X_scRECODE,axis=1))
+			size_factor_RECODE = np.median(np.sum(self.X_RECODE,axis=1))
 		X_ss_log = np.log2(size_factor*(self.X[:,self.idx_nonsilent].T/np.sum(self.X,axis=1)).T+1)
-		X_scRECODE_ss_log = np.log2(size_factor_scRECODE*(self.X_scRECODE[:,self.idx_nonsilent].T/np.sum(self.X_scRECODE,axis=1)).T+1)
+		X_RECODE_ss_log = np.log2(size_factor_RECODE*(self.X_RECODE[:,self.idx_nonsilent].T/np.sum(self.X_RECODE,axis=1)).T+1)
 		fig,ax0 = plt.subplots(figsize=figsize)
 		plt.rcParams['xtick.direction'] = 'in'
 		plt.rcParams['ytick.direction'] = 'in'
@@ -750,18 +750,18 @@ class scRECODE():
 		if save:
 			plt.savefig('%s_Original.%s' % (save_filename,save_format),dpi=dpi)
 		fig,ax1 = plt.subplots(figsize=figsize)
-		x,y = np.mean(X_scRECODE_ss_log,axis=0),np.var(X_scRECODE_ss_log,axis=0,ddof=1)
+		x,y = np.mean(X_RECODE_ss_log,axis=0),np.var(X_RECODE_ss_log,axis=0,ddof=1)
 		ax1.scatter(x,y,color='b',s=ps,label='significant %s' % self.unit,zorder=2)
 		ax1.set_ylim(ax0.set_ylim())
 		ax1.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax1.set_xlabel('Mean of log-scaled data',fontsize=fs_label)
 		ax1.set_ylabel('Variance of log-scaled data',fontsize=fs_label)
 		ax0.set_title('Original',fontsize=fs_title)
-		ax1.set_title('scRECODE',fontsize=fs_title)
+		ax1.set_title('RECODE',fontsize=fs_title)
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
-			plt.savefig('%s_scRECODE.%s' % (save_filename,save_format),dpi=dpi)
+			plt.savefig('%s_RECODE.%s' % (save_filename,save_format),dpi=dpi)
 		plt.show()
 	
 	def plot_mean_cv(
@@ -831,10 +831,10 @@ class scRECODE():
 		if save:
 			plt.savefig('%s_Original.%s' % (save_filename,save_format),dpi=dpi)
 		
-		X_scRECODE_ss = (np.median(np.sum(self.X_scRECODE[:,self.idx_nonsilent],axis=1))*self.X_scRECODE[:,self.idx_nonsilent].T/np.sum(self.X_scRECODE[:,self.idx_nonsilent],axis=1)).T
+		X_RECODE_ss = (np.median(np.sum(self.X_RECODE[:,self.idx_nonsilent],axis=1))*self.X_RECODE[:,self.idx_nonsilent].T/np.sum(self.X_RECODE[:,self.idx_nonsilent],axis=1)).T
 		fig,ax1 = plt.subplots(figsize=figsize)
-		x = np.mean(X_scRECODE_ss,axis=0)
-		cv = np.std(X_scRECODE_ss,axis=0)/np.mean(X_scRECODE_ss,axis=0)
+		x = np.mean(X_RECODE_ss,axis=0)
+		cv = np.std(X_RECODE_ss,axis=0)/np.mean(X_RECODE_ss,axis=0)
 		#ax1.set_ylim(ax0.set_ylim())
 		ax1.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax1.set_xscale('log')
@@ -842,7 +842,7 @@ class scRECODE():
 		ax1.set_ylabel('Coefficient of variation',fontsize=14)
 		if title==None:
 			ax0.set_title('Original',fontsize=14)
-			ax1.set_title('scRECODE',fontsize=14)
+			ax1.set_title('RECODE',fontsize=14)
 		else:
 			ax0.title(title,fontsize=fs_title)
 			ax1.title(title,fontsize=fs_title)
@@ -866,7 +866,7 @@ class scRECODE():
 			ax1.scatter(x,cv,color='b',s=ps,zorder=2)
 			
 		if save:
-			plt.savefig('%s_scRECODE.%s' % (save_filename,save_format),dpi=dpi)
+			plt.savefig('%s_RECODE.%s' % (save_filename,save_format),dpi=dpi)
 		plt.show()
 	
 	def plot_ATAC_preprocessing(
@@ -946,7 +946,7 @@ class scRECODE():
 		plt.show()
 	
 
-class RECODE():
+class RECODE_core():
 
 	def __init__(
 		self,
@@ -957,8 +957,7 @@ class RECODE():
 		ell_manual = None,
 	):
 		"""
-		RECODE (Resolution of curse of dimensionality). 
-		A noise reduction method for general data. 
+		The core part of RECODE (for non-randam sampling data). 
 
 		Parameters
 		----------
