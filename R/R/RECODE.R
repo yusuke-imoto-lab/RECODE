@@ -1,7 +1,7 @@
-scRECODE <- function(
+RECODE <- function(
   X
 ){
-  message('--START scRECODE--')
+  message('--START RECODE--')
   message(' I.   Normalizing')
   X_clean <- t(as.matrix(X))[,apply(X,1,sum)>0]
   n <- nrow(X_clean)
@@ -36,6 +36,6 @@ scRECODE <- function(
   X_RECODE_clean[X_RECODE_clean<0] = 0
   X_RECODE <- t(X)
   X_RECODE[,apply(X,1,sum)>0] <- X_RECODE_clean
-  message('--END scRECODE--')
+  message('--END RECODE--')
   return(t(X_RECODE))
 }

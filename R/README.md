@@ -3,19 +3,19 @@ The current version of the R code is not fast because the PCA algorithm on R is 
 
 ## Installation
 
-You can install `scRECODE` on R with:
+You can install `RECODE` on R with:
 
 ``` r
-devtools::install_github("yusuke-imoto-lab/scRECODE/R")
+devtools::install_github("yusuke-imoto-lab/RECODE/R")
 ```
 
 
 ## Example
-For the single-cell data *X* (rows: genes, columns: cells), we can apply scRECODE as follows. 
+For the single-cell data *X* (rows: genes, columns: cells), we can apply RECODE as follows. 
 
 
 ``` r
-library(scRECODE)
+library(RECODE)
 
-X.RECODE <- scRECODE(X)
+X.RECODE <- RECODE(X)
 ```
