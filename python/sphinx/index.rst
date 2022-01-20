@@ -1,15 +1,15 @@
-.. scRECODE documentation master file, created by
+.. RECODE documentation master file, created by
    sphinx-quickstart on Fri Oct  8 15:45:48 2021.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-scRECODE: Resolution of Curse of Dimensionality in Single-cell Data Analysis
+RECODE: Resolution of Curse of Dimensionality in Single-cell Data Analysis
 ====================================
-**Re**\ solution of **c**\ urse **o**\ f **d**\ im\ **e**\ nsionality in **s**\ ingle-**c**\ ell data analysis (scRECODE) is a noire reduction method for single-cell sequencing data. `github <https://github.com/yusuke-imoto-lab/screcode>`_
+**Re**\ solution of **c**\ urse **o**\ f **d**\ im\ **e**\ nsionality in **s**\ ingle-**c**\ ell data analysis (scRECODE) is a noise reduction method for single-cell sequencing data. `github <https://github.com/yusuke-imoto-lab/screcode>`_
 
 Installation
 ====================================
-scRECODE package supports PyPI install. 
+RECODE package supports PyPI install. 
 
 .. code-block:: bash
 
@@ -21,10 +21,10 @@ You can also install the development version of lingam package from GitHub:
 
 .. code-block:: bash
 
-	$ pip install git+https://github.com/yusuke-imoto-lab/scRECODE.git
+	$ pip install git+https://github.com/yusuke-imoto-lab/RECODE.git
 
 
-To use scRECODE, import ``screcode``. 
+To use RECODE, import ``screcode``. 
 
 .. code-block:: python
 

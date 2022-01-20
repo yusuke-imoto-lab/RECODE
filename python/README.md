@@ -1,7 +1,7 @@
-# scRECODE - python code
+# RECODE - python code
 
 ## Installation
-To install scRECODE package, use `pip` as follows:
+To install RECODE package, use `pip` as follows:
 
 ```
 $ pip install screcode
