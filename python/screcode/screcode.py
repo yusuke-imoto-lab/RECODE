@@ -204,7 +204,8 @@ class RECODE():
 		save = False,
 		save_filename = 'check_applicability',
 		save_format = 'png',
-		dpi = None
+		dpi = None,
+	  show = True
 	):
 		"""
 		Check applicability of RECODE. 
@@ -288,7 +289,8 @@ class RECODE():
 			print('applicabity:',applicability)
 		if save:
 			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
-		plt.show()
+		if show:
+			plt.show()
 		
 	
 	def plot_procedures(
@@ -299,7 +301,8 @@ class RECODE():
 		  save_filename = 'RECODE_procedures',
 		  save_filename_foots = ('1_Original','2_Normalized','3_Projected','4_Variance-modified','5_Denoised'),
 		  save_format = 'png',
-		  dpi=None
+		  dpi=None,
+		  show=True
 	):
 		"""
 		Plot procedures of RECODE. The vertical axes of feature are sorted by the mean. 
@@ -336,27 +339,27 @@ class RECODE():
 			foot = '0_ATAC_preprocessing'
 			self.plot_ATAC_preprocessing(title=title,figsize=figsize,
 				save = save,save_filename = '%s_%s' % (save_filename,foot),
-				save_format = save_format,dpi=dpi)
+				save_format = save_format,dpi=dpi,show=show)
 
 		self.plot_original_data(title=titles[0],figsize=figsize,
 			save = save,save_filename = '%s_%s' % (save_filename,save_filename_foots[0]),
-			save_format = save_format,dpi=dpi)
+			save_format = save_format,dpi=dpi,show=show)
 		 
 		self.plot_normalized_data(title=titles[1],figsize=figsize,
 			save = save,save_filename = '%s_%s' % (save_filename,save_filename_foots[1]),
-			save_format = save_format,dpi=dpi)
+			save_format = save_format,dpi=dpi,show=show)
 		
 		self.plot_projected_data(title=titles[2],figsize=figsize,
 			save = save,save_filename = '%s_%s' % (save_filename,save_filename_foots[2]),
-			save_format = save_format,dpi=dpi)
+			save_format = save_format,dpi=dpi,show=show)
 		
 		self.plot_variance_modified_data(title=titles[3],figsize=figsize,
 			save = save,save_filename = '%s_%s' % (save_filename,save_filename_foots[3]),
-			save_format = save_format,dpi=dpi)
+			save_format = save_format,dpi=dpi,show=show)
 		
 		self.plot_denoised_data(title=titles[4],figsize=figsize,
 			save = save,save_filename = '%s_%s' % (save_filename,save_filename_foots[4]),
-			save_format = save_format,dpi=dpi)
+			save_format = save_format,dpi=dpi,show=show)
 	
 	
 	def plot_original_data(
@@ -366,7 +369,8 @@ class RECODE():
 		  save = False,
 		  save_filename = 'original_data',
 		  save_format = 'png',
-		  dpi=None
+		  dpi=None,
+		  show = True
 	):
 		"""
 		Plot noise variance for each features.
@@ -425,8 +429,9 @@ class RECODE():
 		plt.gca().spines['top'].set_visible(False)
 		if save:
 			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
-		plt.show()
-	
+		if show:
+			plt.show()
+
 	def plot_normalized_data(
 			self,
 		  title='Normalized data',
@@ -434,7 +439,8 @@ class RECODE():
 		  save = False,
 		  save_filename = 'noise_variance',
 		  save_format = 'png',
-		  dpi=None
+		  dpi=None,
+		  show = True
 	):
 		"""
 		Plot the transformed data by the noise variance-srabilizing normalization.
@@ -486,7 +492,8 @@ class RECODE():
 		plt.gca().spines['top'].set_visible(False)
 		if save:
 			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
-		plt.show()
+		if show:
+			plt.show()
 
 	def plot_projected_data(
 			self,
@@ -495,7 +502,8 @@ class RECODE():
 		  save = False,
 		  save_filename = 'noise_variance',
 		  save_format = 'png',
-		  dpi=None
+		  dpi=None,
+		  show = True
 	):
 		"""
 		Plot projected data.
@@ -548,7 +556,8 @@ class RECODE():
 		plt.gca().spines['top'].set_visible(False)
 		if save:
 			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
-		plt.show()
+		if show:
+			plt.show()
 		
 	def plot_variance_modified_data(
 			self,
@@ -557,7 +566,8 @@ class RECODE():
 		  save = False,
 		  save_filename = 'noise_variance',
 		  save_format = 'png',
-		  dpi=None
+		  dpi=None,
+		  show = True
 	):
 		"""
 		Plot varainces (eigenvalues) of the variance-modified data.
@@ -616,7 +626,8 @@ class RECODE():
 		plt.gca().spines['top'].set_visible(False)
 		if save:
 			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
-		plt.show()
+		if show:
+			plt.show()
 	
 	def plot_denoised_data(
 			self,
@@ -625,7 +636,8 @@ class RECODE():
 		  save = False,
 		  save_filename = 'noise_variance',
 		  save_format = 'png',
-		  dpi=None
+		  dpi=None,
+		  show = True
 	):
 		"""
 		Plot varainces of the denoised data.
@@ -679,7 +691,8 @@ class RECODE():
 		plt.gca().spines['top'].set_visible(False)
 		if save:
 			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
-		plt.show()
+		if show:
+			plt.show()
 	
 	def plot_mean_variance(
 		self,
@@ -690,7 +703,8 @@ class RECODE():
 		save = False,
 		save_filename = 'plot_mean_variance',
 		save_format = 'png',
-		dpi=None
+		dpi=None,
+	  show = True
 	):
 		"""
 		Plot mean vs variance of features for log-normalized data
@@ -762,8 +776,9 @@ class RECODE():
 		plt.gca().spines['top'].set_visible(False)
 		if save:
 			plt.savefig('%s_RECODE.%s' % (save_filename,save_format),dpi=dpi)
-		plt.show()
-	
+		if show:
+			plt.show()
+
 	def plot_mean_cv(
 		self,
 		title=None,
@@ -777,6 +792,7 @@ class RECODE():
 		n_show_features = 10,
 		cut_detect_rate = 0.005,
 		index = None,
+	  show = True
 	):
 		"""
 		Plot mean vs variance of features for log-normalized data
@@ -867,7 +883,8 @@ class RECODE():
 			
 		if save:
 			plt.savefig('%s_RECODE.%s' % (save_filename,save_format),dpi=dpi)
-		plt.show()
+		if show:
+			plt.show()
 	
 	def plot_ATAC_preprocessing(
 		self,
@@ -877,7 +894,8 @@ class RECODE():
 		save = False,
 		save_filename = 'plot_ATAC_preprocessing',
 		save_format = 'png',
-		dpi=None
+		dpi=None,
+	  show=True
 	):
 		"""
 		Plot the number of values in scATAC-seq data matrix with and without preprocessing (odd-even normalization).
@@ -943,8 +961,8 @@ class RECODE():
 		plt.legend(fontsize=fs_legend)
 		if save:
 			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
-		plt.show()
-	
+		if show:
+			plt.show()	
 
 class RECODE_core():
 
