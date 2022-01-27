@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('../screcode/'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'scRECODE'
+project = 'RECODE'
 copyright = '2021, Yusuke Imoto'
 author = 'Yusuke Imoto'
 
