@@ -34,7 +34,7 @@ python/poetry.lock
 python/poetry.toml
 
 # Test
-python/recode/data
-python/recode/figure
-python/recode/test.py
+python/screcode/data
+python/screcode/figure
+python/screcode/test.py
 *.ipynb
