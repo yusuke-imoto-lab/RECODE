@@ -24,31 +24,31 @@ Imput data from HDF5 file (\*\*\*.h5).
 	input_filename = '10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.h5'
 	adata = scanpy.read_10x_h5(input_filename)
 
-Apply scRECODE. The denoised data is created in ``data_scRECODE``.
+Apply RECODE. The denoised data is created in ``data_RECODE``.
 
 .. code-block:: python
 
-	recode = screcode.scRECODE()
-	data_scRECODE = recode.fit_transform(adata.X.toarray())
+	recode = screcode.RECODE()
+	data_RECODE = recode.fit_transform(adata.X.toarray())
 
 .. parsed-literal::
 
-	start scRECODE for scRNA-seq
-	end scRECODE for scRNA-seq
+	start RECODE for scRNA-seq
+	end RECODE for scRNA-seq
 	log: {'seq_target': 'RNA', '#significant genes': 15789, '#non-significant genes': 9322, '#silent genes': 11490, 'ell': 165, 'Elapsed_time': '53.9133[sec]'}
 	
 Write the denoised data as HDF5 file. 
 
 .. code-block:: python
 
-	adata_scRECODE = adata.copy()
-	adata_scRECODE.X = scipy.sparse.csc_matrix(data_scRECODE)
-	adata_scRECODE.var['noise_variance'] = recode.noise_variance_
-	adata_scRECODE.var['normalized_variance'] = recode.normalized_variance_
-	adata_scRECODE.var['significance'] = recode.significance_
-	adata_scRECODE.var_names_make_unique()
-	output_filename = '10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix_scRECODE.h5'
-	adata_scRECODE.write(output_filename)
+	adata_RECODE = adata.copy()
+	adata_RECODE.X = scipy.sparse.csc_matrix(data_RECODE)
+	adata_RECODE.var['noise_variance'] = recode.noise_variance_
+	adata_RECODE.var['normalized_variance'] = recode.normalized_variance_
+	adata_RECODE.var['significance'] = recode.significance_
+	adata_RECODE.var_names_make_unique()
+	output_filename = '10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix_RECODE.h5'
+	adata_RECODE.write(output_filename)
 
 Check applicability. 
 
@@ -62,7 +62,7 @@ Check applicability.
 
 .. image:: ../image/Example_10X_RNA_applicability.png
 
-Show 5 procedures of scRECODE. 
+Show 5 procedures of RECODE. 
 
 .. code-block:: python
 
@@ -85,7 +85,7 @@ Show 5 procedures of scRECODE.
 .. image:: ../image/Example_10X_RNA_applicability.png
 	
 
-Show scatter plots of mean versus variance of log-scaled data before and after scRECODE. 
+Show scatter plots of mean versus variance of log-scaled data before and after RECODE. 
 
 .. code-block:: python
 
@@ -93,9 +93,9 @@ Show scatter plots of mean versus variance of log-scaled data before and after s
 
 .. image:: ../image/Example_10X_RNA_mean_var_Original.png
 
-.. image:: ../image/Example_10X_RNA_mean_var_scRECODE.png
+.. image:: ../image/Example_10X_RNA_mean_var_RECODE.png
 
-Show scatter plots of mean vs CV (coefficient of variation) before and after scRECODE. 	
+Show scatter plots of mean vs CV (coefficient of variation) before and after RECODE. 	
 
 .. code-block:: python
 
@@ -103,7 +103,7 @@ Show scatter plots of mean vs CV (coefficient of variation) before and after scR
 
 .. image:: ../image/Example_10X_RNA_mean_cv_Original.png
 
-.. image:: ../image/Example_10X_RNA_mean_cv_scRECODE.png
+.. image:: ../image/Example_10X_RNA_mean_cv_RECODE.png
 
 Check the log. 
 
