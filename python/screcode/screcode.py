@@ -830,6 +830,8 @@ class RECODE():
 			
 		
 		"""
+        fs_label = 14
+		fs_title = 14
 		X_ss = (np.median(np.sum(self.X[:,self.idx_nonsilent],axis=1))*self.X[:,self.idx_nonsilent].T/np.sum(self.X[:,self.idx_nonsilent],axis=1)).T
 		fig,ax0 = plt.subplots(figsize=figsize)
 		plt.rcParams['xtick.direction'] = 'in'
@@ -839,8 +841,8 @@ class RECODE():
 		ax0.scatter(x,cv,color='b',s=ps,zorder=2)
 		ax0.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax0.set_xscale('log')
-		ax0.set_xlabel('Mean',fontsize=14)
-		ax0.set_ylabel('Coefficient of variation',fontsize=14)
+		ax0.set_xlabel('Mean',fontsize=fs_label)
+		ax0.set_ylabel('Coefficient of variation',fontsize=fs_label)
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		ax0.set_title(titles[0],fontsize=fs_title)
@@ -854,8 +856,8 @@ class RECODE():
 		#ax1.set_ylim(ax0.set_ylim())
 		ax1.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax1.set_xscale('log')
-		ax1.set_xlabel('Mean',fontsize=14)
-		ax1.set_ylabel('Coefficient of variation',fontsize=14)
+		ax1.set_xlabel('Mean',fontsize=fs_label)
+		ax1.set_ylabel('Coefficient of variation',fontsize=fs_label)
 		ax1.set_title(titles[1],fontsize=fs_title)
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
