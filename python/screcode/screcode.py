@@ -830,7 +830,7 @@ class RECODE():
 			
 		
 		"""
-        fs_label = 14
+		fs_label = 14
 		fs_title = 14
 		X_ss = (np.median(np.sum(self.X[:,self.idx_nonsilent],axis=1))*self.X[:,self.idx_nonsilent].T/np.sum(self.X[:,self.idx_nonsilent],axis=1)).T
 		fig,ax0 = plt.subplots(figsize=figsize)
