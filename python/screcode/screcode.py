@@ -711,7 +711,7 @@ class RECODE():
 		
 		Parameters
 		----------
-		titles : str, default=('Original','RECODE')
+		titles : tuple, default=('Original','RECODE')
 			Figure title.
 		
 		figsize : 2-tuple of floats, default=(7,5)
@@ -758,7 +758,7 @@ class RECODE():
 		ax0.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax0.set_xlabel('Mean of log-scaled data',fontsize=fs_label)
 		ax0.set_ylabel('Variance of log-scaled data',fontsize=fs_label)
-		ax0.set_title('Original',fontsize=fs_title)
+		ax0.set_title(titles[0],fontsize=fs_title)
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
@@ -770,8 +770,7 @@ class RECODE():
 		ax1.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax1.set_xlabel('Mean of log-scaled data',fontsize=fs_label)
 		ax1.set_ylabel('Variance of log-scaled data',fontsize=fs_label)
-		ax0.set_title('Original',fontsize=fs_title)
-		ax1.set_title('RECODE',fontsize=fs_title)
+		ax1.set_title(titles[1],fontsize=fs_title)
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
@@ -844,7 +843,7 @@ class RECODE():
 		ax0.set_ylabel('Coefficient of variation',fontsize=14)
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
-        if title==None:
+		if title==None:
 			ax0.set_title('Original',fontsize=14)
 		else:
 			ax0.title(title,fontsize=fs_title)
