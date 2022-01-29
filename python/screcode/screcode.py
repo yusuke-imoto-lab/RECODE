@@ -857,8 +857,6 @@ class RECODE():
 		ax1.set_xlabel('Mean',fontsize=14)
 		ax1.set_ylabel('Coefficient of variation',fontsize=14)
 		ax1.set_title(titles[1],fontsize=fs_title)
-		else:
-			ax1.title(title,fontsize=fs_title)
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		
