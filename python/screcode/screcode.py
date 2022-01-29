@@ -780,7 +780,7 @@ class RECODE():
 
 	def plot_mean_cv(
 		self,
-		title=None,
+		titles=('Original','RECODE'),
 		figsize=(7,5),
 		ps = 2,
 		save = False,
@@ -843,10 +843,7 @@ class RECODE():
 		ax0.set_ylabel('Coefficient of variation',fontsize=14)
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
-		if title==None:
-			ax0.set_title('Original',fontsize=14)
-		else:
-			ax0.title(title,fontsize=fs_title)
+		ax0.set_title(titles[0],fontsize=fs_title)
 		if save:
 			plt.savefig('%s_Original.%s' % (save_filename,save_format),dpi=dpi)
 		
@@ -859,8 +856,7 @@ class RECODE():
 		ax1.set_xscale('log')
 		ax1.set_xlabel('Mean',fontsize=14)
 		ax1.set_ylabel('Coefficient of variation',fontsize=14)
-		if title==None:
-			ax1.set_title('RECODE',fontsize=14)
+		ax1.set_title(titles[1],fontsize=fs_title)
 		else:
 			ax1.title(title,fontsize=fs_title)
 		plt.gca().spines['right'].set_visible(False)
