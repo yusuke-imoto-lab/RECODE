@@ -138,8 +138,8 @@ class RECODE():
 
 		"""
 		if scipy.sparse.issparse(X):
-            warnings.warn('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
-            X = X.toarray()
+			warnings.warn('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
+			X = X.toarray()
 		self.X = X
 		self.idx_nonsilent = np.sum(X,axis=0) > 0
 		self.X_temp = X[:,self.idx_nonsilent]
@@ -1023,8 +1023,8 @@ class RECODE_core():
 		else:
 			self.n_pca = min(n-1,d-1)
 		if scipy.sparse.issparse(X):
-            warnings.warn('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
-            X = X.toarray()
+			warnings.warn('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
+			X = X.toarray()
 		X_svd = X
 		n_svd,d = X_svd.shape
 		X_mean = np.mean(X,axis=0)
