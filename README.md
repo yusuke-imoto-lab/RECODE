@@ -1,6 +1,6 @@
 # RECODE - Resolution of curse of dimensionality in single-cell data analysis
 
-## Python
+## Python code
 
 ### Installation
 
@@ -21,7 +21,7 @@ $ pip install screcode
 * scipy
 * scikit-learn
 
-## R
+## R code
 
 ### Installation
 

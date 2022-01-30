@@ -1,6 +1,6 @@
 .. module:: screcode
 
-scRECODE
+RECODE
 =============
 
 .. automodule:: screcode
