@@ -1023,7 +1023,7 @@ class RECODE_core():
 		else:
 			self.n_pca = min(n-1,d-1)
 		if scipy.sparse.issparse(X):
-			warnings.warn('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
+			print('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
 			X = X.toarray()
 		X_svd = X
 		n_svd,d = X_svd.shape
