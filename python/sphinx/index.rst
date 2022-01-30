@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-RECODE: Resolution of Curse of Dimensionality in Single-cell Data Analysis
+RECODE documentation
 ====================================
-**Re**\ solution of **c**\ urse **o**\ f **d**\ im\ **e**\ nsionality in **s**\ ingle-**c**\ ell data analysis (RECODE) is a noise reduction method for single-cell sequencing data. `github <https://github.com/yusuke-imoto-lab/screcode>`_
+**Re**\ solution of **c**\ urse **o**\ f **d**\ im\ **e**\ nsionality in **s**\ ingle-**c**\ ell data analysis (RECODE) is a noise reduction method for single-cell sequencing data. `github <https://github.com/yusuke-imoto-lab/RECODE>`_
 
 Installation
 ====================================
