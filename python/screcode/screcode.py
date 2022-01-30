@@ -150,7 +150,7 @@ class RECODE():
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features)
-			single-cell sequencing data matrix (row:cell, culumn:gene/peak).
+			Tranceforming single-cell sequencing data matrix (row:cell, culumn:gene/peak).
 
 		Returns
 		-------
@@ -978,7 +978,7 @@ class RECODE_core():
 		----------
 		solver : {'variance','manual'}
 			If 'variance', regular variance-based algorithm. 
-			If 'manual', parameter ell, which identifies essential and noise parts in the PCA space, is manually set. The manual parameter is given by ``ell_manual``. 
+			If 'manual', parameter :math:`\ell`, which identifies essential and noise parts in the PCA space, is manually set. The manual parameter is given by ``ell_manual``. 
 		
 		variance_estimate : boolean, default=True
 			If True and ``solver='variance'``, the parameter estimation method will be conducted. 
@@ -990,7 +990,7 @@ class RECODE_core():
 			Upper bound of parameter :math:`\ell` for the fast algorithm. Must be of range [1, infinity).
 		
 		ell_manual : int, default=10
-			Manual parameter computed by ``solver='ell'``. Must be of range [1, infinity).
+			Manual parameter computed when ``solver='manual'``. Must be of range [1, infinity).
 		
 		"""
 		self.solver = solver
@@ -1019,6 +1019,9 @@ class RECODE_core():
 			self.n_pca = min(n-1,d-1,self.fast_algorithm_ell_ub)
 		else:
 			self.n_pca = min(n-1,d-1)
+        if scipy.sparse.issparse(X):
+            warnings.warn('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
+            X = X.toarray()
 		X_svd = X
 		n_svd,d = X_svd.shape
 		X_mean = np.mean(X,axis=0)
@@ -1120,7 +1123,7 @@ class RECODE_core():
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features).
-			Training data matrix, where `n_samples` is the number of samples
+			Tranceforming data matrix, where `n_samples` is the number of samples
 			and `n_features` is the number of features.
 
 		Returns
@@ -1128,7 +1131,6 @@ class RECODE_core():
 		X_new : ndarray of shape (n_samples, n_components)
 			Denoised data matrix.
 		"""
-		self.fit(X)
 		if self.solver=='variance':
 			if self.variance_estimate:
 				noise_var = self._noise_var_est(X)
