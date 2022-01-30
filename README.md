@@ -1,4 +1,4 @@
-# RECODE - resolution of curse of dimensionality in single-cell data analysis
+# RECODE - Resolution of curse of dimensionality in single-cell data analysis
 
 ## Python
 
@@ -10,7 +10,12 @@ To install RECODE package, use `pip` as follows:
 $ pip install screcode
 ```
 
-#### Requirements
+### Documentation
+
+[Examples and API reference](https://yusuke-imoto-lab.github.io/RECODE/index.html)
+
+
+### Requirements
 * Python3
 * numpy
 * scipy
