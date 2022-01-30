@@ -137,6 +137,9 @@ class RECODE():
 			single-cell sequencing data matrix (row:cell, culumn:gene/peak).
 
 		"""
+        if scipy.sparse.issparse(X):
+            warnings.warn('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
+            X = X.toarray()
 		self.X = X
 		self.idx_nonsilent = np.sum(X,axis=0) > 0
 		self.X_temp = X[:,self.idx_nonsilent]
