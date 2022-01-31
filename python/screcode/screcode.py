@@ -1003,7 +1003,10 @@ class RECODE_core():
 		self.ell_manual=ell_manual
 		self.fit_id_ = False
 	
-	def fit(self, X):
+	def fit(
+		self,
+		X
+		):
 		"""
 		Fit the model to X.
 
