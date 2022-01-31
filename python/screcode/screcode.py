@@ -965,7 +965,6 @@ class RECODE():
 			plt.show()	
 
 class RECODE_core():
-
 	def __init__(
 		self,
 		solver = 'variance',
@@ -1121,13 +1120,14 @@ class RECODE_core():
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features).
-			Training data matrix, where `n_samples` is the number of samples
+			Transsforming data matrix, where `n_samples` is the number of samples
 			and `n_features` is the number of features.
 		Returns
 		-------
 		X_new : ndarray of shape (n_samples, n_components)
 			Denoised data matrix.
 		"""
+		
 		self.fit(X)
 		if self.solver=='variance':
 			if self.variance_estimate:
