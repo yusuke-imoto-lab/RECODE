@@ -1134,6 +1134,7 @@ class RECODE_core():
 		X_new : ndarray of shape (n_samples, n_components)
 			Denoised data matrix.
 		"""
+		self.fit(X)
 		if self.solver=='variance':
 			if self.variance_estimate:
 				noise_var = self._noise_var_est(X)
