@@ -1039,6 +1039,7 @@ class RECODE_core():
 		self.X = X
 		self.X_mean = np.mean(X,axis=0)
 		self.PCA_Ev_sum_all = PCA_Ev_sum_all
+		print('fit end')
 	
 	def _noise_reduct_param(
 		self,
