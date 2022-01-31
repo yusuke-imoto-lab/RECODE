@@ -1138,7 +1138,9 @@ class RECODE_core():
 		X_new : ndarray of shape (n_samples, n_components)
 			Denoised data matrix.
 		"""
+		print(self.fit_id_ )
 		self.fit(X)
+		print(self.fit_id_ )
 		# if self.fit_id_ == False:
 		# 	self.fit(X)
 		if self.solver=='variance':
