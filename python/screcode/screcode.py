@@ -1001,6 +1001,7 @@ class RECODE_core():
 		self.fast_algorithm = fast_algorithm
 		self.fast_algorithm_ell_ub = fast_algorithm_ell_ub
 		self.ell_manual=ell_manual
+		self.fit_id_ = False
 	
 	def fit(self, X):
 		"""
@@ -1045,6 +1046,7 @@ class RECODE_core():
 		self.X = X
 		self.X_mean = np.mean(X,axis=0)
 		self.PCA_Ev_sum_all = PCA_Ev_sum_all
+		self.fit_id_ = True
 	
 	def _noise_reduct_param(
 		self,
@@ -1134,7 +1136,8 @@ class RECODE_core():
 		X_new : ndarray of shape (n_samples, n_components)
 			Denoised data matrix.
 		"""
-		self.fit(X)
+		if self.fit_id_ == False:
+			self.fit(X)
 		if self.solver=='variance':
 			if self.variance_estimate:
 				noise_var = self._noise_var_est(X)
