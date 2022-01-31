@@ -976,12 +976,11 @@ class RECODE_core():
 	):
 		"""
 		The core part of RECODE (for non-randam sampling data). 
-
 		Parameters
 		----------
 		solver : {'variance','manual'}
 			If 'variance', regular variance-based algorithm. 
-			If 'manual', parameter :math:`\ell`, which identifies essential and noise parts in the PCA space, is manually set. The manual parameter is given by ``ell_manual``. 
+			If 'manual', parameter ell, which identifies essential and noise parts in the PCA space, is manually set. The manual parameter is given by ``ell_manual``. 
 		
 		variance_estimate : boolean, default=True
 			If True and ``solver='variance'``, the parameter estimation method will be conducted. 
@@ -993,7 +992,7 @@ class RECODE_core():
 			Upper bound of parameter :math:`\ell` for the fast algorithm. Must be of range [1, infinity).
 		
 		ell_manual : int, default=10
-			Manual parameter computed when ``solver='manual'``. Must be of range [1, infinity).
+			Manual parameter computed by ``solver='ell'``. Must be of range [1, infinity).
 		
 		"""
 		self.solver = solver
@@ -1001,21 +1000,15 @@ class RECODE_core():
 		self.fast_algorithm = fast_algorithm
 		self.fast_algorithm_ell_ub = fast_algorithm_ell_ub
 		self.ell_manual=ell_manual
-		self.fit_id_ = False
 	
-	def fit(
-		self,
-		X
-		):
+	def fit(self, X):
 		"""
 		Fit the model to X.
-
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features).
 			Training data matrix, where ``n_samples`` is the number of samples
 			and ``n_features`` is the number of features.
-
 		Returns
 		-------
 		self : object
@@ -1026,9 +1019,6 @@ class RECODE_core():
 			self.n_pca = min(n-1,d-1,self.fast_algorithm_ell_ub)
 		else:
 			self.n_pca = min(n-1,d-1)
-		# if scipy.sparse.issparse(X):
-		# 	print('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
-		# 	X = X.toarray()
 		X_svd = X
 		n_svd,d = X_svd.shape
 		X_mean = np.mean(X,axis=0)
@@ -1049,7 +1039,6 @@ class RECODE_core():
 		self.X = X
 		self.X_mean = np.mean(X,axis=0)
 		self.PCA_Ev_sum_all = PCA_Ev_sum_all
-		self.fit_id_ = True
 	
 	def _noise_reduct_param(
 		self,
@@ -1076,6 +1065,7 @@ class RECODE_core():
 		X_var  = np.var(self.X,axis=0,ddof=1)
 		dim = np.sum(X_var>0)
 		thrshold = (dim-np.arange(self.n_pca))*noise_var
+		#comp = np.sum(PCA_Ev_sum-thrshold>0)
 		comp = min(np.arange(self.n_pca)[PCA_Ev_sum-thrshold<0])
 		self.ell = max(min(self.ell_max,comp),ell_min)
 		X_RECODE = self._noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
@@ -1126,23 +1116,17 @@ class RECODE_core():
 	def fit_transform(self,X):
 		"""
 		Apply RECODE to X.
-
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features).
-			Tranceforming data matrix, where `n_samples` is the number of samples
+			Training data matrix, where `n_samples` is the number of samples
 			and `n_features` is the number of features.
-
 		Returns
 		-------
 		X_new : ndarray of shape (n_samples, n_components)
 			Denoised data matrix.
 		"""
-		print(self.fit_id_ )
 		self.fit(X)
-		print(self.fit_id_ )
-		# if self.fit_id_ == False:
-		# 	self.fit(X)
 		if self.solver=='variance':
 			if self.variance_estimate:
 				noise_var = self._noise_var_est(X)
@@ -1151,6 +1135,6 @@ class RECODE_core():
 				return self._noise_reduct_noise_var()
 		elif self.solver=='manual':
 			self.ell = self.ell_manual
-			return self._noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
-	
+			self.X_RECODE = _noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
+			return self.X_RECODE
 
