@@ -551,7 +551,6 @@ class RECODE():
 		ax.scatter(np.arange(n_EV)+1,plot_EV,color='k',label='Original',s=ps,zorder=1)
 		ax.set_xlabel('PC',fontsize=fs_label)
 		ax.set_ylabel('Variance (eigenvalue)',fontsize=fs_label)
-		#ax.set_xscale('log')
 		ax.set_yscale('symlog')
 		ax.set_ylim([0,max(plot_EV)*1.5])
 		ax.set_title(title,fontsize=fs_title)
@@ -1013,7 +1012,6 @@ class RECODE_core():
 		self : object
 			Returns the instance itself.
 		"""
-		print('fit start')
 		n,d = X.shape
 		if self.fast_algorithm:
 			self.n_pca = min(n-1,d-1,self.fast_algorithm_ell_ub)
@@ -1039,7 +1037,6 @@ class RECODE_core():
 		self.X = X
 		self.X_mean = np.mean(X,axis=0)
 		self.PCA_Ev_sum_all = PCA_Ev_sum_all
-		print('fit end')
 	
 	def _noise_reduct_param(
 		self,
@@ -1137,6 +1134,5 @@ class RECODE_core():
 				return self._noise_reduct_noise_var()
 		elif self.solver=='manual':
 			self.ell = self.ell_manual
-			self.X_RECODE = _noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
-			return self.X_RECODE
+			return self._noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
 
