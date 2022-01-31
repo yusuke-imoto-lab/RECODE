@@ -137,6 +137,9 @@ class RECODE():
 			single-cell sequencing data matrix (row:cell, culumn:gene/peak).
 
 		"""
+		if scipy.sparse.issparse(X):
+			warnings.warn('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
+			X = X.toarray()
 		self.X = X
 		self.idx_nonsilent = np.sum(X,axis=0) > 0
 		self.X_temp = X[:,self.idx_nonsilent]
@@ -150,7 +153,7 @@ class RECODE():
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features)
-			single-cell sequencing data matrix (row:cell, culumn:gene/peak).
+			Tranceforming single-cell sequencing data matrix (row:cell, culumn:gene/peak).
 
 		Returns
 		-------
@@ -711,7 +714,7 @@ class RECODE():
 		
 		Parameters
 		----------
-		titles : str, default=('Original','RECODE')
+		titles : tuple, default=('Original','RECODE')
 			Figure title.
 		
 		figsize : 2-tuple of floats, default=(7,5)
@@ -758,7 +761,7 @@ class RECODE():
 		ax0.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax0.set_xlabel('Mean of log-scaled data',fontsize=fs_label)
 		ax0.set_ylabel('Variance of log-scaled data',fontsize=fs_label)
-		ax0.set_title('Original',fontsize=fs_title)
+		ax0.set_title(titles[0],fontsize=fs_title)
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
@@ -770,8 +773,7 @@ class RECODE():
 		ax1.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax1.set_xlabel('Mean of log-scaled data',fontsize=fs_label)
 		ax1.set_ylabel('Variance of log-scaled data',fontsize=fs_label)
-		ax0.set_title('Original',fontsize=fs_title)
-		ax1.set_title('RECODE',fontsize=fs_title)
+		ax1.set_title(titles[1],fontsize=fs_title)
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
@@ -781,7 +783,7 @@ class RECODE():
 
 	def plot_mean_cv(
 		self,
-		title=None,
+		titles=('Original','RECODE'),
 		figsize=(7,5),
 		ps = 2,
 		save = False,
@@ -831,6 +833,8 @@ class RECODE():
 			
 		
 		"""
+		fs_label = 14
+		fs_title = 14
 		X_ss = (np.median(np.sum(self.X[:,self.idx_nonsilent],axis=1))*self.X[:,self.idx_nonsilent].T/np.sum(self.X[:,self.idx_nonsilent],axis=1)).T
 		fig,ax0 = plt.subplots(figsize=figsize)
 		plt.rcParams['xtick.direction'] = 'in'
@@ -840,14 +844,11 @@ class RECODE():
 		ax0.scatter(x,cv,color='b',s=ps,zorder=2)
 		ax0.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax0.set_xscale('log')
-		ax0.set_xlabel('Mean',fontsize=14)
-		ax0.set_ylabel('Coefficient of variation',fontsize=14)
+		ax0.set_xlabel('Mean',fontsize=fs_label)
+		ax0.set_ylabel('Coefficient of variation',fontsize=fs_label)
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
-        if title==None:
-			ax0.set_title('Original',fontsize=14)
-		else:
-			ax0.title(title,fontsize=fs_title)
+		ax0.set_title(titles[0],fontsize=fs_title)
 		if save:
 			plt.savefig('%s_Original.%s' % (save_filename,save_format),dpi=dpi)
 		
@@ -858,12 +859,9 @@ class RECODE():
 		#ax1.set_ylim(ax0.set_ylim())
 		ax1.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax1.set_xscale('log')
-		ax1.set_xlabel('Mean',fontsize=14)
-		ax1.set_ylabel('Coefficient of variation',fontsize=14)
-		if title==None:
-			ax1.set_title('RECODE',fontsize=14)
-		else:
-			ax1.title(title,fontsize=fs_title)
+		ax1.set_xlabel('Mean',fontsize=fs_label)
+		ax1.set_ylabel('Coefficient of variation',fontsize=fs_label)
+		ax1.set_title(titles[1],fontsize=fs_title)
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		
@@ -983,7 +981,7 @@ class RECODE_core():
 		----------
 		solver : {'variance','manual'}
 			If 'variance', regular variance-based algorithm. 
-			If 'manual', parameter ell, which identifies essential and noise parts in the PCA space, is manually set. The manual parameter is given by ``ell_manual``. 
+			If 'manual', parameter :math:`\ell`, which identifies essential and noise parts in the PCA space, is manually set. The manual parameter is given by ``ell_manual``. 
 		
 		variance_estimate : boolean, default=True
 			If True and ``solver='variance'``, the parameter estimation method will be conducted. 
@@ -995,7 +993,7 @@ class RECODE_core():
 			Upper bound of parameter :math:`\ell` for the fast algorithm. Must be of range [1, infinity).
 		
 		ell_manual : int, default=10
-			Manual parameter computed by ``solver='ell'``. Must be of range [1, infinity).
+			Manual parameter computed when ``solver='manual'``. Must be of range [1, infinity).
 		
 		"""
 		self.solver = solver
@@ -1003,6 +1001,7 @@ class RECODE_core():
 		self.fast_algorithm = fast_algorithm
 		self.fast_algorithm_ell_ub = fast_algorithm_ell_ub
 		self.ell_manual=ell_manual
+		self.fit_id_ = False
 	
 	def fit(self, X):
 		"""
@@ -1024,6 +1023,9 @@ class RECODE_core():
 			self.n_pca = min(n-1,d-1,self.fast_algorithm_ell_ub)
 		else:
 			self.n_pca = min(n-1,d-1)
+		# if scipy.sparse.issparse(X):
+		# 	print('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
+		# 	X = X.toarray()
 		X_svd = X
 		n_svd,d = X_svd.shape
 		X_mean = np.mean(X,axis=0)
@@ -1044,6 +1046,7 @@ class RECODE_core():
 		self.X = X
 		self.X_mean = np.mean(X,axis=0)
 		self.PCA_Ev_sum_all = PCA_Ev_sum_all
+		self.fit_id_ = True
 	
 	def _noise_reduct_param(
 		self,
@@ -1070,7 +1073,6 @@ class RECODE_core():
 		X_var  = np.var(self.X,axis=0,ddof=1)
 		dim = np.sum(X_var>0)
 		thrshold = (dim-np.arange(self.n_pca))*noise_var
-		#comp = np.sum(PCA_Ev_sum-thrshold>0)
 		comp = min(np.arange(self.n_pca)[PCA_Ev_sum-thrshold<0])
 		self.ell = max(min(self.ell_max,comp),ell_min)
 		X_RECODE = self._noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
@@ -1125,7 +1127,7 @@ class RECODE_core():
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features).
-			Training data matrix, where `n_samples` is the number of samples
+			Tranceforming data matrix, where `n_samples` is the number of samples
 			and `n_features` is the number of features.
 
 		Returns
@@ -1134,6 +1136,8 @@ class RECODE_core():
 			Denoised data matrix.
 		"""
 		self.fit(X)
+		# if self.fit_id_ == False:
+		# 	self.fit(X)
 		if self.solver=='variance':
 			if self.variance_estimate:
 				noise_var = self._noise_var_est(X)
@@ -1142,6 +1146,6 @@ class RECODE_core():
 				return self._noise_reduct_noise_var()
 		elif self.solver=='manual':
 			self.ell = self.ell_manual
-			self.X_RECODE = _noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
-			return self.X_RECODE
+			return self._noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
 	
+
