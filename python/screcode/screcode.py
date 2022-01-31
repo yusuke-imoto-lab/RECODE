@@ -999,7 +999,7 @@ class RECODE_core():
 		self.variance_estimate = variance_estimate
 		self.fast_algorithm = fast_algorithm
 		self.fast_algorithm_ell_ub = fast_algorithm_ell_ub
-		self.ell_manual=ell_manual
+		self.ell_manual = ell_manual
 	
 	def fit(self, X):
 		"""
@@ -1014,6 +1014,7 @@ class RECODE_core():
 		self : object
 			Returns the instance itself.
 		"""
+		print('fit start')
 		n,d = X.shape
 		if self.fast_algorithm:
 			self.n_pca = min(n-1,d-1,self.fast_algorithm_ell_ub)
