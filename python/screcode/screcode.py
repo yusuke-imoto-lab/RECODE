@@ -1023,9 +1023,9 @@ class RECODE_core():
 			self.n_pca = min(n-1,d-1,self.fast_algorithm_ell_ub)
 		else:
 			self.n_pca = min(n-1,d-1)
-		if scipy.sparse.issparse(X):
-			print('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
-			X = X.toarray()
+		# if scipy.sparse.issparse(X):
+		# 	print('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
+		# 	X = X.toarray()
 		X_svd = X
 		n_svd,d = X_svd.shape
 		X_mean = np.mean(X,axis=0)
