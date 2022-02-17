@@ -56,7 +56,6 @@ class RECODE():
 		self.fast_algorithm_ell_ub = fast_algorithm_ell_ub
 		self.seq_target = seq_target
 		self.verbose = verbose
-		self.fit_id = False
 		self.unit = 'gene'
 		self.Unit = 'Gene'
 		if seq_target == 'ATAC':
@@ -1027,6 +1026,7 @@ class RECODE_core():
 		self.fast_algorithm = fast_algorithm
 		self.fast_algorithm_ell_ub = fast_algorithm_ell_ub
 		self.ell_manual = ell_manual
+		self.fit_idx = False
 	
 	def _noise_reduct_param(
 		self,
@@ -1117,8 +1117,8 @@ class RECODE_core():
 		PCA_Ev = (SVD_Sv**2)/(n_svd-1)
 		U = svd.components_
 		PCA_Ev_sum_all = np.sum(np.var(X,axis=0,ddof=1))
-		PCA_Ev_NRM = np.array(self.PCA_Ev,dtype=float)
-		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(self.PCA_Ev)
+		PCA_Ev_NRM = np.array(PCA_Ev,dtype=float)
+		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(PCA_Ev)
 		n_Ev_all = min(n,d)
 		for i in range(len(PCA_Ev_NRM)-1):
 			PCA_Ev_NRM[i] -= (np.sum(self.PCA_Ev[i+1:])+PCA_Ev_sum_diff)/(n_Ev_all-i-1)
@@ -1144,26 +1144,28 @@ class RECODE_core():
 		self.X = X
 		self.X_mean = np.mean(X,axis=0)
 		self.PCA_Ev_sum_all = PCA_Ev_sum_all
+		self.fit_idx = True
 
 	def transform(self,X):
-			"""
-			Apply RECODE to X.
-			Parameters
-			----------
-			X : ndarray of shape (n_samples, n_features).
-				Transsforming data matrix, where `n_samples` is the number of samples
-				and `n_features` is the number of features.
-			Returns
-			-------
-			X_new : ndarray of shape (n_samples, n_components)
-				Denoised data matrix.
-			"""
-			
-			if self.solver=='variance':
-				return self._noise_reduct_noise_var(self.noise_var)
-			elif self.solver=='manual':
-				self.ell = self.ell_manual
-				return self._noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
+		"""
+		Apply RECODE to X.
+		Parameters
+		----------
+		X : ndarray of shape (n_samples, n_features).
+			Transsforming data matrix, where `n_samples` is the number of samples
+			and `n_features` is the number of features.
+		Returns
+		-------
+		X_new : ndarray of shape (n_samples, n_components)
+			Denoised data matrix.
+		"""
+		if self.fit_idx == False:
+			raise TypeError("Run fit before transform.")
+		if self.solver=='variance':
+			return self._noise_reduct_noise_var(self.noise_var)
+		elif self.solver=='manual':
+			self.ell = self.ell_manual
+			return self._noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
 
 	def fit_transform(self,X):
 		"""
