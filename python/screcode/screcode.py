@@ -78,13 +78,9 @@ class RECODE():
 			Data matrix
 		"""
 		## scaled X
-		X_nUMI = np.sum(X,axis=1)
-		X_scaled = (X.T/X_nUMI).T
-		X_scaled_mean = np.mean(X_scaled,axis=0)
+		X_scaled = (X.T/self.X_nUMI).T
 		## normalization
-		X_norm = (X_scaled-X_scaled_mean)/np.sqrt(self.noise_var)
-		self.X_nUMI = X_nUMI
-		self.X_scaled_mean = X_scaled_mean
+		X_norm = (X_scaled-self.X_scaled_mean)/np.sqrt(self.noise_var)
 		return X_norm
 	
 	def _inv_noise_variance_stabilizing_normalization(
@@ -151,6 +147,8 @@ class RECODE():
 		self.noise_var = noise_var
 		self.recode_ = recode_
 		self.X_norm_var = X_norm_var
+		self.X_nUMI = X_nUMI
+		self.X_scaled_mean = X_scaled_mean
 		self.idx_sig = self.X_norm_var > 1
 		self.idx_nonsig = self.idx_sig==False
 		self.log_['#significant %ss' % self.unit] = sum(self.idx_sig)
@@ -973,11 +971,8 @@ class RECODE():
 		plt.rcParams['xtick.direction'] = 'in'
 		plt.rcParams['ytick.direction'] = 'in'
 		plt.plot(val[1:],count[1:],color='lightblue',zorder=1,marker='^',label='Original')
-		#plt.scatter(val[idx_even],count[idx_even],color='r',marker='^',zorder=2)
-		#plt.scatter(val[idx_odd],count[idx_odd],color='b',zorder=2)
 		val,count = np.unique(self.X_temp,return_counts=True)
 		plt.plot(val[1:],count[1:],color='gray',marker='o',label='Preprpcessed',zorder=3)
-		#plt.scatter(val[1:],count[1:],color='g',zorder=3)
 		plt.xscale('log')
 		plt.yscale('log')
 		plt.xlabel('value',fontsize=fs_label)
@@ -1194,4 +1189,4 @@ class RECODE_core():
 			Denoised data matrix.
 		"""
 		self.fit(X)
-		self.transform(X)
+		return self.transform(X)
