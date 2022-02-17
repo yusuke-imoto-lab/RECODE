@@ -56,13 +56,15 @@ class RECODE():
 		self.fast_algorithm_ell_ub = fast_algorithm_ell_ub
 		self.seq_target = seq_target
 		self.verbose = verbose
-		self.log_ = {}
 		self.fit_id = False
 		self.unit = 'gene'
 		self.Unit = 'Gene'
 		if seq_target == 'ATAC':
 			self.unit = 'peak'
 			self.Unit = 'Peak'
+		self.log_ = {}
+		self.log_['seq_target'] = self.seq_target
+		self.fit_idx = False
 
 	def _noise_variance_stabilizing_normalization(
 		self,
@@ -81,18 +83,9 @@ class RECODE():
 		X_scaled = (X.T/X_nUMI).T
 		X_scaled_mean = np.mean(X_scaled,axis=0)
 		## normalization
-		noise_var = np.mean(X.T/X_nUMI/X_nUMI,axis=1)
-		noise_var[noise_var==0] = 1
-		X_norm = (X_scaled-np.mean(X_scaled,axis=0))/np.sqrt(noise_var)
+		X_norm = (X_scaled-X_scaled_mean)/np.sqrt(self.noise_var)
 		self.X_nUMI = X_nUMI
 		self.X_scaled_mean = X_scaled_mean
-		self.noise_var = noise_var
-		self.X_norm_var = np.var(X_norm,axis=0,ddof=1)
-		self.idx_sig = self.X_norm_var > 1
-		self.idx_nonsig = self.idx_sig==False
-		self.log_['#significant %ss' % self.unit] = sum(self.idx_sig)
-		self.log_['#non-significant %ss' % self.unit] = sum(self.idx_nonsig)
-		self.log_['#silent %ss' % self.unit] = X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig)
 		return X_norm
 	
 	def _inv_noise_variance_stabilizing_normalization(
@@ -146,9 +139,25 @@ class RECODE():
 		self.X_temp = X[:,self.idx_nonsilent]
 		if self.seq_target == 'ATAC':
 			self.X_temp = self._ATAC_preprocessing(self.X_temp)
-		self.fit_id = True
+		
+		X_nUMI = np.sum(self.X_temp,axis=1)
+		X_scaled = (self.X_temp.T/X_nUMI).T
+		X_scaled_mean = np.mean(X_scaled,axis=0)
+		noise_var = np.mean(self.X_temp.T/np.sum(self.X_temp,axis=1)/np.sum(self.X_temp,axis=1),axis=1)
+		noise_var[noise_var==0] = 1
+		X_norm = (X_scaled-X_scaled_mean)/np.sqrt(noise_var)
+		recode_ = RECODE_core(variance_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_ub=self.fast_algorithm_ell_ub)
+		recode_.fit(X_norm)
+		self.noise_var = noise_var
+		self.recode_ = recode_
+		self.idx_sig = self.X_norm_var > 1
+		self.idx_nonsig = self.idx_sig==False
+		self.log_['#significant %ss' % self.unit] = sum(self.idx_sig)
+		self.log_['#non-significant %ss' % self.unit] = sum(self.idx_nonsig)
+		self.log_['#silent %ss' % self.unit] = X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig)
+		self.fit_idx = True
 
-	def fit_transform(self,X):
+	def transform(self,X):
 		"""
 		Fit the model with X and apply RECODE on X.
 
@@ -165,17 +174,15 @@ class RECODE():
 		start = time.time()
 		if self.verbose:
 			print('start RECODE for sc%s-seq' % self.seq_target)
-		if self.fit_id:
-			self.fit(X)
-		self.log_['seq_target'] = self.seq_target
-		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
-		recode_ = RECODE_core(variance_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_ub=self.fast_algorithm_ell_ub)
-		X_norm_RECODE = recode_.fit_transform(X_norm)
+		if self.fit_idx == False:
+			raise TypeError("Run fit before transform.")
+		X_ = X[:,self.idx_nonsilent]
+		X_norm = self._noise_variance_stabilizing_normalization(X_)
+		X_norm_RECODE = self.recode_.fit_transform(X_norm)
 		X_RECODE = np.zeros(X.shape,dtype=float)
 		X_RECODE[:,self.idx_nonsilent] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
 		X_RECODE = np.where(X_RECODE>0,X_RECODE,0)
 		elapsed_time = time.time() - start
-		self.recode_ = recode_
 		self.log_['#silent %ss' % self.unit] = sum(np.sum(X,axis=0)==0)
 		self.log_['ell'] = recode_.ell
 		self.log_['Elapsed_time'] = "{0}".format(np.round(elapsed_time,decimals=4
@@ -200,6 +207,27 @@ class RECODE():
 		self.significance_[self.normalized_variance_==0] = 'silent'
 		self.significance_[self.normalized_variance_>0] = 'non-significant'
 		self.significance_[self.normalized_variance_>1] = 'significant'
+		return X_RECODE
+	
+	def fit_transform(self,X):
+		"""
+		Fit the model with X and apply RECODE on X.
+
+		Parameters
+		----------
+		X : ndarray of shape (n_samples, n_features)
+			Tranceforming single-cell sequencing data matrix (row:cell, culumn:gene/peak).
+
+		Returns
+		-------
+		X_new : ndarray of shape (n_samples, n_features)
+			Denoised data matrix.
+		"""
+		start = time.time()
+		if self.verbose:
+			print('start RECODE for sc%s-seq' % self.seq_target)
+		self.fit(X)
+		X_RECODE = self.transform(X)
 		return X_RECODE
 		
 	def check_applicability(
