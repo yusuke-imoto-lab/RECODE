@@ -1120,8 +1120,10 @@ class RECODE_core():
 		PCA_Ev_NRM = np.array(PCA_Ev,dtype=float)
 		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(PCA_Ev)
 		n_Ev_all = min(n,d)
-		for i in range(len(PCA_Ev_NRM)-1):
-			PCA_Ev_NRM[i] -= (np.sum(self.PCA_Ev[i+1:])+PCA_Ev_sum_diff)/(n_Ev_all-i-1)
+		PCA_Ev_NRM = np.array([PCA_Ev[i]-(np.sum(PCA_Ev[i+1:])+PCA_Ev_sum_diff)/(n_Ev_all-i-1) for i in range(len(PCA_Ev_NRM)-1)])
+		PCA_Ev_NRM = np.append(PCA_Ev_NRM,0)
+		# for i in range(len(PCA_Ev_NRM)-1):
+		# 	PCA_Ev_NRM[i] = PCA_Ev[i]-(np.sum(PCA_Ev[i+1:])+PCA_Ev_sum_diff)/(n_Ev_all-i-1)
 		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(PCA_Ev)
 		PCA_Ev_sum = np.array([np.sum(PCA_Ev[i:]) for i in range(n_pca)])+PCA_Ev_sum_diff
 		d_act = sum(np.var(X,axis=0,ddof=1)>0)
