@@ -57,6 +57,7 @@ class RECODE():
 		self.seq_target = seq_target
 		self.verbose = verbose
 		self.log_ = {}
+		self.fit_id = False
 		self.unit = 'gene'
 		self.Unit = 'Gene'
 		if seq_target == 'ATAC':
@@ -145,6 +146,7 @@ class RECODE():
 		self.X_temp = X[:,self.idx_nonsilent]
 		if self.seq_target == 'ATAC':
 			self.X_temp = self._ATAC_preprocessing(self.X_temp)
+		self.fit_id = True
 
 	def fit_transform(self,X):
 		"""
@@ -163,7 +165,8 @@ class RECODE():
 		start = time.time()
 		if self.verbose:
 			print('start RECODE for sc%s-seq' % self.seq_target)
-		self.fit(X)
+		if self.fit_id:
+			self.fit(X)
 		self.log_['seq_target'] = self.seq_target
 		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
 		recode_ = RECODE_core(variance_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_ub=self.fast_algorithm_ell_ub)
