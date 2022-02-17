@@ -146,10 +146,12 @@ class RECODE():
 		noise_var = np.mean(self.X_temp.T/np.sum(self.X_temp,axis=1)/np.sum(self.X_temp,axis=1),axis=1)
 		noise_var[noise_var==0] = 1
 		X_norm = (X_scaled-X_scaled_mean)/np.sqrt(noise_var)
+		X_norm_var = np.var(X_norm,axis=0)
 		recode_ = RECODE_core(variance_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_ub=self.fast_algorithm_ell_ub)
 		recode_.fit(X_norm)
 		self.noise_var = noise_var
 		self.recode_ = recode_
+		self.X_norm_var = X_norm_var
 		self.idx_sig = self.X_norm_var > 1
 		self.idx_nonsig = self.idx_sig==False
 		self.log_['#significant %ss' % self.unit] = sum(self.idx_sig)
@@ -171,9 +173,6 @@ class RECODE():
 		X_new : ndarray of shape (n_samples, n_features)
 			Denoised data matrix.
 		"""
-		start = time.time()
-		if self.verbose:
-			print('start RECODE for sc%s-seq' % self.seq_target)
 		if self.fit_idx == False:
 			raise TypeError("Run fit before transform.")
 		X_ = X[:,self.idx_nonsilent]
@@ -182,14 +181,8 @@ class RECODE():
 		X_RECODE = np.zeros(X.shape,dtype=float)
 		X_RECODE[:,self.idx_nonsilent] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
 		X_RECODE = np.where(X_RECODE>0,X_RECODE,0)
-		elapsed_time = time.time() - start
 		self.log_['#silent %ss' % self.unit] = sum(np.sum(X,axis=0)==0)
 		self.log_['ell'] = recode_.ell
-		self.log_['Elapsed_time'] = "{0}".format(np.round(elapsed_time,decimals=4
-		)) + "[sec]"
-		if self.verbose:
-			print('end RECODE for sc%s-seq' % self.seq_target)
-			print('log:',self.log_)
 		if recode_.ell == self.fast_algorithm_ell_ub:
 			warnings.warn("Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_ub.\n"
 			"Ex. X_new = screcode.RECODE(fast_algorithm=False).fit_transform(X)")
@@ -228,6 +221,11 @@ class RECODE():
 			print('start RECODE for sc%s-seq' % self.seq_target)
 		self.fit(X)
 		X_RECODE = self.transform(X)
+		elapsed_time = time.time() - start
+		self.log_['Elapsed_time'] = "{0}".format(np.round(elapsed_time,decimals=4)) + "[sec]"
+		if self.verbose:
+			print('end RECODE for sc%s-seq' % self.seq_target)
+			print('log:',self.log_)
 		return X_RECODE
 		
 	def check_applicability(
