@@ -1113,10 +1113,9 @@ class RECODE_core():
 			Returns the instance itself.
 		"""
 		n,d = X.shape
+		n_pca = min(n-1,d-1)
 		if self.fast_algorithm:
-			n_pca = min(n-1,d-1,self.fast_algorithm_ell_ub)
-		else:
-			n_pca = min(n-1,d-1)
+			n_pca = min(n_pca,self.fast_algorithm_ell_ub)
 		n_svd,d = X.shape
 		X_mean = np.mean(X,axis=0)
 		svd = sklearn.decomposition.TruncatedSVD(n_components=n_pca).fit(X-X_mean)
