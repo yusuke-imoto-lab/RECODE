@@ -1030,6 +1030,7 @@ class RECODE_core():
 		self.fast_algorithm = fast_algorithm
 		self.fast_algorithm_ell_ub = fast_algorithm_ell_ub
 		self.ell_manual = ell_manual
+		self.ell_min = ell_min
 		self.fit_idx = False
 	
 	def _noise_reductor(
@@ -1145,7 +1146,7 @@ class RECODE_core():
 			self.noise_var = self._noise_var_est(X)
 		thrshold = (dim-np.arange(n_pca))*noise_var
 		comp = min(np.arange(n_pca)[PCA_Ev_sum-thrshold<0])
-		self.ell = max(min(self.ell_max,comp),ell_min)
+		self.ell = max(min(self.ell_max,comp),self.ell_min)
 		self.PCA_Ev = PCA_Ev
 		self.n_pca = n_pca
 		self.ell_max = np.sum(PCA_Ev>1.0e-10)
