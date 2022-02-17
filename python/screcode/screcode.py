@@ -118,7 +118,7 @@ class RECODE():
 	
 	def fit(self,X):
 		"""
-		Fit the model to X. After ``fit(X)``, ``check_applicability`` becomes applicable. 
+		Fit the model to X. (Determine the transformation.)
 		
 		Parameters
 		----------
@@ -156,19 +156,22 @@ class RECODE():
 		self.log_['#silent %ss' % self.unit] = X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig)
 		self.fit_idx = True
 
-	def transform(self,X):
+	def transform(
+		self,
+		X
+	):
 		"""
-		Fit the model with X and apply RECODE on X.
+		Transform X into RECODE-denoised data.
 
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features)
-			Tranceforming single-cell sequencing data matrix (row:cell, culumn:gene/peak).
+			Single-cell sequencing data matrix (row:cell, culumn:gene/peak).
 
 		Returns
 		-------
 		X_new : ndarray of shape (n_samples, n_features)
-			Denoised data matrix.
+			RECODE-denoised data matrix.
 		"""
 		if self.fit_idx == False:
 			raise TypeError("Run fit before transform.")
@@ -201,7 +204,7 @@ class RECODE():
 	
 	def fit_transform(self,X):
 		"""
-		Fit the model with X and apply RECODE on X.
+		Fit the model with X and transform X into RECODE-denoised data.
 
 		Parameters
 		----------
@@ -234,10 +237,10 @@ class RECODE():
 		save_filename = 'check_applicability',
 		save_format = 'png',
 		dpi = None,
-	  show = True
+		show = True
 	):
 		"""
-		Check applicability of RECODE. 
+		Check the applicability of RECODE. 
 		Before using this function, you have to conduct ``fit(X)`` or ``fit_transform(X)`` for the target data matrix ``X``. 
 		
 		Parameters
