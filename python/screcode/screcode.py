@@ -182,8 +182,8 @@ class RECODE():
 		X_RECODE[:,self.idx_nonsilent] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
 		X_RECODE = np.where(X_RECODE>0,X_RECODE,0)
 		self.log_['#silent %ss' % self.unit] = sum(np.sum(X,axis=0)==0)
-		self.log_['ell'] = recode_.ell
-		if recode_.ell == self.fast_algorithm_ell_ub:
+		self.log_['ell'] = self.recode_.ell
+		if self.recode_.ell == self.fast_algorithm_ell_ub:
 			warnings.warn("Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_ub.\n"
 			"Ex. X_new = screcode.RECODE(fast_algorithm=False).fit_transform(X)")
 		self.X_RECODE = X_RECODE
@@ -305,14 +305,14 @@ class RECODE():
 		applicability = 'Unknown'
 		backcolor = 'w'
 		if (rate_low_var < 0.01) and (np.abs(peak_val)<0.1):
-				applicability = '(A) Strongly applicable'
-				backcolor = 'lightgreen'
+			applicability = '(A) Strongly applicable'
+			backcolor = 'lightgreen'
 		elif rate_low_var < 0.01:
-				applicability = '(B) Weakly applicable'
-				backcolor = 'yellow'
+			applicability = '(B) Weakly applicable'
+			backcolor = 'yellow'
 		else:
-				applicability = '(C) Inapplicabile'
-				backcolor = 'tomato'
+			applicability = '(C) Inapplicabile'
+			backcolor = 'tomato'
 		ax0.text(0.99, 0.982,applicability,va='top',ha='right', transform=ax0.transAxes,fontsize=14,backgroundcolor=backcolor)
 		self.log_['Applicability'] = applicability
 		self.log_['Rate of 0 < normalized variance < 0.9'] = "{:.0%}".format(rate_low_var)
