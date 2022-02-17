@@ -961,14 +961,14 @@ class RECODE():
 		idx_even = np.empty(len(val),dtype=bool)
 		idx_odd = np.empty(len(val),dtype=bool)
 		for i in range(len(val)):
-				if i>0 and i%2==0:
-				    idx_even[i] = True
-				else:
-				    idx_even[i] = False
-				if i>0 and i%2==1:
-				    idx_odd[i] = True
-				else:
-				    idx_odd[i] = False
+			if i>0 and i%2==0:
+				idx_even[i] = True
+			else:
+				idx_even[i] = False
+			if i>0 and i%2==1:
+				idx_odd[i] = True
+			else:
+				idx_odd[i] = False
 		plt.figure(figsize=figsize)
 		plt.rcParams['xtick.direction'] = 'in'
 		plt.rcParams['ytick.direction'] = 'in'
@@ -1028,19 +1028,26 @@ class RECODE_core():
 		self.ell_manual = ell_manual
 		self.fit_idx = False
 	
+	def _noise_reductor(
+		self,
+		X,
+		L,
+		U,
+		Xmean,
+		ell
+	):
+		U_ell = U[:ell,:]
+		L_ell = L[:ell,:ell]
+		return np.dot(np.dot(np.dot(X-Xmean,U_ell.T),L_ell),U_ell)+Xmean
+
 	def _noise_reduct_param(
 		self,
 		delta = 0.05
 	):
 		comp = max(np.sum(self.PCA_Ev_NRM>delta*self.PCA_Ev_NRM[0]),3)
 		self.ell = min(self.ell_max,comp)
-		self.X_RECODE = _noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
+		self.X_RECODE =  self._noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
 		return self.X_RECODE
-		
-	def _noise_reductor(self,X,L,U,Xmean,ell):
-		U_ell = U[:ell,:]
-		L_ell = L[:ell,:ell]
-		return np.dot(np.dot(np.dot(X-Xmean,U_ell.T),L_ell),U_ell)+Xmean
 	
 	def _noise_reduct_noise_var(
 		self,
@@ -1182,6 +1189,5 @@ class RECODE_core():
 		X_new : ndarray of shape (n_samples, n_components)
 			Denoised data matrix.
 		"""
-		
 		self.fit(X)
 		self.transform(X)
