@@ -1133,7 +1133,7 @@ class RECODE_core():
 		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(PCA_Ev)
 		PCA_Ev_sum = np.array([np.sum(PCA_Ev[i:]) for i in range(n_pca)])+PCA_Ev_sum_diff
 		d_act = sum(np.var(X,axis=0,ddof=1)>0)
-		X_var  = np.var(self.X,axis=0,ddof=1)
+		X_var  = np.var(X,axis=0,ddof=1)
 		dim = np.sum(X_var>0)
 		thrshold = (dim-np.arange(n_pca))*noise_var
 		comp = min(np.arange(n_pca)[PCA_Ev_sum-thrshold<0])
