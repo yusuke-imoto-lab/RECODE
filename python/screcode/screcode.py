@@ -1130,6 +1130,11 @@ class RECODE_core():
 		thrshold = (dim-np.arange(self.n_pca))*noise_var
 		comp = min(np.arange(self.n_pca)[PCA_Ev_sum-thrshold<0])
 
+		if self.variance_estimate:
+			self.noise_var = self._noise_var_est(X)
+		else:
+			self.noise_var = 1
+
 		self.ell = max(min(self.ell_max,comp),ell_min)
 		self.PCA_Ev = PCA_Ev
 		self.n_pca = n_pca
@@ -1139,7 +1144,7 @@ class RECODE_core():
 		self.X = X
 		self.X_mean = np.mean(X,axis=0)
 		self.PCA_Ev_sum_all = PCA_Ev_sum_all
-	
+
 	def transform(self,X):
 			"""
 			Apply RECODE to X.
@@ -1155,11 +1160,7 @@ class RECODE_core():
 			"""
 			
 			if self.solver=='variance':
-				if self.variance_estimate:
-					noise_var = self._noise_var_est(X)
-					return self._noise_reduct_noise_var(noise_var)
-				else:
-					return self._noise_reduct_noise_var()
+				return self._noise_reduct_noise_var(self.noise_var)
 			elif self.solver=='manual':
 				self.ell = self.ell_manual
 				return self._noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
@@ -1179,13 +1180,4 @@ class RECODE_core():
 		"""
 		
 		self.fit(X)
-		if self.solver=='variance':
-			if self.variance_estimate:
-				noise_var = self._noise_var_est(X)
-				return self._noise_reduct_noise_var(noise_var)
-			else:
-				return self._noise_reduct_noise_var()
-		elif self.solver=='manual':
-			self.ell = self.ell_manual
-			return self._noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
-
+		self.transform(X)
