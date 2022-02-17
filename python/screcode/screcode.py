@@ -998,7 +998,8 @@ class RECODE_core():
 		variance_estimate = True,
 		fast_algorithm = True,
 		fast_algorithm_ell_ub = 1000,
-		ell_manual = None,
+		ell_manual = 10,
+		ell_min = 3,
 	):
 		"""
 		The core part of RECODE (for non-randam sampling data). 
@@ -1012,14 +1013,17 @@ class RECODE_core():
 			If True and ``solver='variance'``, the parameter estimation method will be conducted. 
 		
 		fast_algorithm : boolean, default=True
-			If True, the fast algorithm is conducted. The upper bound of parameter :math:`\ell` is set in ``fast_algorithm_ell_ub``.
+			If True, the fast algorithm is conducted. The upper bound of essential dimension :math:`\ell` is set in ``fast_algorithm_ell_ub``.
 		
 		fast_algorithm_ell_ub : int, default=1000
 			Upper bound of parameter :math:`\ell` for the fast algorithm. Must be of range [1, infinity).
 		
 		ell_manual : int, default=10
-			Manual parameter computed by ``solver='ell'``. Must be of range [1, infinity).
+			Manual essential dimension :math:`\ell` computed by ``solver='manual'``. Must be of range [1, infinity).
 		
+		ell_min : int, default=3
+			Minimam value of essential dimension :math:`\ell`.
+
 		"""
 		self.solver = solver
 		self.variance_estimate = variance_estimate
@@ -1051,8 +1055,7 @@ class RECODE_core():
 	
 	def _noise_reduct_noise_var(
 		self,
-		noise_var = 1,
-		ell_min = 3
+		noise_var = 1
 	):
 		X_RECODE = self._noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
 		return X_RECODE
@@ -1099,7 +1102,10 @@ class RECODE_core():
 		var = np.mean(X_var_sub[idx_set_k_max])
 		return var
 	
-	def fit(self, X):
+	def fit(
+			self,
+			X
+		):
 		"""
 		Fit the model to X.
 		Parameters
@@ -1121,7 +1127,6 @@ class RECODE_core():
 		svd = sklearn.decomposition.TruncatedSVD(n_components=n_pca).fit(X-X_mean)
 		SVD_Sv = svd.singular_values_
 		PCA_Ev = (SVD_Sv**2)/(n_svd-1)
-		U = svd.components_
 		PCA_Ev_sum_all = np.sum(np.var(X,axis=0,ddof=1))
 		PCA_Ev_NRM = np.array(PCA_Ev,dtype=float)
 		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(PCA_Ev)
@@ -1135,23 +1140,22 @@ class RECODE_core():
 		d_act = sum(np.var(X,axis=0,ddof=1)>0)
 		X_var  = np.var(X,axis=0,ddof=1)
 		dim = np.sum(X_var>0)
-		thrshold = (dim-np.arange(n_pca))*noise_var
-		comp = min(np.arange(n_pca)[PCA_Ev_sum-thrshold<0])
-
+		noise_var = 1
 		if self.variance_estimate:
 			self.noise_var = self._noise_var_est(X)
-		else:
-			self.noise_var = 1
-
+		thrshold = (dim-np.arange(n_pca))*noise_var
+		comp = min(np.arange(n_pca)[PCA_Ev_sum-thrshold<0])
 		self.ell = max(min(self.ell_max,comp),ell_min)
 		self.PCA_Ev = PCA_Ev
 		self.n_pca = n_pca
+		self.ell_max = np.sum(PCA_Ev>1.0e-10)
 		self.PCA_Ev_NRM = PCA_Ev_NRM
-		self.ell_max = np.sum(self.PCA_Ev>1.0e-10)
+		self.U = svd.components_
 		self.L = np.diag(np.sqrt(self.PCA_Ev_NRM[:self.ell_max]/self.PCA_Ev[:self.ell_max]))
 		self.X = X
 		self.X_mean = np.mean(X,axis=0)
 		self.PCA_Ev_sum_all = PCA_Ev_sum_all
+		self.noise_var = noise_var
 		self.fit_idx = True
 
 	def transform(self,X):
