@@ -1107,12 +1107,12 @@ class RECODE_core():
 		"""
 		n,d = X.shape
 		if self.fast_algorithm:
-			self.n_pca = min(n-1,d-1,self.fast_algorithm_ell_ub)
+			n_pca = min(n-1,d-1,self.fast_algorithm_ell_ub)
 		else:
-			self.n_pca = min(n-1,d-1)
+			n_pca = min(n-1,d-1)
 		n_svd,d = X.shape
 		X_mean = np.mean(X,axis=0)
-		svd = sklearn.decomposition.TruncatedSVD(n_components=self.n_pca).fit(X-X_mean)
+		svd = sklearn.decomposition.TruncatedSVD(n_components=n_pca).fit(X-X_mean)
 		SVD_Sv = svd.singular_values_
 		PCA_Ev = (SVD_Sv**2)/(n_svd-1)
 		U = svd.components_
@@ -1129,8 +1129,8 @@ class RECODE_core():
 		d_act = sum(np.var(X,axis=0,ddof=1)>0)
 		X_var  = np.var(self.X,axis=0,ddof=1)
 		dim = np.sum(X_var>0)
-		thrshold = (dim-np.arange(self.n_pca))*noise_var
-		comp = min(np.arange(self.n_pca)[PCA_Ev_sum-thrshold<0])
+		thrshold = (dim-np.arange(n_pca))*noise_var
+		comp = min(np.arange(n_pca)[PCA_Ev_sum-thrshold<0])
 
 		if self.variance_estimate:
 			self.noise_var = self._noise_var_est(X)
