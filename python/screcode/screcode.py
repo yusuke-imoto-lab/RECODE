@@ -1114,8 +1114,8 @@ class RECODE_core():
 		X_mean = np.mean(X,axis=0)
 		svd = sklearn.decomposition.TruncatedSVD(n_components=self.n_pca).fit(X-X_mean)
 		SVD_Sv = svd.singular_values_
-		self.PCA_Ev = (SVD_Sv**2)/(n_svd-1)
-		self.U = svd.components_
+		PCA_Ev = (SVD_Sv**2)/(n_svd-1)
+		U = svd.components_
 		PCA_Ev_sum_all = np.sum(np.var(X,axis=0,ddof=1))
 		PCA_Ev_NRM = np.array(self.PCA_Ev,dtype=float)
 		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(self.PCA_Ev)
