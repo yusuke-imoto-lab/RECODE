@@ -77,11 +77,26 @@ class RECODE():
 		X : array-like of shape (n_samples, n_features)
 			Data matrix
 		"""
+		d = X.shape[1]
+		if d == self.d_all:
+			X_ = X[:,self.idx_nonsilent]
+		elif d == self.d_nonsilent:
+			X_ = X
+		else:
+			raise TypeError("Dimension of data is not correct.")
+		
 		## scaled X
 		X_scaled = (X.T/self.X_nUMI).T
 		## normalization
 		X_norm = (X_scaled-self.X_scaled_mean)/np.sqrt(self.noise_var)
-		return X_norm
+
+		if d == self.d_all:
+			X_norm_ = np.zeros(X.shapedtype=float)
+			X_norm_[:,self.idx_nonsilent] = X_norm
+			return X_norm_
+		elif d == self.d_nonsilent:
+			return X_norm
+		
 	
 	def _inv_noise_variance_stabilizing_normalization(
 		self,
@@ -129,7 +144,7 @@ class RECODE():
 		if scipy.sparse.issparse(X):
 			warnings.warn('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
 			X = X.toarray()
-		self.X = X
+		self.X_fit = X
 		self.idx_nonsilent = np.sum(X,axis=0) > 0
 		self.X_temp = X[:,self.idx_nonsilent]
 		if self.seq_target == 'ATAC':
@@ -144,6 +159,9 @@ class RECODE():
 		X_norm_var = np.var(X_norm,axis=0)
 		recode_ = RECODE_core(variance_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_ub=self.fast_algorithm_ell_ub)
 		recode_.fit(X_norm)
+
+		self.d_all = X.shape[1]
+		self.d_nonsilent = sum(self.idx_nonsilent)
 		self.noise_var = noise_var
 		self.recode_ = recode_
 		self.X_norm_var = X_norm_var
