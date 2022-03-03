@@ -91,7 +91,7 @@ class RECODE():
 		X_norm = (X_scaled-self.X_scaled_mean)/np.sqrt(self.noise_var)
 
 		if d == self.d_all:
-			X_norm_ = np.zeros(X.shapedtype=float)
+			X_norm_ = np.zeros(X.shape,dtype=float)
 			X_norm_[:,self.idx_nonsilent] = X_norm
 			return X_norm_
 		elif d == self.d_nonsilent:
