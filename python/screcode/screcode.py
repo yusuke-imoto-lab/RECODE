@@ -1,3 +1,4 @@
+import anndata
 import adjustText
 import matplotlib
 import matplotlib.pyplot as plt
@@ -64,6 +65,26 @@ class RECODE():
 		self.log_ = {}
 		self.log_['seq_target'] = self.seq_target
 		self.fit_idx = False
+
+	def _check_datatype(
+		self,
+		X
+	):
+		if type(X) == anndata._core.anndata.AnnData:
+			if scipy.sparse.issparse(X.X):
+				return X.X.toarray()
+			elif type(X.X) == np.ndarray:
+				return X.X
+			else:
+				raise TypeError("Data type error: ndarray or anndata is available.")
+		elif scipy.sparse.issparse(X):
+			warnings.warn('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
+			return X.toarray()
+		elif type(X) == np.ndarray:
+			return X
+		else:
+			raise TypeError("Data type error: ndarray or anndata is available.")
+	
 
 	def _noise_variance_stabilizing_normalization(
 		self,
@@ -140,13 +161,10 @@ class RECODE():
 		X : ndarray of shape (n_samples, n_features).
 			single-cell sequencing data matrix (row:cell, culumn:gene/peak).
 
-		"""
-		if scipy.sparse.issparse(X):
-			warnings.warn('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
-			X = X.toarray()
-		self.X_fit = X
-		self.idx_nonsilent = np.sum(X,axis=0) > 0
-		self.X_temp = X[:,self.idx_nonsilent]
+		"""	
+		X_mat = self._check_datatype(X)
+		self.idx_nonsilent = np.sum(X_mat,axis=0) > 0
+		self.X_temp = X_mat[:,self.idx_nonsilent]
 		if self.seq_target == 'ATAC':
 			self.X_temp = self._ATAC_preprocessing(self.X_temp)
 		
@@ -160,6 +178,7 @@ class RECODE():
 		recode_ = RECODE_core(variance_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_ub=self.fast_algorithm_ell_ub)
 		recode_.fit(X_norm)
 
+		self.X_fit = X_mat
 		self.d_all = X.shape[1]
 		self.d_nonsilent = sum(self.idx_nonsilent)
 		self.noise_var = noise_var
@@ -173,7 +192,7 @@ class RECODE():
 		self.log_['#non-significant %ss' % self.unit] = sum(self.idx_nonsig)
 		self.log_['#silent %ss' % self.unit] = X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig)
 		self.fit_idx = True
-
+	
 	def transform(
 		self,
 		X
@@ -191,23 +210,24 @@ class RECODE():
 		X_new : ndarray of shape (n_samples, n_features)
 			RECODE-denoised data matrix.
 		"""
+		X_mat = self._check_datatype(X)
 		if self.fit_idx == False:
 			raise TypeError("Run fit before transform.")
-		X_ = X[:,self.idx_nonsilent]
+		X_ = X_mat[:,self.idx_nonsilent]
 		X_norm = self._noise_variance_stabilizing_normalization(X_)
 		X_norm_RECODE = self.recode_.fit_transform(X_norm)
-		X_RECODE = np.zeros(X.shape,dtype=float)
+		X_RECODE = np.zeros(X_mat.shape,dtype=float)
 		X_RECODE[:,self.idx_nonsilent] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
 		X_RECODE = np.where(X_RECODE>0,X_RECODE,0)
-		self.log_['#silent %ss' % self.unit] = sum(np.sum(X,axis=0)==0)
+		self.log_['#silent %ss' % self.unit] = sum(np.sum(X_mat,axis=0)==0)
 		self.log_['ell'] = self.recode_.ell
 		if self.recode_.ell == self.fast_algorithm_ell_ub:
 			warnings.warn("Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_ub.\n"
 			"Ex. X_new = screcode.RECODE(fast_algorithm=False).fit_transform(X)")
 		self.X_RECODE = X_RECODE
-		self.noise_variance_ = np.zeros(X.shape[1],dtype=float)
+		self.noise_variance_ = np.zeros(X_mat.shape[1],dtype=float)
 		self.noise_variance_[self.idx_nonsilent] =  self.noise_var
-		self.normalized_variance_ = np.zeros(X.shape[1],dtype=float)
+		self.normalized_variance_ = np.zeros(X_mat.shape[1],dtype=float)
 		self.normalized_variance_[self.idx_nonsilent] =  self.X_norm_var
 		
 		X_RECODE_ss = (np.median(np.sum(X_RECODE[:,self.idx_nonsilent],axis=1))*X_RECODE[:,self.idx_nonsilent].T/np.sum(X_RECODE[:,self.idx_nonsilent],axis=1)).T
@@ -218,7 +238,14 @@ class RECODE():
 		self.significance_[self.normalized_variance_==0] = 'silent'
 		self.significance_[self.normalized_variance_>0] = 'non-significant'
 		self.significance_[self.normalized_variance_>1] = 'significant'
-		return X_RECODE
+
+		if type(X) == anndata._core.anndata.AnnData:
+			X_out = anndata.AnnData.copy(X)
+			X_out.obsm['RECODE'] = X_RECODE
+		else:
+			X_out = X_RECODE
+
+		return X_out
 	
 	def fit_transform(self,X):
 		"""
