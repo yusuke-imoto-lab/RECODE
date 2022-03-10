@@ -1,23 +1,23 @@
-\name{scRECODE-package}
-\alias{scRECODE-package}
-\alias{scRECODE}
+\name{RECODE-package}
+\alias{RECODE-package}
+\alias{RECODE}
 \docType{package}
 \title{
-\packageTitle{scRECODE}
+\packageTitle{RECODE}
 }
 \description{
-\packageDescription{scRECODE}
+\packageDescription{RECODE}
 }
 \details{
 
 The DESCRIPTION file:
-\packageDESCRIPTION{scRECODE}
-\packageIndices{scRECODE}
+\packageDESCRIPTION{RECODE}
+\packageIndices{RECODE}
 }
 \author{
-\packageAuthor{scRECODE}
+\packageAuthor{RECODE}
 
-Maintainer: \packageMaintainer{scRECODE}
+Maintainer: \packageMaintainer{RECODE}
 }
 \keyword{scRNE-seq}
 \seealso{
