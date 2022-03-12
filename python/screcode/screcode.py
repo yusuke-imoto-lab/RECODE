@@ -224,6 +224,7 @@ class RECODE():
 		if self.recode_.ell == self.fast_algorithm_ell_ub:
 			warnings.warn("Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_ub.\n"
 			"Ex. X_new = screcode.RECODE(fast_algorithm=False).fit_transform(X)")
+		self.X_trans = X_mat
 		self.X_RECODE = X_RECODE
 		self.noise_variance_ = np.zeros(X_mat.shape[1],dtype=float)
 		self.noise_variance_[self.idx_nonsilent] =  self.noise_var
@@ -814,11 +815,11 @@ class RECODE():
 		fs_label = 14
 		fs_title = 14
 		if size_factor=='median':
-			size_factor = np.median(np.sum(self.X,axis=1))
+			size_factor = np.median(np.sum(self.X_trans,axis=1))
 			size_factor_RECODE = np.median(np.sum(self.X_RECODE,axis=1))
 		elif size_factor=='mean':
-			size_factor = np.mean(np.sum(self.X,axis=1))
-			size_factor_RECODE = np.mean(np.sum(self.X_sECODE,axis=1))
+			size_factor = np.mean(np.sum(self.X_trans,axis=1))
+			size_factor_RECODE = np.mean(np.sum(self.X_REECODE,axis=1))
 		elif (type(size_factor) == int) | (type(size_factor) == float):
 			size_factor_RECODE = size_factor
 		else:
