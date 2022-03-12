@@ -158,7 +158,7 @@ class RECODE():
 		
 		Parameters
 		----------
-		X : ndarray of shape (n_samples, n_features).
+		X : ndarray or anndata of shape (n_samples, n_features).
 			single-cell sequencing data matrix (row:cell, culumn:gene/peak).
 
 		"""	
@@ -179,7 +179,7 @@ class RECODE():
 		recode_.fit(X_norm)
 
 		self.X_fit = X_mat
-		self.d_all = X.shape[1]
+		self.d_all = X_mat.shape[1]
 		self.d_nonsilent = sum(self.idx_nonsilent)
 		self.noise_var = noise_var
 		self.recode_ = recode_
@@ -202,7 +202,7 @@ class RECODE():
 
 		Parameters
 		----------
-		X : ndarray of shape (n_samples, n_features)
+		X : ndarray or anndata of shape (n_samples, n_features)
 			Single-cell sequencing data matrix (row:cell, culumn:gene/peak).
 
 		Returns
@@ -253,7 +253,7 @@ class RECODE():
 
 		Parameters
 		----------
-		X : ndarray of shape (n_samples, n_features)
+		X : ndarray or anndata of shape (n_samples, n_features)
 			Tranceforming single-cell sequencing data matrix (row:cell, culumn:gene/peak).
 
 		Returns
