@@ -823,9 +823,9 @@ class RECODE():
 		elif (type(size_factor) == int) | (type(size_factor) == float):
 			size_factor_RECODE = size_factor
 		else:
-			size_factor = np.median(np.sum(self.X,axis=1))
+			size_factor = np.median(np.sum(self.X_trans,axis=1))
 			size_factor_RECODE = np.median(np.sum(self.X_RECODE,axis=1))
-		X_ss_log = np.log2(size_factor*(self.X[:,self.idx_nonsilent].T/np.sum(self.X,axis=1)).T+1)
+		X_ss_log = np.log2(size_factor*(self.X_trans[:,self.idx_nonsilent].T/np.sum(self.X,axis=1)).T+1)
 		X_RECODE_ss_log = np.log2(size_factor_RECODE*(self.X_RECODE[:,self.idx_nonsilent].T/np.sum(self.X_RECODE,axis=1)).T+1)
 		fig,ax0 = plt.subplots(figsize=figsize)
 		plt.rcParams['xtick.direction'] = 'in'
