@@ -1007,7 +1007,7 @@ class RECODE():
 		fs_title = 16
 		fs_label = 14
 		fs_legend = 14
-		val,count = np.unique(self.X,return_counts=True)
+		val,count = np.unique(self.X_trans,return_counts=True)
 		idx_even = np.empty(len(val),dtype=bool)
 		idx_odd = np.empty(len(val),dtype=bool)
 		for i in range(len(val)):
@@ -1200,7 +1200,7 @@ class RECODE_core():
 		self.PCA_Ev_NRM = PCA_Ev_NRM
 		self.U = svd.components_
 		self.L = np.diag(np.sqrt(self.PCA_Ev_NRM[:self.ell_max]/self.PCA_Ev[:self.ell_max]))
-		self.X = X
+		self.X_fit = X
 		self.X_mean = np.mean(X,axis=0)
 		self.PCA_Ev_sum_all = PCA_Ev_sum_all
 		self.noise_var = noise_var
