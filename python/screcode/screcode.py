@@ -1094,18 +1094,20 @@ class RECODE_core():
 
 	def _noise_reduct_param(
 		self,
+		X,
 		delta = 0.05
 	):
 		comp = max(np.sum(self.PCA_Ev_NRM>delta*self.PCA_Ev_NRM[0]),3)
 		self.ell = min(self.ell_max,comp)
-		self.X_RECODE =  self._noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
+		self.X_RECODE =  self._noise_reductor(X,self.L,self.U,self.X_mean,self.ell)
 		return self.X_RECODE
 	
 	def _noise_reduct_noise_var(
 		self,
+		X,
 		noise_var = 1
 	):
-		X_RECODE = self._noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
+		X_RECODE = self._noise_reductor(X,self.L,self.U,self.X_mean,self.ell)
 		return X_RECODE
 	
 	def _noise_var_est(
@@ -1222,10 +1224,10 @@ class RECODE_core():
 		if self.fit_idx == False:
 			raise TypeError("Run fit before transform.")
 		if self.solver=='variance':
-			return self._noise_reduct_noise_var(self.noise_var)
+			return self._noise_reduct_noise_var(X,self.noise_var)
 		elif self.solver=='manual':
 			self.ell = self.ell_manual
-			return self._noise_reductor(self.X,self.L,self.U,self.X_mean,self.ell)
+			return self._noise_reductor(X,self.L,self.U,self.X_mean,self.ell)
 
 	def fit_transform(self,X):
 		"""
