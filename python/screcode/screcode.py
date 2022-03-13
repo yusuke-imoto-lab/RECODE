@@ -825,7 +825,7 @@ class RECODE():
 		else:
 			size_factor = np.median(np.sum(self.X_trans,axis=1))
 			size_factor_RECODE = np.median(np.sum(self.X_RECODE,axis=1))
-		X_ss_log = np.log2(size_factor*(self.X_trans[:,self.idx_nonsilent].T/np.sum(self.X,axis=1)).T+1)
+		X_ss_log = np.log2(size_factor*(self.X_trans[:,self.idx_nonsilent].T/np.sum(self.X_trans,axis=1)).T+1)
 		X_RECODE_ss_log = np.log2(size_factor_RECODE*(self.X_RECODE[:,self.idx_nonsilent].T/np.sum(self.X_RECODE,axis=1)).T+1)
 		fig,ax0 = plt.subplots(figsize=figsize)
 		plt.rcParams['xtick.direction'] = 'in'
@@ -909,7 +909,7 @@ class RECODE():
 		"""
 		fs_label = 14
 		fs_title = 14
-		X_ss = (np.median(np.sum(self.X[:,self.idx_nonsilent],axis=1))*self.X[:,self.idx_nonsilent].T/np.sum(self.X[:,self.idx_nonsilent],axis=1)).T
+		X_ss = (np.median(np.sum(self.X_trans[:,self.idx_nonsilent],axis=1))*self.X_trans[:,self.idx_nonsilent].T/np.sum(self.X_trans[:,self.idx_nonsilent],axis=1)).T
 		fig,ax0 = plt.subplots(figsize=figsize)
 		plt.rcParams['xtick.direction'] = 'in'
 		plt.rcParams['ytick.direction'] = 'in'
