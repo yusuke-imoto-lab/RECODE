@@ -243,6 +243,9 @@ class RECODE():
 		if type(X) == anndata._core.anndata.AnnData:
 			X_out = anndata.AnnData.copy(X)
 			X_out.obsm['RECODE'] = X_RECODE
+			X_out.var['noise_variance_RECODE'] = self.noise_variance_
+			X_out.var['normalized_variance_RECODE'] = self.normalized_variance_
+			X_out.var['significance_RECODE'] = self.significance_
 		else:
 			X_out = X_RECODE
 
