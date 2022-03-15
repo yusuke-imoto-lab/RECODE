@@ -30,7 +30,10 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: install
-        run: pip install poetry sphinx sphinx_rtd_theme
+        run: |
+          apt-get update
+          apt-get install -y pandoc
+          pip install poetry sphinx sphinx_rtd_theme nbsphinx
       - name: make
         run: |
           poetry export -f requirements.txt --output requirements.txt 
