@@ -1158,6 +1158,7 @@ class RECODE_core():
 		):
 		"""
 		Fit the model to X.
+		
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features).
@@ -1211,6 +1212,7 @@ class RECODE_core():
 	def transform(self,X):
 		"""
 		Apply RECODE to X.
+
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features).
@@ -1232,6 +1234,7 @@ class RECODE_core():
 	def fit_transform(self,X):
 		"""
 		Apply RECODE to X.
+
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features).
