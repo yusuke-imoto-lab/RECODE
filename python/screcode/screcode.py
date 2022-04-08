@@ -1050,6 +1050,7 @@ class RECODE_core():
 	):
 		"""
 		The core part of RECODE (for non-randam sampling data). 
+
 		Parameters
 		----------
 		solver : {'variance','manual'}
@@ -1157,8 +1158,8 @@ class RECODE_core():
 			X
 		):
 		"""
-		Fit the model to X.
-		
+		Create the transformation using X.
+
 		Parameters
 		----------
 		X : ndarray of shape (n_samples, n_features).
@@ -1184,8 +1185,6 @@ class RECODE_core():
 		n_Ev_all = min(n,d)
 		PCA_Ev_NRM = np.array([PCA_Ev[i]-(np.sum(PCA_Ev[i+1:])+PCA_Ev_sum_diff)/(n_Ev_all-i-1) for i in range(len(PCA_Ev_NRM)-1)])
 		PCA_Ev_NRM = np.append(PCA_Ev_NRM,0)
-		# for i in range(len(PCA_Ev_NRM)-1):
-		# 	PCA_Ev_NRM[i] = PCA_Ev[i]-(np.sum(PCA_Ev[i+1:])+PCA_Ev_sum_diff)/(n_Ev_all-i-1)
 		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(PCA_Ev)
 		PCA_Ev_sum = np.array([np.sum(PCA_Ev[i:]) for i in range(n_pca)])+PCA_Ev_sum_diff
 		d_act = sum(np.var(X,axis=0,ddof=1)>0)
@@ -1233,7 +1232,7 @@ class RECODE_core():
 
 	def fit_transform(self,X):
 		"""
-		Apply RECODE to X.
+		Fit and transform RECODE to X.
 
 		Parameters
 		----------
