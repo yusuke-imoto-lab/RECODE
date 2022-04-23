@@ -1,14 +1,14 @@
-\name{scRECODE}
-\alias{scRECODE}
+\name{RECODE}
+\alias{RECODE}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-scRECODE
+RECODE
 }
 \description{
-scRECODE
+RECODE
 }
 \usage{
-scRECODE(data)
+RECODE(data)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
