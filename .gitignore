@@ -5,7 +5,7 @@
 # Data directory
 data/*
 tests/data
-python/sphinx/examples/pbmc3k_filtered_gene_bc_matrices/*
+python/sphinx/examples/data/*
 
 # Documents
 #*.rst
