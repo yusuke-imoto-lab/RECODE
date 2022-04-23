@@ -35,7 +35,7 @@ To use RECODE, import ``screcode``.
 	:maxdepth: 2
 	:caption: Contents:
 	
-	examples/index
+	Tutorials/index
 	reference/index
 
 
