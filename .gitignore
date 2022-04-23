@@ -38,4 +38,4 @@ python/poetry.toml
 python/screcode/data
 python/screcode/figure
 python/screcode/test.py
-*.ipynb
+python/screcode/screcode_test.ipynb
