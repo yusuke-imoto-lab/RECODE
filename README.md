@@ -1,4 +1,4 @@
-# RECODE - Resolution of curse of dimensionality in single-cell data analysis
+# RECODE - Resolution of curse of dimensionality
 
 ## Python code
 
