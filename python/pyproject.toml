@@ -10,6 +10,7 @@ documentation = "https://yusuke-imoto-lab.github.io/RECODE/"
 [tool.poetry.dependencies]
 python       = ">=3.7,<3.10"
 numpy        = ">=1.20"
+datetime     = ">=4.0"
 scikit-learn = ">=0.24"
 scipy = ">=1.7.1"
 seaborn = ">=0.11.2"

@@ -1,7 +1,9 @@
 import anndata
 import adjustText
+import datetime
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
 import numpy as np
 import sklearn.decomposition
 import scipy.sparse
@@ -375,15 +377,15 @@ class RECODE():
 		
 	
 	def plot_procedures(
-			self,
-		  titles = ('Original data','Normalized data','Projected data','Variance-modified data','Denoised data'),
-		  figsize=(7,5),
-		  save = False,
-		  save_filename = 'RECODE_procedures',
-		  save_filename_foots = ('1_Original','2_Normalized','3_Projected','4_Variance-modified','5_Denoised'),
-		  save_format = 'png',
-		  dpi=None,
-		  show=True
+		self,
+		titles = ('Original data','Normalized data','Projected data','Variance-modified data','Denoised data'),
+		figsize=(7,5),
+		save = False,
+		save_filename = 'RECODE_procedures',
+		save_filename_foots = ('1_Original','2_Normalized','3_Projected','4_Variance-modified','5_Denoised'),
+		save_format = 'png',
+		dpi=None,
+		show=True
 	):
 		"""
 		Plot procedures of RECODE. The vertical axes of feature are sorted by the mean. 
@@ -441,6 +443,115 @@ class RECODE():
 		self.plot_denoised_data(title=titles[4],figsize=figsize,
 			save = save,save_filename = '%s_%s' % (save_filename,save_filename_foots[4]),
 			save_format = save_format,dpi=dpi,show=show)
+	
+	def report(
+		self,
+		title = '',
+		figsize=(8.27,11.69),
+		ps = 2,
+		save = False,
+		save_filename = 'check_applicability',
+		save_format = 'png',
+		dpi = None,
+		show = True
+	):
+		"""
+		Check the applicability of RECODE. 
+		Before using this function, you have to conduct ``fit(X)`` or ``fit_transform(X)`` for the target data matrix ``X``. 
+		
+		Parameters
+		----------
+		title : str, default=''
+			Figure title.
+		
+		figsize : 2-tuple of floats, default=(10,5)
+			Figure dimension ``(width, height)`` in inches.
+		
+		ps : float, default=10,
+			Point size. 
+		
+		save : bool, default=False
+			If True, save the figure. 
+		
+		save_filename : str, default= 'check_applicability',
+			File name (path) of save figure. 
+		
+		save_format : {'png', 'pdf', 'svg'}, default= 'png',
+			File format of save figure. 
+		
+		dpi: float or None, default=None
+			Dots per inch.
+		"""
+		X_scaled =(self.X_temp.T/np.sum(self.X_temp,axis=1)).T
+		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
+		norm_var = np.var(X_norm,axis=0,ddof=1)
+		x,y = np.mean(X_scaled,axis=0),norm_var
+		idx_nonsig, idx_sig = y <= 1, y > 1
+		fig = plt.figure(figsize=(8.27,11.69))
+		plt.rcParams["xtick.direction"] = "in"
+		plt.rcParams["ytick.direction"] = "in"
+		plt.subplots_adjust(left=0.05, right=0.97, bottom=0.01, top=0.98)
+		gs_master = GridSpec(nrows=200, ncols=100,wspace=0,hspace=0)
+		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[8,0:60])
+		ax = fig.add_subplot(gs[0,0])
+		ax.text(0,0,'RECODE report',fontsize=30,fontweight='bold')
+		ax.axis("off")
+		#
+		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[8,70:100])
+		ax = fig.add_subplot(gs[0,0])
+		now = datetime.datetime.today()
+		ax.text(1,0,'%d-%02d-%02d %02d:%02d:%02d' % (now.year,now.month,now.day,now.hour,now.minute,now.second),fontsize=12,ha='right')
+		ax.axis("off")
+		#
+		spec = matplotlib.gridspec.GridSpec(ncols=2, nrows=1,width_ratios=[4, 1],wspace=0.)
+		# ax0 = fig.add_subplot(spec[0])
+		# ax0.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant %s' % self.unit,zorder=2)
+		# ax0.scatter(x[idx_nonsig],y[idx_nonsig],color='r',s=ps,label='non-significant %s' % self.unit,zorder=3)
+		# ax0.axhline(1,color='gray',ls='--',lw=2,zorder=1)
+		# ax0.set_xscale('log')
+		# ax0.set_yscale('log')
+		# ax0.set_title(title,fontsize=14)
+		# ax0.set_xlabel('Mean of scaled data',fontsize=14)
+		# ax0.set_ylabel('NVSN variance',fontsize=14)
+		# ax0.legend(loc='upper left',borderaxespad=0,fontsize=14,markerscale=2).get_frame().set_alpha(0)
+		# ylim = ax0.set_ylim()
+		# ax1 = fig.add_subplot(spec[1])
+		# sns.kdeplot(y=np.log10(norm_var[norm_var>0]), color='k',shade=True,ax=ax1)
+		# ax1.axhline(0,c='gray',ls='--',lw=2,zorder=1)
+		# ax1.axvline(0,c='k',ls='-',lw=1,zorder=1)
+		# ax1.set_ylim(np.log10(ax0.set_ylim()))
+		# ax1.tick_params(labelbottom=True,labelleft=False,bottom=True)
+		# ax1.set_xlabel('Density',fontsize=14)
+		# ax1.spines['right'].set_visible(False)
+		# ax1.spines['top'].set_visible(False)
+		# ax1.tick_params(left=False)
+		# ax1.patch.set_alpha(0)
+		# #
+		# x = np.linspace(ax1.set_ylim()[0],ax1.set_ylim()[1],1000)
+		# dens = scipy.stats.kde.gaussian_kde(np.log10(norm_var[norm_var>0]))(x)
+		# peak_val = x[np.argmax(dens)]
+		# rate_low_var = np.sum(norm_var[norm_var>0] < 0.90)/len(norm_var[norm_var>0])
+		# applicability = 'Unknown'
+		# backcolor = 'w'
+		# if (rate_low_var < 0.01) and (np.abs(peak_val)<0.1):
+		# 	applicability = '(A) Strongly applicable'
+		# 	backcolor = 'lightgreen'
+		# elif rate_low_var < 0.01:
+		# 	applicability = '(B) Weakly applicable'
+		# 	backcolor = 'yellow'
+		# else:
+		# 	applicability = '(C) Inapplicabile'
+		# 	backcolor = 'tomato'
+		# ax0.text(0.99, 0.982,applicability,va='top',ha='right', transform=ax0.transAxes,fontsize=14,backgroundcolor=backcolor)
+		# self.log_['Applicability'] = applicability
+		# self.log_['Rate of 0 < normalized variance < 0.9'] = "{:.0%}".format(rate_low_var)
+		# self.log_['Peak density of normalized variance'] = 10**peak_val
+		# if self.verbose:
+		# 	print('applicabity:',applicability)
+		# if save:
+		# 	plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
+		# if show:
+		# 	plt.show()
 	
 	
 	def plot_original_data(
