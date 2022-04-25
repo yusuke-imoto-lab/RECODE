@@ -151,7 +151,7 @@ class RECODE():
 		X_new : ndarray of shape (n_samples, n_features)
 			Preprecessed data matrix.
 		"""
-		X_new = np.array((X+1)/2,dtype=int)
+		X_new = (X+1)//2
 		return X_new
 	
 	def fit(self,X):
@@ -1305,9 +1305,9 @@ class RECODE_core():
 		if self.variance_estimate:
 			self.noise_var = self._noise_var_est(X)
 		thrshold = (dim-np.arange(n_pca))*noise_var
-		comp = min(np.arange(n_pca)[PCA_Ev_sum-thrshold<0])
+		comp = np.min(np.arange(n_pca)[PCA_Ev_sum-thrshold<0])
 		self.ell_max = np.sum(PCA_Ev>1.0e-10)
-		self.ell = max(min(self.ell_max,comp),self.ell_min)
+		self.ell = np.max(min(self.ell_max,comp),self.ell_min)
 		self.PCA_Ev = PCA_Ev
 		self.n_pca = n_pca
 		self.PCA_Ev_NRM = PCA_Ev_NRM
