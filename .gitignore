@@ -40,3 +40,5 @@ python/screcode/data
 python/screcode/figure
 python/screcode/test.py
 python/screcode/screcode_test.ipynb
+*.h5
+python/sphinx/Tutorials/data/atac_pbmc_5k_nextgem_filtered_peak_bc_matrix.h5
