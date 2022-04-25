@@ -5,7 +5,7 @@
 # Data directory
 data/*
 tests/data
-python/screcode/data/*
+python/screcode/data
 python/sphinx/examples/data/*
 
 # Documents
