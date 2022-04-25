@@ -6,7 +6,7 @@
 data/*
 tests/data
 python/screcode/data
-python/sphinx/examples/data/*
+python/sphinx/examples/data
 
 # Documents
 #*.rst
