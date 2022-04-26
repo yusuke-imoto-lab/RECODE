@@ -48,7 +48,7 @@ In the [Seurat](https://satijalab.org/seurat/) analysis, we can apply RECODE and
 library(RECODE)
 library(Matrix)
 
-SeuratObject[["RECODE"]]<-CreateAssayObject(counts=pbmc[["RNA"]]@counts %>% 
+SeuratObject[["RECODE"]]<-CreateAssayObject(counts=SeuratObject[["RNA"]]@counts %>% 
                                       as.matrix() %>% 
                                       RECODE() %>% 
                                       Matrix(sparse=TRUE))
