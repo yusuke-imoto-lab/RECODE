@@ -42,7 +42,7 @@ library(RECODE)
 X.RECODE <- RECODE(X)
 ```
 
-In the [Seurat](https://satijalab.org/seurat/) analysis, we can apply RECODE and set as default in analysis to `SeuratObject` as follows:
+In the [Seurat](https://satijalab.org/seurat/) analysis, we can apply RECODE to `SeuratObject`  and set it as default, as follows:
 
 ``` r
 library(RECODE)
