@@ -635,7 +635,7 @@ class RECODE():
 		  show = True
 	):
 		"""
-		Plot the transformed data by the noise variance-srabilizing normalization.
+		Plot the transformed data by the noise variance-stabilizing normalization.
 		
 		Parameters
 		----------
@@ -831,7 +831,7 @@ class RECODE():
 		  show = True
 	):
 		"""
-		Plot varainces of the denoised data.
+		Plot variances of the denoised data.
 		
 		Parameters
 		----------
