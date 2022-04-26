@@ -19,6 +19,6 @@ The DESCRIPTION file:
 
 Maintainer: \packageMaintainer{RECODE}
 }
-\keyword{scRNE-seq}
+\keyword{single cell,scRNA-seq}
 \seealso{
 }
