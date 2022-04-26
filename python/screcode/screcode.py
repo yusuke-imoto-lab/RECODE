@@ -1307,7 +1307,12 @@ class RECODE_core():
 		thrshold = (dim-np.arange(n_pca))*noise_var
 		comp = np.min(np.arange(n_pca)[PCA_Ev_sum-thrshold<0])
 		self.ell_max = np.sum(PCA_Ev>1.0e-10)
-		self.ell = np.max(min(self.ell_max,comp),self.ell_min)
+		self.ell = comp
+		if self.ell > self.ell_max:
+			self.ell = self.ell_max
+		if self.ell < self.ell_min:
+			self.ell = self.ell_max
+		#self.ell = np.max(np.min(self.ell_max,comp),self.ell_min)
 		self.PCA_Ev = PCA_Ev
 		self.n_pca = n_pca
 		self.PCA_Ev_NRM = PCA_Ev_NRM
