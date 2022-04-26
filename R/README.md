@@ -24,6 +24,7 @@ In the [Seurat](https://satijalab.org/seurat/) analysis, we can apply RECODE and
 
 ``` r
 library(RECODE)
+library(Matrix)
 
 SeuratObject[["RECODE"]]<-CreateAssayObject(counts=pbmc[["RNA"]]@counts %>% 
                                       as.matrix() %>% 
