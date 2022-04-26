@@ -41,3 +41,17 @@ library(RECODE)
 
 X.RECODE <- RECODE(X)
 ```
+
+In the [Seurat](https://satijalab.org/seurat/) analysis, we can apply RECODE and set as default in analysis to `SeuratObject` as follows:
+
+``` r
+library(RECODE)
+library(Matrix)
+
+SeuratObject[["RECODE"]]<-CreateAssayObject(counts=pbmc[["RNA"]]@counts %>% 
+                                      as.matrix() %>% 
+                                      RECODE() %>% 
+                                      Matrix(sparse=TRUE))
+
+DefaultAssay(SeuratObject)<-"RECODE"
+```
