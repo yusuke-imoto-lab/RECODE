@@ -12,7 +12,7 @@ $ pip install screcode
 
 ### Documentation
 
-[Examples and API reference](https://yusuke-imoto-lab.github.io/RECODE/index.html)
+[Tutorials and API reference](https://yusuke-imoto-lab.github.io/RECODE/index.html)
 
 
 ### Requirements
