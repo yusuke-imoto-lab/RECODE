@@ -9,7 +9,7 @@ RECODE documentation
 
 Installation
 ====================================
-RECODE package supports PyPI install. 
+The python package of RECODE supports PyPI install. 
 
 .. code-block:: bash
 
@@ -30,6 +30,8 @@ To use RECODE, import ``screcode``.
 
  import screcode
 
+
+The R package is available in `here <https://github.com/yusuke-imoto-lab/RECODE/tree/main/R>`_.
 
 .. toctree::
 	:maxdepth: 2
