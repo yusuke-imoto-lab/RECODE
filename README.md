@@ -1,6 +1,6 @@
 # RECODE - Resolution of curse of dimensionality
 
-<div style="text-align:center"><img style="width:60%; height: auto" src="https://github.com/yanailab/enhance/raw/master/images/splash.jpg"/></div>
+<div style="text-align:left"><img style="width:60%; height: auto" src="https://github.com/yusuke-imoto-lab/RECODE/images/RECODE_procedure.png.jpg"/></div>
 
 ## Python code
 
