@@ -357,13 +357,13 @@ class RECODE():
 		applicability = 'Unknown'
 		backcolor = 'w'
 		if (rate_low_var < 0.01) and (np.abs(peak_val)<0.1):
-			applicability = '(A) Strongly applicable'
+			applicability = 'Class A (strongly applicable)'
 			backcolor = 'lightgreen'
 		elif rate_low_var < 0.01:
-			applicability = '(B) Weakly applicable'
+			applicability = 'Class B (weakly applicable)'
 			backcolor = 'yellow'
 		else:
-			applicability = '(C) Inapplicabile'
+			applicability = 'Class C (inapplicabile)'
 			backcolor = 'tomato'
 		ax0.text(0.99, 0.982,applicability,va='top',ha='right', transform=ax0.transAxes,fontsize=14,backgroundcolor=backcolor)
 		self.log_['Applicability'] = applicability
