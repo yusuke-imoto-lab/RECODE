@@ -531,7 +531,7 @@ class RECODE():
 		ax.axis("off")
 		#
 		ps = 2
-		gs = GridSpecFromSubplotSpec(nrows=1,ncols=2,width_ratios=[4, 1],subplot_spec=gs_master[37:85,10:100],wspace=0.)
+		gs = GridSpecFromSubplotSpec(nrows=1,ncols=2,width_ratios=[4, 1],subplot_spec=gs_master[37:85,8:100],wspace=0.)
 		ax0 = fig.add_subplot(gs[0,0])
 		x,y = np.mean(X_scaled,axis=0),norm_var
 		idx_nonsig, idx_sig = y <= 1, y > 1
@@ -577,15 +577,15 @@ class RECODE():
 		ax.text(0,0.,'PC variance modification/elimination',fontsize=16,fontweight='bold')
 		ax.axis("off")
 		#
-		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[105:145,10:80])
+		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[105:145,8:80])
 		ps = 10
 		n_plot = min(n_EV,1000)
 		ax = fig.add_subplot(gs[0,0])
 		plt.rcParams['xtick.direction'] = 'in'
 		plt.rcParams['ytick.direction'] = 'in'
 		ax.scatter(np.arange(n_plot)+1,plot_EV[:n_plot],color='lightblue',label='Original',marker='^',s=ps,zorder=1)
-		ax.scatter(np.arange(self.recode_.ell)+1,plot_EV_mod[:self.recode_.ell],color='green',label='PC varaince modification',s=ps,zorder=2)
-		ax.scatter(np.arange(self.recode_.ell,n_plot)+1,plot_EV_mod[self.recode_.ell:n_plot],color='orange',label='PC varaince elimination',s=ps,zorder=2)
+		ax.scatter(np.arange(self.recode_.ell)+1,plot_EV_mod[:self.recode_.ell],color='green',label='PC variance \nmodification',s=ps,zorder=2)
+		ax.scatter(np.arange(self.recode_.ell,n_plot)+1,plot_EV_mod[self.recode_.ell:n_plot],color='orange',label='PC variance \nelimination',s=ps,zorder=2)
 		ax.axhline(0,color='gray',ls='--',zorder=-10)
 		ax.axvline(self.recode_.ell,color='gray',ls='--')
 		ax.text(self.recode_.ell*1.1,0.3,'$\ell$=%d' % self.recode_.ell,color='k',fontsize=16,ha='left')
@@ -594,7 +594,7 @@ class RECODE():
 		ax.set_yscale('symlog')
 		ax.set_xlim([-5,n_plot+5])
 		ax.set_ylim([-0.5,max(plot_EV)*1.5])
-		ax.legend(loc='upper right',borderaxespad=0,fontsize=14,markerscale=2,handletextpad=0.).get_frame().set_alpha(0)
+		ax.legend(bbox_to_anchor=(1.00, 1), loc='upper left',borderaxespad=0,fontsize=12,markerscale=2,handletextpad=0.).get_frame().set_alpha(0)
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		#
