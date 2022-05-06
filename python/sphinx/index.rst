@@ -7,7 +7,7 @@ RECODE documentation
 ====================================
 **Re**\ solution of **c**\ urse **o**\ f **d**\ im\ **e**\ nsionality (RECODE) is a noise reduction method for single-cell sequencing data. `github <https://github.com/yusuke-imoto-lab/RECODE>`_
 
-<div style="text-align:left"><img style="width:60%; height: auto" src="https://github.com/yusuke-imoto-lab/RECODE/images/RECODE_procedure.png"/></div>
+.. image:: ../../images/RECODE_procedure.png
 
 Installation
 ====================================
