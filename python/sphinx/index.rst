@@ -41,7 +41,7 @@ To use RECODE, import ``screcode``.
  import screcode
 
 
-The R package is available in `here <https://github.com/yusuke-imoto-lab/RECODE/tree/main/R>`_.
+The R package is available `here <https://github.com/yusuke-imoto-lab/RECODE/tree/main/R>`_.
 
 .. toctree::
 	:maxdepth: 2
