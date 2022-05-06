@@ -9,7 +9,7 @@ RECODE documentation
 
 .. image:: ../../images/RECODE_procedure.jpg
 
-The preprint is available `here <https://doi.org/10.1101/2022.05.02.490246>`_.
+The preprint is available `here <https://doi.org/10.1101/2022.05.02.490246>`_ .
 
 Installation
 ====================================
@@ -41,7 +41,7 @@ To use RECODE, import ``screcode``.
  import screcode
 
 
-The R package is available `here <https://github.com/yusuke-imoto-lab/RECODE/tree/main/R>`_.
+The R package is available `here <https://github.com/yusuke-imoto-lab/RECODE/tree/main/R>`_ .
 
 .. toctree::
 	:maxdepth: 2
