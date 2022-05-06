@@ -1,5 +1,7 @@
 # RECODE - Resolution of curse of dimensionality
 
+<div style="text-align:center"><img style="width:60%; height: auto" src="https://github.com/yanailab/enhance/raw/master/images/splash.jpg"/></div>
+
 ## Python code
 
 ### Installation
