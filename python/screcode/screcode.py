@@ -517,7 +517,7 @@ class RECODE():
 		ax = fig.add_subplot(gs[0,0])
 		ax.text(0,1,'#significant %ss: %s' % (self.unit,self.log_['#significant %ss' % self.unit]),fontsize=12)
 		ax.text(0,0.5,'#non-significant %ss: %s' % (self.unit,self.log_['#non-significant %ss' % self.unit]),fontsize=12)
-		ax.text(0,0.0,'#silent genes: %s' % self.log_['#silent genes'],fontsize=12)
+		ax.text(0,0.0,'#silent %ss: %s' % (self.unit,self.log_['#silent %ss' % self.unit]),fontsize=12)
 		ax.axis("off")
 		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[16:26,64:100])
 		ax = fig.add_subplot(gs[0,0])
