@@ -2,6 +2,8 @@
 
 <div style="text-align:left"><img style="width:100%; height: auto" src="https://github.com/yusuke-imoto-lab/RECODE/blob/main/images/RECODE_procedure.png"/></div>
 
+The preprint is available [here](https://doi.org/10.1101/2022.05.02.490246).
+
 ## Python code
 
 ### Installation
