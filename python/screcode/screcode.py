@@ -515,8 +515,8 @@ class RECODE():
 		ax.axis("off")
 		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[16:26,25:64])
 		ax = fig.add_subplot(gs[0,0])
-		ax.text(0,1,'#significant %s: %s' % (self.unit,self.log_['#significant %s' % self.unit]),fontsize=12)
-		ax.text(0,0.5,'#non-significant %s: %s' % (self.unit,self.log_['#non-significant %s' % self.unit]),fontsize=12)
+		ax.text(0,1,'#significant %ss: %s' % (self.unit,self.log_['#significant %ss' % self.unit]),fontsize=12)
+		ax.text(0,0.5,'#non-significant %ss: %s' % (self.unit,self.log_['#non-significant %ss' % self.unit]),fontsize=12)
 		ax.text(0,0.0,'#silent genes: %s' % self.log_['#silent genes'],fontsize=12)
 		ax.axis("off")
 		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[16:26,64:100])
@@ -535,8 +535,8 @@ class RECODE():
 		ax0 = fig.add_subplot(gs[0,0])
 		x,y = np.mean(X_scaled,axis=0),norm_var
 		idx_nonsig, idx_sig = y <= 1, y > 1
-		ax0.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant %s' % self.unit,zorder=2)
-		ax0.scatter(x[idx_nonsig],y[idx_nonsig],color='r',s=ps,label='non-significant %s' % self.unit,zorder=3)
+		ax0.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant %ss' % self.unit,zorder=2)
+		ax0.scatter(x[idx_nonsig],y[idx_nonsig],color='r',s=ps,label='non-significant %ss' % self.unit,zorder=3)
 		ax0.axhline(1,color='gray',ls='--',lw=2,zorder=1)
 		ax0.set_xscale('log')
 		ax0.set_yscale('log')
@@ -611,7 +611,7 @@ class RECODE():
 		plt.rcParams['xtick.direction'] = 'in'
 		plt.rcParams['ytick.direction'] = 'in'
 		x,y = np.mean(X_ss_log,axis=0),np.var(X_ss_log,axis=0,ddof=1)
-		ax0.scatter(x,y,color='b',s=ps,label='significant %s' % self.unit,zorder=2)
+		ax0.scatter(x,y,color='b',s=ps,label='significant %ss' % self.unit,zorder=2)
 		ax0.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax0.set_xlabel('Mean',fontsize=fs_label)
 		ax0.set_ylabel('Variance',fontsize=fs_label)
@@ -620,7 +620,7 @@ class RECODE():
 		plt.gca().spines['top'].set_visible(False)
 		ax1 = fig.add_subplot(gs[0,1])
 		x,y = np.mean(X_RECODE_ss_log,axis=0),np.var(X_RECODE_ss_log,axis=0,ddof=1)
-		ax1.scatter(x,y,color='b',s=ps,label='significant %s' % self.unit,zorder=2)
+		ax1.scatter(x,y,color='b',s=ps,label='significant %ss' % self.unit,zorder=2)
 		ax1.set_ylim(ax0.set_ylim())
 		ax1.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax1.set_xlabel('Mean',fontsize=fs_label)
@@ -1024,7 +1024,7 @@ class RECODE():
 		plt.rcParams['xtick.direction'] = 'in'
 		plt.rcParams['ytick.direction'] = 'in'
 		x,y = np.mean(X_ss_log,axis=0),np.var(X_ss_log,axis=0,ddof=1)
-		ax0.scatter(x,y,color='b',s=ps,label='significant %s' % self.unit,zorder=2)
+		ax0.scatter(x,y,color='b',s=ps,label='significant %ss' % self.unit,zorder=2)
 		ax0.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax0.set_xlabel('Mean of log-scaled data',fontsize=fs_label)
 		ax0.set_ylabel('Variance of log-scaled data',fontsize=fs_label)
@@ -1035,7 +1035,7 @@ class RECODE():
 			plt.savefig('%s_Original.%s' % (save_filename,save_format),dpi=dpi)
 		fig,ax1 = plt.subplots(figsize=figsize)
 		x,y = np.mean(X_RECODE_ss_log,axis=0),np.var(X_RECODE_ss_log,axis=0,ddof=1)
-		ax1.scatter(x,y,color='b',s=ps,label='significant %s' % self.unit,zorder=2)
+		ax1.scatter(x,y,color='b',s=ps,label='significant %ss' % self.unit,zorder=2)
 		ax1.set_ylim(ax0.set_ylim())
 		ax1.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax1.set_xlabel('Mean of log-scaled data',fontsize=fs_label)
