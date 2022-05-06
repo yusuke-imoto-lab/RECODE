@@ -181,6 +181,7 @@ class RECODE():
 		recode_.fit(X_norm)
 
 		self.X_fit = X_mat
+		self.n_all = X_mat.shape[0]
 		self.d_all = X_mat.shape[1]
 		self.d_nonsilent = sum(self.idx_nonsilent)
 		self.noise_var = noise_var
@@ -398,9 +399,6 @@ class RECODE():
 		figsize : 2-tuple of floats, default=(7,5)
 			Figure dimension ``(width, height)`` in inches.
 		
-		ps : float, default=10,
-			Point size. 
-		
 		save : bool, default=False
 			If True, save the figure. 
 		
@@ -446,11 +444,9 @@ class RECODE():
 	
 	def report(
 		self,
-		title = '',
 		figsize=(8.27,11.69),
-		ps = 2,
 		save = False,
-		save_filename = 'check_applicability',
+		save_filename = 'report',
 		save_format = 'png',
 		dpi = None,
 		show = True
@@ -464,16 +460,13 @@ class RECODE():
 		title : str, default=''
 			Figure title.
 		
-		figsize : 2-tuple of floats, default=(10,5)
+		figsize : 2-tuple of floats, default=(8.27,11.69)
 			Figure dimension ``(width, height)`` in inches.
-		
-		ps : float, default=10,
-			Point size. 
 		
 		save : bool, default=False
 			If True, save the figure. 
 		
-		save_filename : str, default= 'check_applicability',
+		save_filename : str, default= 'report',
 			File name (path) of save figure. 
 		
 		save_format : {'png', 'pdf', 'svg'}, default= 'png',
@@ -482,77 +475,163 @@ class RECODE():
 		dpi: float or None, default=None
 			Dots per inch.
 		"""
+		fs_label = 14
 		X_scaled =(self.X_temp.T/np.sum(self.X_temp,axis=1)).T
 		X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
 		norm_var = np.var(X_norm,axis=0,ddof=1)
-		x,y = np.mean(X_scaled,axis=0),norm_var
-		idx_nonsig, idx_sig = y <= 1, y > 1
+		size_factor = np.median(np.sum(self.X_trans,axis=1))
+		X_ss_log = np.log2(size_factor*(self.X_trans[:,self.idx_nonsilent].T/np.sum(self.X_trans,axis=1)).T+1)
+		X_RECODE_ss_log = np.log2(size_factor*(self.X_RECODE[:,self.idx_nonsilent].T/np.sum(self.X_RECODE,axis=1)).T+1)
+		plot_EV = self.recode_.PCA_Ev[self.recode_.PCA_Ev>0]
+		n_EV = len(plot_EV)
+		plot_EV_mod = np.zeros(n_EV)
+		plot_EV_mod[:self.recode_.ell] = self.recode_.PCA_Ev_NRM[:self.recode_.ell]
+		#
 		fig = plt.figure(figsize=(8.27,11.69))
 		plt.rcParams["xtick.direction"] = "in"
 		plt.rcParams["ytick.direction"] = "in"
 		plt.subplots_adjust(left=0.05, right=0.97, bottom=0.01, top=0.98)
 		gs_master = GridSpec(nrows=200, ncols=100,wspace=0,hspace=0)
-		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[8,0:60])
+		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[8,0:50])
 		ax = fig.add_subplot(gs[0,0])
-		ax.text(0,0,'RECODE report',fontsize=30,fontweight='bold')
+		ax.text(0,0,'RECODE report',fontsize=25,fontweight='bold')
 		ax.axis("off")
-		#
-		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[8,70:100])
+		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[12:28,0:100])
+		ax = fig.add_subplot(gs[0,0])
+		ax.patch.set_facecolor('gainsboro')
+		ax.tick_params(labelbottom=False,labelleft=False,labelright=False,labeltop=False)         
+		ax.tick_params(bottom=False,left=False,right=False,top=False)
+		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[8,50:100])
 		ax = fig.add_subplot(gs[0,0])
 		now = datetime.datetime.today()
-		ax.text(1,0,'%d-%02d-%02d %02d:%02d:%02d' % (now.year,now.month,now.day,now.hour,now.minute,now.second),fontsize=12,ha='right')
+		ax.text(1,0,'Date: %d-%02d-%02d %02d:%02d:%02d' % (now.year,now.month,now.day,now.hour,now.minute,now.second),fontsize=12,ha='right')
+		ax.axis("off")
+		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[16:26,2:30])
+		ax = fig.add_subplot(gs[0,0])
+		ax.text(0,1,'Method: %s' % self.log_['seq_target'],fontsize=12)
+		ax.text(0,0.5,'nCells: %s' % self.X_fit.shape[0],fontsize=12)
+		ax.text(0,0.0,'n%ss: %s' % (self.Unit,self.d_all),fontsize=12)
+		# ax.text(0,0.0,'Method: %s' % self.log_['seq_target'],fontsize=12)
+		ax.axis("off")
+		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[16:26,25:64])
+		ax = fig.add_subplot(gs[0,0])
+		ax.text(0,1,'#significant genes: %s' % self.log_['#significant genes'],fontsize=12)
+		ax.text(0,0.5,'#non-significant genes: %s' % self.log_['#non-significant genes'],fontsize=12)
+		ax.text(0,0.0,'#silent genes: %s' % self.log_['#silent genes'],fontsize=12)
+		ax.axis("off")
+		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[16:26,64:100])
+		ax = fig.add_subplot(gs[0,0])
+		ax.text(0,1.0,r'Essential dimension $\ell$: %s' % self.log_['ell'],fontsize=12)
+		ax.text(0,0.5,'Elapsed_time: %s' % self.log_['Elapsed_time'],fontsize=12)
 		ax.axis("off")
 		#
-		spec = matplotlib.gridspec.GridSpec(ncols=2, nrows=1,width_ratios=[4, 1],wspace=0.)
-		# ax0 = fig.add_subplot(spec[0])
-		# ax0.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant %s' % self.unit,zorder=2)
-		# ax0.scatter(x[idx_nonsig],y[idx_nonsig],color='r',s=ps,label='non-significant %s' % self.unit,zorder=3)
-		# ax0.axhline(1,color='gray',ls='--',lw=2,zorder=1)
-		# ax0.set_xscale('log')
-		# ax0.set_yscale('log')
-		# ax0.set_title(title,fontsize=14)
-		# ax0.set_xlabel('Mean of scaled data',fontsize=14)
-		# ax0.set_ylabel('NVSN variance',fontsize=14)
-		# ax0.legend(loc='upper left',borderaxespad=0,fontsize=14,markerscale=2).get_frame().set_alpha(0)
-		# ylim = ax0.set_ylim()
-		# ax1 = fig.add_subplot(spec[1])
-		# sns.kdeplot(y=np.log10(norm_var[norm_var>0]), color='k',shade=True,ax=ax1)
-		# ax1.axhline(0,c='gray',ls='--',lw=2,zorder=1)
-		# ax1.axvline(0,c='k',ls='-',lw=1,zorder=1)
-		# ax1.set_ylim(np.log10(ax0.set_ylim()))
-		# ax1.tick_params(labelbottom=True,labelleft=False,bottom=True)
-		# ax1.set_xlabel('Density',fontsize=14)
-		# ax1.spines['right'].set_visible(False)
-		# ax1.spines['top'].set_visible(False)
-		# ax1.tick_params(left=False)
-		# ax1.patch.set_alpha(0)
-		# #
-		# x = np.linspace(ax1.set_ylim()[0],ax1.set_ylim()[1],1000)
-		# dens = scipy.stats.kde.gaussian_kde(np.log10(norm_var[norm_var>0]))(x)
-		# peak_val = x[np.argmax(dens)]
-		# rate_low_var = np.sum(norm_var[norm_var>0] < 0.90)/len(norm_var[norm_var>0])
-		# applicability = 'Unknown'
-		# backcolor = 'w'
-		# if (rate_low_var < 0.01) and (np.abs(peak_val)<0.1):
-		# 	applicability = '(A) Strongly applicable'
-		# 	backcolor = 'lightgreen'
-		# elif rate_low_var < 0.01:
-		# 	applicability = '(B) Weakly applicable'
-		# 	backcolor = 'yellow'
-		# else:
-		# 	applicability = '(C) Inapplicabile'
-		# 	backcolor = 'tomato'
-		# ax0.text(0.99, 0.982,applicability,va='top',ha='right', transform=ax0.transAxes,fontsize=14,backgroundcolor=backcolor)
-		# self.log_['Applicability'] = applicability
-		# self.log_['Rate of 0 < normalized variance < 0.9'] = "{:.0%}".format(rate_low_var)
-		# self.log_['Peak density of normalized variance'] = 10**peak_val
-		# if self.verbose:
-		# 	print('applicabity:',applicability)
-		# if save:
-		# 	plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
-		# if show:
-		# 	plt.show()
-	
+		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[34,0])
+		ax = fig.add_subplot(gs[0,0])
+		ax.text(0,0.,'Applicability',fontsize=16,fontweight='bold')
+		ax.axis("off")
+		#
+		ps = 2
+		gs = GridSpecFromSubplotSpec(nrows=1,ncols=2,width_ratios=[4, 1],subplot_spec=gs_master[37:85,10:100],wspace=0.)
+		ax0 = fig.add_subplot(gs[0,0])
+		x,y = np.mean(X_scaled,axis=0),norm_var
+		idx_nonsig, idx_sig = y <= 1, y > 1
+		ax0.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant %s' % self.unit,zorder=2)
+		ax0.scatter(x[idx_nonsig],y[idx_nonsig],color='r',s=ps,label='non-significant %s' % self.unit,zorder=3)
+		ax0.axhline(1,color='gray',ls='--',lw=2,zorder=1)
+		ax0.set_xscale('log')
+		ax0.set_yscale('log')
+		ax0.set_xlabel('Mean of scaled data',fontsize=14)
+		ax0.set_ylabel('NVSN variance',fontsize=14)
+		ax0.legend(loc='upper left',borderaxespad=0,fontsize=14,markerscale=5,handletextpad=0.).get_frame().set_alpha(0)
+		ylim = ax0.set_ylim()
+		ax1 = fig.add_subplot(gs[0,1])
+		sns.kdeplot(y=np.log10(norm_var[norm_var>0]), color='k',shade=True,ax=ax1)
+		ax1.axhline(0,c='gray',ls='--',lw=2,zorder=1)
+		ax1.axvline(0,c='k',ls='-',lw=1,zorder=1)
+		ax1.set_ylim(np.log10(ax0.set_ylim()))
+		ax1.tick_params(labelbottom=True,labelleft=False,bottom=True)
+		ax1.set_xlabel('Density',fontsize=14)
+		ax1.spines['right'].set_visible(False)
+		ax1.spines['top'].set_visible(False)
+		ax1.tick_params(left=False)
+		ax1.patch.set_alpha(0)
+		x = np.linspace(ax1.set_ylim()[0],ax1.set_ylim()[1],1000)
+		dens = scipy.stats.kde.gaussian_kde(np.log10(norm_var[norm_var>0]))(x)
+		peak_val = x[np.argmax(dens)]
+		rate_low_var = np.sum(norm_var[norm_var>0] < 0.90)/len(norm_var[norm_var>0])
+		applicability = 'Unknown'
+		backcolor = 'w'
+		if (rate_low_var < 0.01) and (np.abs(peak_val)<0.1):
+			applicability = 'Class A (strongly applicable)'
+			backcolor = 'lightgreen'
+		elif rate_low_var < 0.01:
+			applicability = 'Class A (weakly applicable)'
+			backcolor = 'yellow'
+		else:
+			applicability = 'Class C (inapplicabile)'
+			backcolor = 'tomato'
+		ax0.text(0.99, 0.975,applicability,va='top',ha='right', transform=ax0.transAxes,fontsize=14,backgroundcolor=backcolor)
+		#
+		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[100,0])
+		ax = fig.add_subplot(gs[0,0])
+		ax.text(0,0.,'PC variance modification/elimination',fontsize=16,fontweight='bold')
+		ax.axis("off")
+		#
+		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[105:145,10:80])
+		ps = 10
+		n_plot = min(n_EV,1000)
+		ax = fig.add_subplot(gs[0,0])
+		plt.rcParams['xtick.direction'] = 'in'
+		plt.rcParams['ytick.direction'] = 'in'
+		ax.scatter(np.arange(n_plot)+1,plot_EV[:n_plot],color='lightblue',label='Original',marker='^',s=ps,zorder=1)
+		ax.scatter(np.arange(self.recode_.ell)+1,plot_EV_mod[:self.recode_.ell],color='green',label='PC varaince modification',s=ps,zorder=2)
+		ax.scatter(np.arange(self.recode_.ell,n_plot)+1,plot_EV_mod[self.recode_.ell:n_plot],color='orange',label='PC varaince elimination',s=ps,zorder=2)
+		ax.axhline(0,color='gray',ls='--',zorder=-10)
+		ax.axvline(self.recode_.ell,color='gray',ls='--')
+		ax.text(self.recode_.ell*1.1,0.3,'$\ell$=%d' % self.recode_.ell,color='k',fontsize=16,ha='left')
+		ax.set_xlabel('PC',fontsize=fs_label)
+		ax.set_ylabel('PC variance (eigenvalue)',fontsize=fs_label)
+		ax.set_yscale('symlog')
+		ax.set_xlim([-5,n_plot+5])
+		ax.set_ylim([-0.5,max(plot_EV)*1.5])
+		ax.legend(loc='upper right',borderaxespad=0,fontsize=14,markerscale=2,handletextpad=0.).get_frame().set_alpha(0)
+		plt.gca().spines['right'].set_visible(False)
+		plt.gca().spines['top'].set_visible(False)
+		#
+		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[155,0])
+		ax = fig.add_subplot(gs[0,0])
+		ax.text(0,0.,'Mean-variance plot (log-normalized data)',fontsize=16,fontweight='bold')
+		ax.axis("off")
+		#
+		titles=('Original','RECODE')
+		ps = 2
+		fs_title = 14
+		gs = GridSpecFromSubplotSpec(nrows=1,ncols=2,subplot_spec=gs_master[163:200,5:100])
+		ax0 = fig.add_subplot(gs[0,0])
+		plt.rcParams['xtick.direction'] = 'in'
+		plt.rcParams['ytick.direction'] = 'in'
+		x,y = np.mean(X_ss_log,axis=0),np.var(X_ss_log,axis=0,ddof=1)
+		ax0.scatter(x,y,color='b',s=ps,label='significant %s' % self.unit,zorder=2)
+		ax0.axhline(0,color='gray',ls='--',lw=2,zorder=1)
+		ax0.set_xlabel('Mean',fontsize=fs_label)
+		ax0.set_ylabel('Variance',fontsize=fs_label)
+		ax0.set_title(titles[0],fontsize=fs_title)
+		plt.gca().spines['right'].set_visible(False)
+		plt.gca().spines['top'].set_visible(False)
+		ax1 = fig.add_subplot(gs[0,1])
+		x,y = np.mean(X_RECODE_ss_log,axis=0),np.var(X_RECODE_ss_log,axis=0,ddof=1)
+		ax1.scatter(x,y,color='b',s=ps,label='significant %s' % self.unit,zorder=2)
+		ax1.set_ylim(ax0.set_ylim())
+		ax1.axhline(0,color='gray',ls='--',lw=2,zorder=1)
+		ax1.set_xlabel('Mean',fontsize=fs_label)
+		ax1.set_ylabel('Variance',fontsize=fs_label)
+		ax1.set_title(titles[1],fontsize=fs_title)
+		plt.gca().spines['right'].set_visible(False)
+		plt.gca().spines['top'].set_visible(False)
+		if save:
+			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
+		if show:
+			plt.show()
 	
 	def plot_original_data(
 			self,

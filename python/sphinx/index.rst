@@ -16,12 +16,18 @@ The python package of RECODE supports PyPI install.
  $ pip install screcode
 
 
-
 You can also install the development version of lingam package from GitHub:
 
 .. code-block:: bash
 
 	$ pip install git+https://github.com/yusuke-imoto-lab/RECODE.git
+
+
+or update to the latest version:
+
+.. code-block:: bash
+
+	$ pip install screcode -U
 
 
 To use RECODE, import ``screcode``. 
