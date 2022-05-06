@@ -59,6 +59,6 @@ DefaultAssay(seurat) <- "RECODE"
 
 Below is a more detailed analysis:
 
-[Tutorial(Run)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_tutorial.html)
+[Tutorial (Run)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_tutorial.html)
 
-[Tutorial(Run,QC,Clustering,Annotating)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_example.html)
+[Tutorial (Run,QC,Clustering,Annotating)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_example.html)

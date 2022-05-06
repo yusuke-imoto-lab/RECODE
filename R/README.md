@@ -10,8 +10,8 @@ devtools::install_github("yusuke-imoto-lab/RECODE/R")
 ```
 
 
-## Example
-For the single-cell data *X* (rows: genes, columns: cells), we can apply RECODE as follows. 
+### Tutorials
+For the single-cell sequeincing data *X* (rows: genes/epigenomes, columns: cells), we can apply RECODE as follows. 
 
 
 ``` r
@@ -31,3 +31,9 @@ data_RECODE <- RECODE(data)
 seurat[["RECODE"]] <- CreateAssayObject(counts = Matrix(data_RECODE, sparse = TRUE))
 DefaultAssay(seurat) <- "RECODE"
 ```
+
+Below is a more detailed analysis:
+
+[Tutorial (Run)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_tutorial.html)
+
+[Tutorial (Run,QC,Clustering,Annotating)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_example.html)
