@@ -273,8 +273,8 @@ class RECODE():
 			print('start RECODE for sc%s-seq' % self.seq_target)
 		self.fit(X)
 		X_RECODE = self.transform(X)
-		elapsed_time = time.time() - start
-		self.log_['Elapsed_time'] = "{0}".format(np.round(elapsed_time,decimals=4)) + "[sec]"
+		Elapsedtime = time.time() - start
+		self.log_['Elapsed time'] = "{0}".format(np.round(Elapsedtime,decimals=4)) + "[sec]"
 		if self.verbose:
 			print('end RECODE for sc%s-seq' % self.seq_target)
 			print('log:',self.log_)
@@ -522,7 +522,7 @@ class RECODE():
 		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[16:26,64:100])
 		ax = fig.add_subplot(gs[0,0])
 		ax.text(0,1.0,r'Essential dimension $\ell$: %s' % self.log_['ell'],fontsize=12)
-		ax.text(0,0.5,r'Elapsed time: %s' % self.log_['Elapsed_time'],fontsize=12)
+		ax.text(0,0.5,r'Elapsed time: %s' % self.log_['Elapsed time'],fontsize=12)
 		ax.axis("off")
 		#
 		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[34,0])
