@@ -522,7 +522,7 @@ class RECODE():
 		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[16:26,64:100])
 		ax = fig.add_subplot(gs[0,0])
 		ax.text(0,1.0,r'Essential dimension $\ell$: %s' % self.log_['ell'],fontsize=12)
-		ax.text(0,0.5,'Elapsed_time: %s' % self.log_['Elapsed_time'],fontsize=12)
+		ax.text(0,0.5,'Elapsed time: %s' % self.log_['Elapsed_time'],fontsize=12)
 		ax.axis("off")
 		#
 		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[34,0])
