@@ -604,7 +604,7 @@ class RECODE():
 		ax.axis("off")
 		#
 		titles=('Original','RECODE')
-		ps = 2
+		ps = 1
 		fs_title = 14
 		gs = GridSpecFromSubplotSpec(nrows=1,ncols=2,subplot_spec=gs_master[163:200,5:100])
 		ax0 = fig.add_subplot(gs[0,0])
@@ -616,12 +616,14 @@ class RECODE():
 		ax0.set_xlabel('Mean',fontsize=fs_label)
 		ax0.set_ylabel('Variance',fontsize=fs_label)
 		ax0.set_title(titles[0],fontsize=fs_title)
+		ylim = [-0.05*np.percentile(y,99.9),1.05*np.percentile(y,99.9)]
+		ax0.set_ylim(ylim)	
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		ax1 = fig.add_subplot(gs[0,1])
 		x,y = np.mean(X_RECODE_ss_log,axis=0),np.var(X_RECODE_ss_log,axis=0,ddof=1)
 		ax1.scatter(x,y,color='b',s=ps,label='significant %ss' % self.unit,zorder=2)
-		ax1.set_ylim(ax0.set_ylim())
+		ax1.set_ylim(ylim)
 		ax1.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax1.set_xlabel('Mean',fontsize=fs_label)
 		ax1.set_ylabel('Variance',fontsize=fs_label)
