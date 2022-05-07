@@ -41,3 +41,5 @@ python/screcode/data
 python/screcode/figure
 python/screcode/test.py
 python/screcode/screcode_test.ipynb
+python/screcode/__pycache__
+python/screcode/.ipynb_checkpoints
