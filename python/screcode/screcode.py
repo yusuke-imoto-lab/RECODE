@@ -33,7 +33,7 @@ class RECODE():
 			Upper bound of parameter :math:`\ell` for the fast algorithm. Must be of range [1,:math:`\infity`).
 		
 		seq_target : {'RNA','ATAC'}, default='RNA'
-			Sequencing target. If 'ATAC', the preprocessing (odd-even normalization) will be performed before the regular algorithm. 
+			Sequencing target. If 'ATAC', the preprocessing (odd-even stabilization) will be performed before the regular algorithm. 
 		
 		verbose : boolean, default=True
 			If False, all running messages are not displayed. 
@@ -139,7 +139,7 @@ class RECODE():
 	
 	def _ATAC_preprocessing(self,X):
 		"""
-		Preprocessing of original ATAC-seq data (odd-even normalization data). 
+		Preprocessing of original ATAC-seq data (odd-even stabilization data). 
 		
 		Parameters
 		----------
@@ -260,12 +260,12 @@ class RECODE():
 
 		Parameters
 		----------
-		X : ndarray or anndata of shape (n_samples, n_features)
+		X : ndarray/anndata of shape (n_samples, n_features)
 			Tranceforming single-cell sequencing data matrix (row:cell, culumn:gene/peak).
 
 		Returns
 		-------
-		X_new : ndarray of shape (n_samples, n_features)
+		X_new : ndarray/anndata (the same format as input)
 			Denoised data matrix.
 		"""
 		start = time.time()
@@ -1167,7 +1167,7 @@ class RECODE():
 	  show=True
 	):
 		"""
-		Plot the number of values in scATAC-seq data matrix with and without preprocessing (odd-even normalization).
+		Plot the number of values in scATAC-seq data matrix with and without preprocessing (odd-even stabilization).
 		
 		Parameters
 		----------
