@@ -66,7 +66,7 @@ Below is a more detailed analysis:
 
 ### Application
 
-[RECODE application] (https://github.com/yusuke-imoto-lab/GUI-RECODE/releases/tag/v1.1.1)
+[RECODE application](https://github.com/yusuke-imoto-lab/GUI-RECODE/releases/tag/v1.1.1)
 
 Windows (exe) and MAC OS (dmg) applications are avairable.
 
