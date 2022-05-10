@@ -69,3 +69,5 @@ Below is a more detailed analysis:
 [RECODE application] (https://github.com/yusuke-imoto-lab/GUI-RECODE/releases/tag/v1.1.1)
 
 Windows (exe) and MAC OS (dmg) applications are avairable.
+
+<div style="text-align:left"><img style="width:80%; height: auto" src="https://github.com/yusuke-imoto-lab/RECODE/blob/main/images/RECODE_GUI.jpg"/></div>
