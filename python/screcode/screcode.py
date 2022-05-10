@@ -372,7 +372,7 @@ class RECODE():
 		if self.verbose:
 			print('applicabity:',applicability)
 		if save:
-			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
+			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi, bbox_inches="tight")
 		if show:
 			plt.show()
 		
@@ -631,7 +631,7 @@ class RECODE():
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
-			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
+			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi, bbox_inches="tight")
 		if show:
 			plt.show()
 	
@@ -701,7 +701,7 @@ class RECODE():
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
-			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
+			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi, bbox_inches="tight")
 		if show:
 			plt.show()
 
@@ -764,7 +764,7 @@ class RECODE():
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
-			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
+			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi, bbox_inches="tight")
 		if show:
 			plt.show()
 
@@ -827,7 +827,7 @@ class RECODE():
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
-			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
+			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi, bbox_inches="tight")
 		if show:
 			plt.show()
 		
@@ -897,7 +897,7 @@ class RECODE():
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
-			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
+			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi, bbox_inches="tight")
 		if show:
 			plt.show()
 	
@@ -962,7 +962,7 @@ class RECODE():
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
-			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
+			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi, bbox_inches="tight")
 		if show:
 			plt.show()
 	
@@ -1034,7 +1034,7 @@ class RECODE():
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
-			plt.savefig('%s_Original.%s' % (save_filename,save_format),dpi=dpi)
+			plt.savefig('%s_Original.%s' % (save_filename,save_format),dpi=dpi, bbox_inches="tight")
 		fig,ax1 = plt.subplots(figsize=figsize)
 		x,y = np.mean(X_RECODE_ss_log,axis=0),np.var(X_RECODE_ss_log,axis=0,ddof=1)
 		ax1.scatter(x,y,color='b',s=ps,label='significant %ss' % self.unit,zorder=2)
@@ -1046,7 +1046,7 @@ class RECODE():
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
-			plt.savefig('%s_RECODE.%s' % (save_filename,save_format),dpi=dpi)
+			plt.savefig('%s_RECODE.%s' % (save_filename,save_format),dpi=dpi, bbox_inches="tight")
 		if show:
 			plt.show()
 
@@ -1119,7 +1119,7 @@ class RECODE():
 		plt.gca().spines['top'].set_visible(False)
 		ax0.set_title(titles[0],fontsize=fs_title)
 		if save:
-			plt.savefig('%s_Original.%s' % (save_filename,save_format),dpi=dpi)
+			plt.savefig('%s_Original.%s' % (save_filename,save_format),dpi=dpi, bbox_inches="tight")
 		
 		X_RECODE_ss = (np.median(np.sum(self.X_RECODE[:,self.idx_nonsilent],axis=1))*self.X_RECODE[:,self.idx_nonsilent].T/np.sum(self.X_RECODE[:,self.idx_nonsilent],axis=1)).T
 		fig,ax1 = plt.subplots(figsize=figsize)
@@ -1151,7 +1151,7 @@ class RECODE():
 			ax1.scatter(x,cv,color='b',s=ps,zorder=2)
 			
 		if save:
-			plt.savefig('%s_RECODE.%s' % (save_filename,save_format),dpi=dpi)
+			plt.savefig('%s_RECODE.%s' % (save_filename,save_format),dpi=dpi, bbox_inches="tight")
 		if show:
 			plt.show()
 	
@@ -1226,7 +1226,7 @@ class RECODE():
 		plt.gca().spines['top'].set_visible(False)
 		plt.legend(fontsize=fs_legend)
 		if save:
-			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi)
+			plt.savefig('%s.%s' % (save_filename,save_format),dpi=dpi, bbox_inches="tight")
 		if show:
 			plt.show()	
 
