@@ -70,4 +70,4 @@ Below is a more detailed analysis:
 
 Windows (exe) and MAC OS (dmg) applications are avairable.
 
-<div style="text-align:left"><img style="width:80%; height: auto" src="https://github.com/yusuke-imoto-lab/RECODE/blob/main/images/RECODE_GUI.jpg"/></div>
+<div style="text-align:left"><img style="width:100%; height: auto" src="https://github.com/yusuke-imoto-lab/RECODE/blob/main/images/RECODE_GUI.jpg"/></div>
