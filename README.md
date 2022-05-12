@@ -57,11 +57,11 @@ seurat[["RECODE"]] <- CreateAssayObject(counts = Matrix(data_RECODE, sparse = TR
 DefaultAssay(seurat) <- "RECODE"
 ```
 
-Below is a more detailed analysis:
+For a detailed analysis, please see below:
 
 [Tutorial (Run)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_tutorial.html)
 
-[Tutorial (Run,QC,Clustering,Annotating)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_example.html)
+[Tutorial (Run, QC, Clustering, Annotating etc.)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_example.html)
 
 
 ## Application
