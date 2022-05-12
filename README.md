@@ -64,7 +64,7 @@ Below is a more detailed analysis:
 [Tutorial (Run,QC,Clustering,Annotating)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_example.html)
 
 
-### Application
+## Application
 
 [RECODE application](https://github.com/yusuke-imoto-lab/GUI-RECODE/releases/tag/v1.1.1)
 
