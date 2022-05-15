@@ -27,6 +27,8 @@ $ pip install screcode
 
 ## R code
 
+Remark: The current version of the R code is not fast because the PCA algorithm on R is slow. Therefore, we recommend using the python code for large-scale data.
+
 ### Installation
 
 You can install `RECODE` on R with:
