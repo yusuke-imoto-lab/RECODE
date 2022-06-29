@@ -11,7 +11,9 @@ RECODE documentation
 
 The preprint is available `here <https://doi.org/10.1101/2022.05.02.490246>`_.
 The license gives permission for personal, academic, or educational use. 
-Any commercial use is strictly prohibited. Please contact imoto.yusuke.4e\<at\>kyoto-u.ac.jp for licensing terms for any commercial use.
+Any commercial use is strictly prohibited. 
+Please contact imoto.yusuke.4e\<at\>kyoto-u.ac.jp for licensing terms for any commercial use.
+
 
 Installation
 ====================================
