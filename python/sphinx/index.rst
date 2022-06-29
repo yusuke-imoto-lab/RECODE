@@ -10,7 +10,8 @@ RECODE documentation
 .. image:: ../../images/RECODE_procedure.jpg
 
 The preprint is available `here <https://doi.org/10.1101/2022.05.02.490246>`_.
-
+The license gives permission for personal, academic, or educational use. 
+Any commercial use is strictly prohibited. 
 
 Installation
 ====================================
