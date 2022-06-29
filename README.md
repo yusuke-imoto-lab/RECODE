@@ -3,7 +3,7 @@
 <div style="text-align:left"><img style="width:100%; height: auto" src="https://github.com/yusuke-imoto-lab/RECODE/blob/main/images/RECODE_procedure.jpg"/></div>
 
 The preprint is available [here](https://doi.org/10.1101/2022.05.02.490246). 
-The license gives permission for personal, academic, or educational use. Any commercial use is strictly prohibited. Please contact imoto.yusuke.4e<at>kyoto-u.ac.jp for licensing terms for any commercial use.
+The license gives permission for personal, academic, or educational use. Any commercial use is strictly prohibited. Please contact imoto.yusuke.4e\<at\>kyoto-u.ac.jp for licensing terms for any commercial use.
 
 ## Python code
 
