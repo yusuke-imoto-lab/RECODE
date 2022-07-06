@@ -8,15 +8,15 @@ repository = "https://github.com/yusuke-imoto-lab/RECODE"
 documentation = "https://yusuke-imoto-lab.github.io/RECODE/"
 
 [tool.poetry.dependencies]
-python       = ">=3.7,<3.11"
-numpy        = ">=1.20"
+python       = ">=3.8,<3.11"
 datetime     = ">=4.0"
 scikit-learn = ">=0.24"
-scipy = ">=1.7.1"
+scipy = "^1.8.1"
 seaborn = ">=0.11.2"
 matplotlib = ">=3.4.3"
 adjustText = ">=0.7"
-anndata    = ">=0.8.0"
+anndata = "^0.8.0"
+numpy = "^1.23.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
