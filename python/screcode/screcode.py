@@ -19,6 +19,7 @@ class RECODE():
 		fast_algorithm = True,
 		fast_algorithm_ell_ub = 1000,
 		seq_target = 'RNA',
+		version = 1,
 		verbose = True
 		):
 		""" 
@@ -34,6 +35,9 @@ class RECODE():
 		
 		seq_target : {'RNA','ATAC'}, default='RNA'
 			Sequencing target. If 'ATAC', the preprocessing (odd-even stabilization) will be performed before the regular algorithm. 
+
+		version : int default='1'
+			Version of RECODE. 
 		
 		verbose : boolean, default=True
 			If False, all running messages are not displayed. 
@@ -58,6 +62,7 @@ class RECODE():
 		self.fast_algorithm = fast_algorithm
 		self.fast_algorithm_ell_ub = fast_algorithm_ell_ub
 		self.seq_target = seq_target
+		self.version = version
 		self.verbose = verbose
 		self.unit = 'gene'
 		self.Unit = 'Gene'
@@ -1279,11 +1284,20 @@ class RECODE_core():
 		L,
 		U,
 		Xmean,
-		ell
+		ell,
+		version=1,
+		TO_CR = 0
 	):
 		U_ell = U[:ell,:]
 		L_ell = L[:ell,:ell]
+		if version==1:
+			U_ell_temp = U_ell
+			for i in range(ell):
+				idx_order = np.argsort(U[i]**2)
+				idx_sparce = np.sort(U[i]**2).cumsum() > TO_C
+				U[i,idx_order[idx_sparce]] = 0
 		return np.dot(np.dot(np.dot(X-Xmean,U_ell.T),L_ell),U_ell)+Xmean
+		
 
 	def _noise_reduct_param(
 		self,
@@ -1371,6 +1385,7 @@ class RECODE_core():
 		svd = sklearn.decomposition.TruncatedSVD(n_components=n_pca).fit(X-X_mean)
 		SVD_Sv = svd.singular_values_
 		PCA_Ev = (SVD_Sv**2)/(n_svd-1)
+		PCA_CCR = (PCA_Ev/np.sum(PCA_Ev)).cumsum()
 		PCA_Ev_sum_all = np.sum(np.var(X,axis=0,ddof=1))
 		PCA_Ev_NRM = np.array(PCA_Ev,dtype=float)
 		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(PCA_Ev)
