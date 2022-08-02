@@ -1306,7 +1306,7 @@ class RECODE_core():
 	):
 		comp = max(np.sum(self.PCA_Ev_NRM>delta*self.PCA_Ev_NRM[0]),3)
 		self.ell = min(self.ell_max,comp)
-		self.X_RECODE =  self._noise_reductor(X,self.L,self.U,self.X_mean,self.ell)
+		self.X_RECODE =  self._noise_reductor(X,self.L,self.U,self.X_mean,self.ell,self.version,self.TO_CR)
 		return self.X_RECODE
 	
 	def _noise_reduct_noise_var(
@@ -1314,7 +1314,7 @@ class RECODE_core():
 		X,
 		noise_var = 1
 	):
-		X_RECODE = self._noise_reductor(X,self.L,self.U,self.X_mean,self.ell)
+		X_RECODE = self._noise_reductor(X,self.L,self.U,self.X_mean,self.ell,self.version,self.TO_CR)
 		return X_RECODE
 	
 	def _noise_var_est(
@@ -1409,7 +1409,9 @@ class RECODE_core():
 		if self.ell < self.ell_min:
 			self.ell = self.ell_max
 		#self.ell = np.max(np.min(self.ell_max,comp),self.ell_min)
+		self.TO_CR = self.PCA_CCR[self.ell]
 		self.PCA_Ev = PCA_Ev
+		self.PCA_CCR = PCA_CCR
 		self.n_pca = n_pca
 		self.PCA_Ev_NRM = PCA_Ev_NRM
 		self.U = svd.components_
@@ -1440,7 +1442,7 @@ class RECODE_core():
 			return self._noise_reduct_noise_var(X,self.noise_var)
 		elif self.solver=='manual':
 			self.ell = self.ell_manual
-			return self._noise_reductor(X,self.L,self.U,self.X_mean,self.ell)
+			return self._noise_reductor(X,self.L,self.U,self.X_mean,self.ell,self.version,self.TO_CR)
 
 	def fit_transform(self,X):
 		"""
