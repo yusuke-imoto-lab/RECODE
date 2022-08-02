@@ -1302,7 +1302,6 @@ class RECODE_core():
 		U_ell = U[:ell,:]
 		L_ell = L[:ell,:ell]
 		return np.dot(np.dot(np.dot(X-Xmean,U_ell.T),L_ell),U_ell)+Xmean
-		
 
 	def _noise_reduct_param(
 		self,
