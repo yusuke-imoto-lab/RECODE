@@ -1297,8 +1297,8 @@ class RECODE_core():
 		L_ell = L[:ell,:ell]
 		if version==2:
 			for i in range(ell):
-				idx_order = np.argsort(U[i]**2)
-				idx_sparce = np.sort(U[i]**2).cumsum() > TO_CR
+				idx_order = np.argsort(U[i]**2)[::-1]
+				idx_sparce = np.sort(U[i]**2)[::-1].cumsum() > TO_CR
 				U[i,idx_order[idx_sparce]] = 0
 			U[i,:] = U[i,:]/np.sqrt(np.sum(U[i,:]**2))
 		return np.dot(np.dot(np.dot(X-Xmean,U_ell.T),L_ell),U_ell)+Xmean
@@ -1415,8 +1415,8 @@ class RECODE_core():
 		if self.ell < self.ell_min:
 			self.ell = self.ell_max
 		#self.ell = np.max(np.min(self.ell_max,comp),self.ell_min)
-		self.TO_CR_t = PCA_CCR[self.ell]
-		self.TO_CR = PCA_CCR_NRM[self.ell]
+		self.TO_CR = PCA_CCR[self.ell]
+		#self.TO_CR = PCA_CCR_NRM[self.ell]
 		self.PCA_Ev = PCA_Ev
 		self.PCA_CCR = PCA_CCR
 		self.n_pca = n_pca
