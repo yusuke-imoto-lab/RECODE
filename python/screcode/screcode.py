@@ -1295,15 +1295,15 @@ class RECODE_core():
 	):
 		if version==2:
 			U_ell = U[:ell,:]
-			U_ell_mod = np.copy(U_ell)
+			# U_ell_mod = np.copy(U_ell)
 			L_ell = L[:ell,:ell]
 			for i in range(ell):
 				# U[i,U_argsort[i][::-1][U_sort[::-1].cumsum() > TO_CR]] = 0
 				idx_order = np.argsort(U[i]**2)[::-1]
-				idx_sparce = np.sort(U[i]**2)[::-1].cumsum() > TO_CR
+				idx_sparce = np.sort(U[i]**2)[::-1].cumsum() > L_ell[i,i]
 				U[i,idx_order[idx_sparce]] = 0
-			U_ell_mod[i,:] = U[i,:]/np.sqrt(np.sum(U[i]**2))
-			return np.dot(np.dot(np.dot(X-Xmean,U_ell.T),L_ell),U_ell_mod)+Xmean
+			U_ell[i,:] = U[i,:]/np.sqrt(np.sum(U[i]**2))
+			return np.dot(np.dot(np.dot(X-Xmean,U_ell.T),L_ell),U_ell)+Xmean
 		else:
 			U_ell = U[:ell,:]
 			L_ell = L[:ell,:ell]
