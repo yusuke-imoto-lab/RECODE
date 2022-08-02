@@ -1291,16 +1291,16 @@ class RECODE_core():
 		Xmean,
 		ell,
 		version=1,
-		TO_CR = 0
+		TO_CR = 1
 	):
-		U_ell = U[:ell,:]
-		L_ell = L[:ell,:ell]
 		if version==2:
 			for i in range(ell):
 				idx_order = np.argsort(U[i]**2)[::-1]
 				idx_sparce = np.sort(U[i]**2)[::-1].cumsum() > TO_CR
 				U[i,idx_order[idx_sparce]] = 0
 			U[i,:] = U[i,:]/np.sqrt(np.sum(U[i,:]**2))
+		U_ell = U[:ell,:]
+		L_ell = L[:ell,:ell]
 		return np.dot(np.dot(np.dot(X-Xmean,U_ell.T),L_ell),U_ell)+Xmean
 		
 
