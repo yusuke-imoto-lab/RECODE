@@ -1,0 +1,21 @@
+screcode package
+================
+
+Submodules
+----------
+
+screcode.screcode module
+------------------------
+
+.. automodule:: screcode.screcode
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: screcode
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+screcode
+========
+
+.. toctree::
+   :maxdepth: 4
+
+   screcode
