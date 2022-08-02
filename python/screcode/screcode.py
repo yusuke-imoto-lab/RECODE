@@ -182,7 +182,7 @@ class RECODE():
 		noise_var[noise_var==0] = 1
 		X_norm = (X_scaled-X_scaled_mean)/np.sqrt(noise_var)
 		X_norm_var = np.var(X_norm,axis=0)
-		recode_ = RECODE_core(variance_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_ub=self.fast_algorithm_ell_ub)
+		recode_ = RECODE_core(variance_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_ub=self.fast_algorithm_ell_ub,version=self.version)
 		recode_.fit(X_norm)
 
 		self.X_fit = X_mat
@@ -1043,7 +1043,7 @@ class RECODE():
 		fig,ax1 = plt.subplots(figsize=figsize)
 		x,y = np.mean(X_RECODE_ss_log,axis=0),np.var(X_RECODE_ss_log,axis=0,ddof=1)
 		ax1.scatter(x,y,color='b',s=ps,label='significant %ss' % self.unit,zorder=2)
-		ax1.set_ylim(ax0.set_ylim())
+		#ax1.set_ylim(ax0.set_ylim())
 		ax1.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax1.set_xlabel('Mean of log-scaled data',fontsize=fs_label)
 		ax1.set_ylabel('Variance of log-scaled data',fontsize=fs_label)
@@ -1244,6 +1244,7 @@ class RECODE_core():
 		fast_algorithm_ell_ub = 1000,
 		ell_manual = 10,
 		ell_min = 3,
+		version = 1
 	):
 		"""
 		The core part of RECODE (for non-randam sampling data). 
@@ -1267,8 +1268,11 @@ class RECODE_core():
 			Manual essential dimension :math:`\ell` computed by ``solver='manual'``. Must be of range [1, infinity).
 		
 		ell_min : int, default=3
-			Minimam value of essential dimension :math:`\ell`.
-
+			Minimam value of essential dimension :math:`\ell`
+		
+		version : int default='1'
+			Version of RECODE. 
+		
 		"""
 		self.solver = solver
 		self.variance_estimate = variance_estimate
@@ -1277,6 +1281,7 @@ class RECODE_core():
 		self.ell_manual = ell_manual
 		self.ell_min = ell_min
 		self.fit_idx = False
+		self.version = version 
 	
 	def _noise_reductor(
 		self,
@@ -1290,11 +1295,11 @@ class RECODE_core():
 	):
 		U_ell = U[:ell,:]
 		L_ell = L[:ell,:ell]
-		if version==1:
+		if version==2:
 			U_ell_temp = U_ell
 			for i in range(ell):
 				idx_order = np.argsort(U[i]**2)
-				idx_sparce = np.sort(U[i]**2).cumsum() > TO_C
+				idx_sparce = np.sort(U[i]**2).cumsum() > TO_CR
 				U[i,idx_order[idx_sparce]] = 0
 		return np.dot(np.dot(np.dot(X-Xmean,U_ell.T),L_ell),U_ell)+Xmean
 		
@@ -1409,7 +1414,7 @@ class RECODE_core():
 		if self.ell < self.ell_min:
 			self.ell = self.ell_max
 		#self.ell = np.max(np.min(self.ell_max,comp),self.ell_min)
-		self.TO_CR = self.PCA_CCR[self.ell]
+		self.TO_CR = PCA_CCR[self.ell]
 		self.PCA_Ev = PCA_Ev
 		self.PCA_CCR = PCA_CCR
 		self.n_pca = n_pca
