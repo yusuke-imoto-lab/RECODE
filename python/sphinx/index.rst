@@ -9,7 +9,8 @@ RECODE documentation
 
 .. image:: ../../images/RECODE_procedure.jpg
 
-The preprint is available `here <https://doi.org/10.1101/2022.05.02.490246>`_.
+`Y. Imoto, T. Nakamura, et al. Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis, 2022, Life Science Alliance <https://dx.doi.org/10.26508/lsa.202201591>`_.
+
 The license gives permission for personal, academic, or educational use. 
 Any commercial use is strictly prohibited. 
 Please contact imoto.yusuke.4e\<at\>kyoto-u.ac.jp for licensing terms for any commercial use.

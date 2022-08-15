@@ -2,7 +2,10 @@
 
 <div style="text-align:left"><img style="width:100%; height: auto" src="https://github.com/yusuke-imoto-lab/RECODE/blob/main/images/RECODE_procedure.jpg"/></div>
 
-The preprint is available [here](https://doi.org/10.1101/2022.05.02.490246). 
+Resolution of the curse of dimensionality (RECODE) is a noise reduction method for single-cell sequencing data based on high-dimensional statistics.
+
+[Y. Imoto, T. Nakamura, et al. Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis, 2022, Life Science Alliance](https://dx.doi.org/10.26508/lsa.202201591). 
+
 The license gives permission for personal, academic, or educational use. Any commercial use is strictly prohibited. Please contact imoto.yusuke.4e\<at\>kyoto-u.ac.jp for licensing terms for any commercial use.
 
 ## Python code
