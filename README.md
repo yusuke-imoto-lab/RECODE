@@ -10,7 +10,10 @@ The license gives permission for personal, academic, or educational use. Any com
 
 ## Python code
 
-Total download [![Downloads](https://static.pepy.tech/personalized-badge/screcode?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/screcode)
+### Downloads
+[![Week](https://static.pepy.tech/personalized-badge/screcode?period=week&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/screcode)
+[![Month](https://static.pepy.tech/personalized-badge/screcode?period=month&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/screcode)
+[![Total](https://static.pepy.tech/personalized-badge/screcode?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/screcode)
 
 ### Installation
 
