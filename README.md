@@ -10,6 +10,8 @@ The license gives permission for personal, academic, or educational use. Any com
 
 ## Python code
 
+Total download [![Downloads](https://static.pepy.tech/personalized-badge/screcode?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/screcode)
+
 ### Installation
 
 To install RECODE package, use `pip` as follows:
