@@ -19,7 +19,7 @@ To install RECODE package, use `pip` as follows:
 $ pip install screcode
 ```
 
-PyPi downloads
+PyPi downloads (by PePy)
 
 [![Week](https://static.pepy.tech/personalized-badge/screcode?period=week&units=international_system&left_color=black&right_color=green&left_text=Week)](https://pepy.tech/project/screcode)
 [![Month](https://static.pepy.tech/personalized-badge/screcode?period=month&units=international_system&left_color=black&right_color=yellow&left_text=Month)](https://pepy.tech/project/screcode)
