@@ -1395,14 +1395,14 @@ class RECODE_core():
 		svd = sklearn.decomposition.TruncatedSVD(n_components=n_pca).fit(X-X_mean)
 		SVD_Sv = svd.singular_values_
 		PCA_Ev = (SVD_Sv**2)/(n_svd-1)
-		PCA_CCR = (PCA_Ev/np.sum(PCA_Ev)).cumsum()
+		PCA_CCR = (PCA_Ev/PCA_Ev_sum_all).cumsum()
 		PCA_Ev_sum_all = np.sum(np.var(X,axis=0,ddof=1))
 		PCA_Ev_NRM = np.array(PCA_Ev,dtype=float)
 		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(PCA_Ev)
 		n_Ev_all = min(n,d)
 		PCA_Ev_NRM = np.array([PCA_Ev[i]-(np.sum(PCA_Ev[i+1:])+PCA_Ev_sum_diff)/(n_Ev_all-i-1) for i in range(len(PCA_Ev_NRM)-1)])
 		PCA_Ev_NRM = np.append(PCA_Ev_NRM,0)
-		PCA_CCR_NRM = (PCA_Ev_NRM/np.sum(PCA_Ev_NRM)).cumsum()
+		#PCA_CCR_NRM = (PCA_Ev_NRM/np.sum(PCA_Ev_NRM)).cumsum()
 		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(PCA_Ev)
 		PCA_Ev_sum = np.array([np.sum(PCA_Ev[i:]) for i in range(n_pca)])+PCA_Ev_sum_diff
 		d_act = sum(np.var(X,axis=0,ddof=1)>0)
@@ -1420,7 +1420,7 @@ class RECODE_core():
 		if self.ell < self.ell_min:
 			self.ell = self.ell_max
 		#self.ell = np.max(np.min(self.ell_max,comp),self.ell_min)
-		self.TO_CR_t = PCA_CCR[self.ell]
+		#self.TO_CR_t = PCA_CCR[self.ell]
 		self.TO_CR = PCA_CCR_NRM[self.ell]
 		self.PCA_Ev = PCA_Ev
 		self.PCA_CCR = PCA_CCR
