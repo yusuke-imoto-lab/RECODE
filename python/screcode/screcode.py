@@ -1420,7 +1420,7 @@ class RECODE_core():
 		if self.ell < self.ell_min:
 			self.ell = self.ell_max
 		#self.ell = np.max(np.min(self.ell_max,comp),self.ell_min)
-		self.TO_CR_t = PCA_CCR[self.ell]
+		self.TO_CR = PCA_CCR[self.ell]
 		#self.TO_CR = PCA_CCR_NRM[self.ell]
 		self.PCA_Ev = PCA_Ev
 		self.PCA_CCR = PCA_CCR
