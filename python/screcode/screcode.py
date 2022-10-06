@@ -1402,7 +1402,7 @@ class RECODE_core():
 		PCA_Ev_NRM = np.array([PCA_Ev[i]-(np.sum(PCA_Ev[i+1:])+PCA_Ev_sum_diff)/(n_Ev_all-i-1) for i in range(len(PCA_Ev_NRM)-1)])
 		PCA_Ev_NRM = np.append(PCA_Ev_NRM,0)
 		PCA_CCR = (PCA_Ev/PCA_Ev_sum_all).cumsum()
-		#PCA_CCR_NRM = (PCA_Ev_NRM/np.sum(PCA_Ev_NRM)).cumsum()
+		PCA_CCR_NRM = (PCA_Ev_NRM/np.sum(PCA_Ev_NRM)).cumsum()
 		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(PCA_Ev)
 		PCA_Ev_sum = np.array([np.sum(PCA_Ev[i:]) for i in range(n_pca)])+PCA_Ev_sum_diff
 		d_act = sum(np.var(X,axis=0,ddof=1)>0)
@@ -1421,7 +1421,7 @@ class RECODE_core():
 			self.ell = self.ell_max
 		#self.ell = np.max(np.min(self.ell_max,comp),self.ell_min)
 		self.TO_CR = PCA_CCR[self.ell]
-		#self.TO_CR = PCA_CCR_NRM[self.ell]
+		self.TO_CR_NRM = PCA_CCR_NRM[self.ell]
 		self.PCA_Ev = PCA_Ev
 		self.PCA_CCR = PCA_CCR
 		self.n_pca = n_pca
