@@ -1299,11 +1299,11 @@ class RECODE_core():
 			L_ell = L[:ell,:ell]
 			for i in range(ell):
 				# U[i,U_argsort[i][::-1][U_sort[::-1].cumsum() > TO_CR]] = 0
-				idx_order = np.argsort(U[i]**2)[::-1]
-				idx_sparce = np.sort(U[i]**2)[::-1].cumsum() > L_ell[i,i]
-				U[i,idx_order[idx_sparce]] = 0
-				U[i] = U[i]/np.sqrt(np.sum(U[i]**2))
-			U_ell[i,:] = U[i,:]/np.sqrt(np.sum(U[i]**2))
+				idx_order = np.argsort(np.abs(U[i]))[::-1]
+				idx_sparce = np.sort(np.abs(U[i]))[::-1].cumsum() > L_ell[i,i]
+				U_ell[i,idx_order[idx_sparce]] = 0
+				U_ell[i] = U_ell[i]/np.sqrt(np.sum(U_ell[i]**2))
+			#U_ell[i,:] = U[i,:]/np.sqrt(np.sum(U[i]**2))
 			return np.dot(np.dot(np.dot(X-Xmean,U_ell.T),L_ell),U_ell)+Xmean
 		else:
 			U_ell = U[:ell,:]
