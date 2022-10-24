@@ -1419,7 +1419,7 @@ class RECODE_core():
 		thrshold = (dim-np.arange(n_pca))*noise_var
 		if np.sum(PCA_Ev_sum-thrshold<0) == 0:
 			warnings.warn("Acceleration error: the optimal value of ell is larger than fast_algorithm_ell_ub. Set larger fast_algorithm_ell_ub than %d or 'fast_algorithm=False'" % self.fast_algorithm_ell_ub)
-			exit
+			exit()
 		comp = np.min(np.arange(n_pca)[PCA_Ev_sum-thrshold<0])
 		self.ell_max = np.sum(PCA_Ev>1.0e-10)
 		self.ell = comp
