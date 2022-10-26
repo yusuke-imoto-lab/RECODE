@@ -279,7 +279,8 @@ class RECODE():
 		self.fit(X)
 		X_RECODE = self.transform(X)
 		Elapsedtime = time.time() - start
-		self.log_['Elapsed time'] = "{0}".format(np.round(Elapsedtime,decimals=4)) + "[sec]"
+		#self.log_['Elapsed time'] = "{0}".format(np.round(Elapsedtime,decimals=4)) + "[sec]"
+		self.log_['Elapsed time'] = datetime.timedelta(seconds=Elapsedtime)
 		if self.verbose:
 			print('end RECODE for sc%s-seq' % self.seq_target)
 			print('log:',self.log_)
