@@ -79,10 +79,8 @@ For a detailed analysis, please see below:
 
 ## Desktop Application
 
-[Installation](https://github.com/yusuke-imoto-lab/GUI-RECODE/releases/tag/v1.1.2)
+[Installation and Tutorials](https://github.com/yusuke-imoto-lab/GUI-RECODE#desktop-application-of-recode)
 
 Windows (exe) and MAC OS (dmg) applications are avairable.
-
-[Tutorials](https://github.com/yusuke-imoto-lab/GUI-RECODE#tutorials)
 
 <div style="text-align:left"><img style="width:100%; height: auto" src="https://github.com/yusuke-imoto-lab/RECODE/blob/main/images/RECODE_GUI.jpg"/></div>
