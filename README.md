@@ -79,7 +79,7 @@ For a detailed analysis, please see below:
 
 ## Desktop Application
 
-[RECODE application](https://github.com/yusuke-imoto-lab/GUI-RECODE/releases/tag/v1.1.2)
+[Installation](https://github.com/yusuke-imoto-lab/GUI-RECODE/releases/tag/v1.1.2)
 
 Windows (exe) and MAC OS (dmg) applications are avairable.
 
