@@ -1283,6 +1283,7 @@ class RECODE_core():
 		self.ell_min = ell_min
 		self.fit_idx = False
 		self.version = version 
+		self.RECODE_done = False
 	
 	def _noise_reductor(
 		self,
@@ -1294,7 +1295,7 @@ class RECODE_core():
 		version=1,
 		TO_CR = 1
 	):
-		if version==2:
+		if version==2 and self.RECODE_done == False:
 			U_ell = U[:ell,:]
 			# U_ell_mod = np.copy(U_ell)
 			L_ell = L[:ell,:ell]
@@ -1420,7 +1421,6 @@ class RECODE_core():
 		thrshold = (dim-np.arange(n_pca))*noise_var
 		if np.sum(PCA_Ev_sum-thrshold<0) == 0:
 			warnings.warn("Acceleration error: the optimal value of ell is larger than fast_algorithm_ell_ub. Set larger fast_algorithm_ell_ub than %d or 'fast_algorithm=False'" % self.fast_algorithm_ell_ub)
-			exit()
 		comp = np.min(np.arange(n_pca)[PCA_Ev_sum-thrshold<0])
 		self.ell_max = np.min([n,d,np.sum(PCA_Ev>1.0e-10)])
 		self.ell = comp
@@ -1464,6 +1464,8 @@ class RECODE_core():
 		elif self.solver=='manual':
 			self.ell = self.ell_manual
 			return self._noise_reductor(X,self.L,self.U,self.X_mean,self.ell,self.version,self.TO_CR)
+		
+		self.RECODE_done = True
 
 	def fit_transform(self,X):
 		"""
