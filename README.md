@@ -77,9 +77,9 @@ For a detailed analysis, please see below:
 [Tutorial (Run, QC, Clustering, Annotating etc.)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_example.html)
 
 
-## Application
+## Desktop Application
 
-[RECODE application](https://github.com/yusuke-imoto-lab/GUI-RECODE/releases/tag/v1.1.1)
+[Installation and Tutorials](https://github.com/yusuke-imoto-lab/GUI-RECODE#desktop-application-of-recode)
 
 Windows (exe) and MAC OS (dmg) applications are avairable.
 
