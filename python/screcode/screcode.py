@@ -222,6 +222,8 @@ class RECODE():
 		X_mat = self._check_datatype(X)
 		if self.fit_idx == False:
 			raise TypeError("Run fit before transform.")
+		if X_mat.shape[1] != self.d_all:
+			raise TypeError("RECODE requires the same dimension as that of fitted data.")
 		X_ = X_mat[:,self.idx_nonsilent]
 		X_norm = self._noise_variance_stabilizing_normalization(X_)
 		X_norm_RECODE = self.recode_.fit_transform(X_norm)
