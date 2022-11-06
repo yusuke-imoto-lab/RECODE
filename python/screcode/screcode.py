@@ -226,7 +226,7 @@ class RECODE():
 			raise TypeError("RECODE requires the same dimension as that of fitted data.")
 		X_ = X_mat[:,self.idx_nonsilent]
 		X_norm = self._noise_variance_stabilizing_normalization(X_)
-		X_norm_RECODE = self.recode_.fit_transform(X_norm)
+		X_norm_RECODE = self.recode_.transform(X_norm)
 		X_RECODE = np.zeros(X_mat.shape,dtype=float)
 		X_RECODE[:,self.idx_nonsilent] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
 		X_RECODE = np.where(X_RECODE>0,X_RECODE,0)
