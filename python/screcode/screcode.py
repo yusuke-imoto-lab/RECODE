@@ -114,6 +114,7 @@ class RECODE():
 			raise TypeError("Dimension of data is not correct.")
 		
 		## scaled X
+		self.X_nUMI = np.sum(X_,axis=1)
 		X_scaled = (X_.T/self.X_nUMI).T
 		## normalization
 		X_norm = (X_scaled-self.X_scaled_mean)/np.sqrt(self.noise_var)
@@ -192,7 +193,7 @@ class RECODE():
 		self.noise_var = noise_var
 		self.recode_ = recode_
 		self.X_norm_var = X_norm_var
-		self.X_nUMI = X_nUMI
+		self.X_fit_nUMI = X_nUMI
 		self.X_scaled_mean = X_scaled_mean
 		self.idx_sig = self.X_norm_var > 1
 		self.idx_nonsig = self.idx_sig==False
