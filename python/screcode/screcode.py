@@ -1,6 +1,7 @@
 import anndata
 import adjustText
 import datetime
+import harmonypy
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
@@ -20,6 +21,7 @@ class RECODE():
 		fast_algorithm_ell_ub = 1000,
 		seq_target = 'RNA',
 		version = 1,
+		decimals = 5,
 		verbose = True
 		):
 		""" 
@@ -40,7 +42,10 @@ class RECODE():
 			Version of RECODE. 
 		
 		verbose : boolean, default=True
-			If False, all running messages are not displayed. 
+			If False, all running messages are not displayed.
+
+		decimals : int default='5'
+			Number of decimals for round processed matrices.
 		
 		Attributes
 		----------
@@ -63,12 +68,11 @@ class RECODE():
 		self.fast_algorithm_ell_ub = fast_algorithm_ell_ub
 		self.seq_target = seq_target
 		self.version = version
+		self.decimals = decimals
 		self.verbose = verbose
-		self.unit = 'gene'
-		self.Unit = 'Gene'
+		self.unit,self.Unit = 'gene','Gene'
 		if seq_target == 'ATAC':
-			self.unit = 'peak'
-			self.Unit = 'Peak'
+			self.unit,self.Unit = 'peak','Peak'
 		self.log_ = {}
 		self.log_['seq_target'] = self.seq_target
 		self.fit_idx = False
@@ -186,7 +190,7 @@ class RECODE():
 		recode_ = RECODE_core(variance_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_ub=self.fast_algorithm_ell_ub,version=self.version)
 		recode_.fit(X_norm)
 
-		self.X_fit = X_mat
+		# self.X_fit = X_mat
 		self.n_all = X_mat.shape[0]
 		self.d_all = X_mat.shape[1]
 		self.d_nonsilent = sum(self.idx_nonsilent)
@@ -235,7 +239,7 @@ class RECODE():
 		if self.recode_.ell == self.fast_algorithm_ell_ub:
 			warnings.warn("Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_ub.\n"
 			"Ex. X_new = screcode.RECODE(fast_algorithm=False).fit_transform(X)")
-		self.X_trans = X_mat
+		self.X_trans = np.round(X_mat,decimals=self.decimals)
 		self.X_RECODE = X_RECODE
 		self.noise_variance_ = np.zeros(X_mat.shape[1],dtype=float)
 		self.noise_variance_[self.idx_nonsilent] =  self.noise_var
@@ -276,19 +280,125 @@ class RECODE():
 		X_new : ndarray/anndata (the same format as input)
 			Denoised data matrix.
 		"""
-		start = time.time()
+		start_time = datetime.datetime.now()
 		if self.verbose:
 			print('start RECODE for sc%s-seq' % self.seq_target)
 		self.fit(X)
 		X_RECODE = self.transform(X)
-		Elapsedtime = time.time() - start
-		#self.log_['Elapsed time'] = "{0}".format(np.round(Elapsedtime,decimals=4)) + "[sec]"
-		self.log_['Elapsed time'] = datetime.timedelta(seconds=Elapsedtime)
+		end_time = datetime.datetime.now()
+		elapsed_time = end_time - start_time
+		hours, remainder = divmod(elapsed_time.seconds, 3600)
+		minutes, seconds = divmod(remainder, 60)
+		milliseconds = int(elapsed_time.microseconds / 1000)
+		self.elapsed_time =  f"{hours}h {minutes}m {seconds}s"
+		self.log_['Elapsed time'] = f"{hours}h {minutes}m {seconds}s {milliseconds:03}ms"
 		if self.verbose:
 			print('end RECODE for sc%s-seq' % self.seq_target)
 			print('log:',self.log_)
 		return X_RECODE
+	
+	def transform_integration(
+			self,
+			X,
+			meta_data,
+			vers_use = 'batch',
+		):
+		"""
+		Transform X into RECODE-denoised data.
+
+		Parameters
+		----------
+		X : ndarray or anndata of shape (n_samples, n_features)
+			Single-cell sequencing data matrix (row:cell, culumn:gene/peak).
 		
+		meta_data : DataFrame (n_samples, *)
+
+		Returns
+		-------
+		X_new : ndarray of shape (n_samples, n_features)
+			RECODE-denoised data matrix.
+		"""
+		X_mat = self._check_datatype(X)
+		if self.fit_idx == False:
+			raise TypeError("Run fit before transform.")
+		if X_mat.shape[1] != self.d_all:
+			raise TypeError("RECODE requires the same dimension as that of fitted data.")
+		X_ = X_mat[:,self.idx_nonsilent]
+		X_norm = self._noise_variance_stabilizing_normalization(X_)
+		X_norm_RECODE = self.recode_.transform(X_norm)
+		self.harmony = harmonypy.run_harmony(X_norm_RECODE,meta_data,vers_use,verbose=False)
+		X_norm_RECODE_merge = self.harmony.Z_corr.T
+		X_RECODE = np.zeros(X_mat.shape,dtype=float)
+		X_RECODE[:,self.idx_nonsilent] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE_merge)
+		X_RECODE = np.where(X_RECODE>0,X_RECODE,0)
+		self.log_['#silent %ss' % self.unit] = sum(np.sum(X_mat,axis=0)==0)
+		self.log_['ell'] = self.recode_.ell
+		if self.recode_.ell == self.fast_algorithm_ell_ub:
+			warnings.warn("Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_ub.\n"
+			"Ex. X_new = screcode.RECODE(fast_algorithm=False).fit_transform(X)")
+		self.X_trans = np.round(X_mat,decimals=self.decimals)
+		self.X_RECODE = X_RECODE
+		self.noise_variance_ = np.zeros(X_mat.shape[1],dtype=float)
+		self.noise_variance_[self.idx_nonsilent] =  self.noise_var
+		self.normalized_variance_ = np.zeros(X_mat.shape[1],dtype=float)
+		self.normalized_variance_[self.idx_nonsilent] =  self.X_norm_var
+		
+		X_RECODE_ss = (np.median(np.sum(X_RECODE[:,self.idx_nonsilent],axis=1))*X_RECODE[:,self.idx_nonsilent].T/np.sum(X_RECODE[:,self.idx_nonsilent],axis=1)).T
+		self.cv_ = np.zeros(X.shape[1],dtype=float)
+		self.cv_[self.idx_nonsilent] =  np.std(X_RECODE_ss,axis=0)/np.mean(X_RECODE_ss,axis=0)
+		
+		self.significance_ = np.empty(X.shape[1],dtype=object)
+		self.significance_[self.normalized_variance_==0] = 'silent'
+		self.significance_[self.normalized_variance_>0] = 'non-significant'
+		self.significance_[self.normalized_variance_>1] = 'significant'
+
+		if type(X) == anndata._core.anndata.AnnData:
+			X_out = anndata.AnnData.copy(X)
+			X_out.obsm['RECODE'] = X_RECODE
+			X_out.var['noise_variance_RECODE'] = self.noise_variance_
+			X_out.var['normalized_variance_RECODE'] = self.normalized_variance_
+			X_out.var['significance_RECODE'] = self.significance_
+		else:
+			X_out = X_RECODE
+
+		return X_out
+
+	def fit_transform_integration(
+			self,
+			X,
+			meta_data,
+			vers_use = 'batch',
+		):
+		"""
+		Fit the model with X and transform X into RECODE-denoised data.
+
+		Parameters
+		----------
+		X : ndarray/anndata of shape (n_samples, n_features)
+			Tranceforming single-cell sequencing data matrix (row:cell, culumn:gene/peak).
+
+		Returns
+		-------
+		X_new : ndarray/anndata (the same format as input)
+			Denoised data matrix.
+		"""
+		start_time = datetime.datetime.now()
+		if self.verbose:
+			print('start RECODE for sc%s-seq' % self.seq_target)
+		self.fit(X)
+		X_RECODE = self.transform_integration(X,meta_data,vers_use)
+		end_time = datetime.datetime.now()
+		elapsed_time = end_time - start_time
+		hours, remainder = divmod(elapsed_time.seconds, 3600)
+		minutes, seconds = divmod(remainder, 60)
+		milliseconds = int(elapsed_time.microseconds / 1000)
+		self.elapsed_time =  f"{hours}h {minutes}m {seconds}s"
+		self.log_['Elapsed time'] = f"{hours}h {minutes}m {seconds}s {milliseconds:03}ms"
+		if self.verbose:
+			print('end RECODE for sc%s-seq' % self.seq_target)
+			print('log:',self.log_)
+		return X_RECODE
+
 	def check_applicability(
 		self,
 		title = '',
@@ -518,7 +628,7 @@ class RECODE():
 		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[16:26,2:30])
 		ax = fig.add_subplot(gs[0,0])
 		ax.text(0,1,'Method: %s' % self.log_['seq_target'],fontsize=12)
-		ax.text(0,0.5,'nCells: %s' % self.X_fit.shape[0],fontsize=12)
+		ax.text(0,0.5,'nCells: %s' % self.n_all,fontsize=12)
 		ax.text(0,0.0,'n%ss: %s' % (self.Unit,self.d_all),fontsize=12)
 		# ax.text(0,0.0,'Method: %s' % self.log_['seq_target'],fontsize=12)
 		ax.axis("off")
@@ -531,7 +641,7 @@ class RECODE():
 		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[16:26,64:100])
 		ax = fig.add_subplot(gs[0,0])
 		ax.text(0,1.0,r'Essential dimension $\ell$: %s' % self.log_['ell'],fontsize=12)
-		ax.text(0,0.5,r'Elapsed time: %s' % self.log_['Elapsed time'],fontsize=12)
+		ax.text(0,0.5,r'Elapsed time: %s' % self.elapsed_time,fontsize=12)
 		ax.axis("off")
 		#
 		gs = GridSpecFromSubplotSpec(nrows=1,ncols=1,subplot_spec=gs_master[34,0])
@@ -1440,7 +1550,7 @@ class RECODE_core():
 		self.PCA_Ev_NRM = PCA_Ev_NRM
 		self.U = svd.components_
 		self.L = np.diag(np.sqrt(self.PCA_Ev_NRM[:self.ell_max]/self.PCA_Ev[:self.ell_max]))
-		self.X_fit = X
+		# self.X_fit = X
 		self.X_mean = np.mean(X,axis=0)
 		self.PCA_Ev_sum_all = PCA_Ev_sum_all
 		self.noise_var = noise_var
