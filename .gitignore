@@ -40,7 +40,7 @@ python/poetry.toml
 python/screcode/data
 python/screcode/figure
 python/screcode/test.py
-python/screcode/screcode_test.ipynb
+python/screcode/*.ipynb
 python/screcode/__pycache__
 python/screcode/.ipynb_checkpoints
 python/sphinx/Tutorials/.ipynb_checkpoints

@@ -1510,11 +1510,37 @@ class RECODE_core():
 		n_pca = min(n-1,d-1)
 		if self.fast_algorithm:
 			n_pca = min(n_pca,self.fast_algorithm_ell_ub)
-		n_svd,d = X.shape
 		X_mean = np.mean(X,axis=0)
-		svd = sklearn.decomposition.TruncatedSVD(n_components=n_pca).fit(X-X_mean)
-		SVD_Sv = svd.singular_values_
-		PCA_Ev = (SVD_Sv**2)/(n_svd-1)
+
+		if n > d:
+			S = np.dot((X - X_mean).T,(X - X_mean))/(X.shape[0]-1)
+			svd = sklearn.decomposition.TruncatedSVD(n_components=n_pca).fit(S)
+			PCA_Ev = svd.singular_values_
+			self.U = svd.components_
+		else:
+			SD = np.dot((X - X_mean),(X - X_mean).T)/(X.shape[0]-1)
+			svd = sklearn.decomposition.TruncatedSVD(n_components=n_pca).fit(SD)
+			PCA_Ev = svd.singular_values_
+			self.U = np.dot((svd.components_.T/np.sqrt(PCA_Ev)).T,(X - X_mean))/np.sqrt(X.shape[0]-1)
+		
+		# S = np.dot((X - X_mean).T,(X - X_mean))/(X.shape[0]-1)
+		# svd = sklearn.decomposition.TruncatedSVD(n_components=n_pca).fit(S)
+		# PCA_Ev1 = svd.singular_values_
+		# U1 = svd.components_
+
+		# SD = np.dot((X - X_mean),(X - X_mean).T)/(X.shape[0]-1)
+		# svd = sklearn.decomposition.TruncatedSVD(n_components=n_pca).fit(SD)
+		# PCA_Ev2 = svd.singular_values_
+		# U2 = np.dot((svd.components_.T/np.sqrt(PCA_Ev2)).T,(X - X_mean))/np.sqrt(X.shape[0]-1)
+
+		# svd = sklearn.decomposition.TruncatedSVD(n_components=n_pca).fit(X-X_mean)
+		# SVD_Sv = svd.singular_values_
+		# PCA_Ev = (SVD_Sv**2)/(n-1)
+		# U3 =  svd.components_
+		# print(self.U)
+		# print(U1.shape,U2.shape,U3.shape)
+		# print(PCA_Ev1.shape,PCA_Ev2.shape,PCA_Ev.shape)
+		# print(PCA_Ev1-PCA_Ev,PCA_Ev2-PCA_Ev)
 		PCA_Ev_sum_all = np.sum(np.var(X,axis=0,ddof=1))
 		PCA_Ev_NRM = np.array(PCA_Ev,dtype=float)
 		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(PCA_Ev)
@@ -1525,7 +1551,6 @@ class RECODE_core():
 		PCA_CCR_NRM = (PCA_Ev_NRM/np.sum(PCA_Ev_NRM)).cumsum()
 		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(PCA_Ev)
 		PCA_Ev_sum = np.array([np.sum(PCA_Ev[i:]) for i in range(n_pca)])+PCA_Ev_sum_diff
-		d_act = sum(np.var(X,axis=0,ddof=1)>0)
 		X_var  = np.var(X,axis=0,ddof=1)
 		dim = np.sum(X_var>0)
 		noise_var = 1
@@ -1534,7 +1559,9 @@ class RECODE_core():
 		thrshold = (dim-np.arange(n_pca))*noise_var
 		if np.sum(PCA_Ev_sum-thrshold<0) == 0:
 			warnings.warn("Acceleration error: the optimal value of ell is larger than fast_algorithm_ell_ub. Set larger fast_algorithm_ell_ub than %d or 'fast_algorithm=False'" % self.fast_algorithm_ell_ub)
-		comp = np.min(np.arange(n_pca)[PCA_Ev_sum-thrshold<0])
+			comp = n_pca
+		else:
+			comp = np.min(np.arange(n_pca)[PCA_Ev_sum-thrshold<0])
 		self.ell_max = np.min([n,d,np.sum(PCA_Ev>1.0e-10)])
 		self.ell = comp
 		if self.ell > self.ell_max:
@@ -1548,7 +1575,7 @@ class RECODE_core():
 		self.PCA_CCR = PCA_CCR
 		self.n_pca = n_pca
 		self.PCA_Ev_NRM = PCA_Ev_NRM
-		self.U = svd.components_
+		# self.U = svd.components_
 		self.L = np.diag(np.sqrt(self.PCA_Ev_NRM[:self.ell_max]/self.PCA_Ev[:self.ell_max]))
 		# self.X_fit = X
 		self.X_mean = np.mean(X,axis=0)
