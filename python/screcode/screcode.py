@@ -21,6 +21,9 @@ class RECODE():
 		fast_algorithm_ell_ub = 1000,
 		seq_target = 'RNA',
 		version = 1,
+		stat_learning = False,
+		stat_learning_rate = 0.2,
+		stat_learning_seed = 0,
 		decimals = 5,
 		verbose = True
 		):
@@ -68,6 +71,9 @@ class RECODE():
 		self.fast_algorithm_ell_ub = fast_algorithm_ell_ub
 		self.seq_target = seq_target
 		self.version = version
+		self.stat_learning = stat_learning
+		self.stat_learning_rate = stat_learning_rate
+		self.stat_learning_seed = stat_learning_seed
 		self.decimals = decimals
 		self.verbose = verbose
 		self.unit,self.Unit = 'gene','Gene'
@@ -283,7 +289,12 @@ class RECODE():
 		start_time = datetime.datetime.now()
 		if self.verbose:
 			print('start RECODE for sc%s-seq' % self.seq_target)
-		self.fit(X)
+		if self.stat_learning:
+			np.random.seed(self.stat_learning_seed)
+			cell_stat = np.random.choice(X.shape[0],int(self.stat_learning_rate*X.shape[0]),replace=False)
+			self.fit(X[cell_stat])
+		else:
+			self.fit(X)
 		X_RECODE = self.transform(X)
 		end_time = datetime.datetime.now()
 		elapsed_time = end_time - start_time
