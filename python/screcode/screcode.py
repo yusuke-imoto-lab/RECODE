@@ -25,7 +25,8 @@ class RECODE():
 		stat_learning_rate = 0.2,
 		stat_learning_seed = 0,
 		decimals = 5,
-		verbose = True
+		anndata_key = 'obsm',
+		verbose = True,
 		):
 		""" 
 		RECODE (Resolution of curse of dimensionality in single-cell data analysis). A noise reduction method for single-cell sequencing data. 
@@ -75,6 +76,7 @@ class RECODE():
 		self.stat_learning_rate = stat_learning_rate
 		self.stat_learning_seed = stat_learning_seed
 		self.decimals = decimals
+		self.anndata_key = anndata_key
 		self.verbose = verbose
 		self.unit,self.Unit = 'gene','Gene'
 		if seq_target == 'ATAC':
@@ -263,7 +265,10 @@ class RECODE():
 
 		if type(X) == anndata._core.anndata.AnnData:
 			X_out = anndata.AnnData.copy(X)
-			X_out.obsm['RECODE'] = X_RECODE
+			if self.anndata_key == 'layers':
+				X_out.layers['RECODE'] = X_RECODE
+			else:
+				X_out.obsm['RECODE'] = X_RECODE
 			X_out.var['noise_variance_RECODE'] = self.noise_variance_
 			X_out.var['normalized_variance_RECODE'] = self.normalized_variance_
 			X_out.var['significance_RECODE'] = self.significance_
