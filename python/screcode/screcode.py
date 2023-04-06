@@ -296,8 +296,9 @@ class RECODE():
 			print('start RECODE for sc%s-seq' % self.seq_target)
 		if self.stat_learning:
 			np.random.seed(self.stat_learning_seed)
-			cell_stat = np.random.choice(X.shape[0],int(self.stat_learning_rate*X.shape[0]),replace=False)
-			self.fit(X[cell_stat])
+			X_mat = self._check_datatype(X)
+			cell_stat = np.random.choice(X_mat.shape[0],int(self.stat_learning_rate*X.shape[0]),replace=False)
+			self.fit(X_mat[cell_stat])
 		else:
 			self.fit(X)
 		X_RECODE = self.transform(X)
