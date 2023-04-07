@@ -9,8 +9,7 @@ import numpy as np
 import sklearn.decomposition
 import scipy.sparse
 import seaborn as sns
-import time
-import warnings
+import logging
 
 
 
@@ -25,6 +24,7 @@ class RECODE():
 		stat_learning_rate = 0.2,
 		stat_learning_seed = 0,
 		decimals = 5,
+		RECODE_key = 'RECODE',
 		anndata_key = 'obsm',
 		verbose = True,
 		):
@@ -76,6 +76,7 @@ class RECODE():
 		self.stat_learning_rate = stat_learning_rate
 		self.stat_learning_seed = stat_learning_seed
 		self.decimals = decimals
+		self.RECODE_key = RECODE_key
 		self.anndata_key = anndata_key
 		self.verbose = verbose
 		self.unit,self.Unit = 'gene','Gene'
@@ -84,6 +85,8 @@ class RECODE():
 		self.log_ = {}
 		self.log_['seq_target'] = self.seq_target
 		self.fit_idx = False
+		self.logger = logging.getLogger("argument checking")
+		self.logger.setLevel(logging.WARNING)
 
 	def _check_datatype(
 		self,
@@ -97,7 +100,7 @@ class RECODE():
 			else:
 				raise TypeError("Data type error: ndarray or anndata is available.")
 		elif scipy.sparse.issparse(X):
-			warnings.warn('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
+			self.logger.warning('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
 			return X.toarray()
 		elif type(X) == np.ndarray:
 			return X
@@ -183,6 +186,9 @@ class RECODE():
 
 		"""	
 		X_mat = self._check_datatype(X)
+		if X_mat.dtype == np.int64:
+			self.logger.warning("Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_ub.\n"
+			"Ex. X_new = screcode.RECODE(fast_algorithm=False).fit_transform(X)")
 		self.idx_nonsilent = np.sum(X_mat,axis=0) > 0
 		self.X_temp = X_mat[:,self.idx_nonsilent]
 		if self.seq_target == 'ATAC':
@@ -245,7 +251,7 @@ class RECODE():
 		self.log_['#silent %ss' % self.unit] = sum(np.sum(X_mat,axis=0)==0)
 		self.log_['ell'] = self.recode_.ell
 		if self.recode_.ell == self.fast_algorithm_ell_ub:
-			warnings.warn("Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_ub.\n"
+			self.logger.warning("Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_ub.\n"
 			"Ex. X_new = screcode.RECODE(fast_algorithm=False).fit_transform(X)")
 		self.X_trans = np.round(X_mat,decimals=self.decimals)
 		self.X_RECODE = X_RECODE
@@ -295,11 +301,17 @@ class RECODE():
 		if self.verbose:
 			print('start RECODE for sc%s-seq' % self.seq_target)
 		if self.stat_learning:
+			if X.shape[0] < 10000:
+				self.logger.warning("Warning: The stat_learning option is for data with a large number of cells (>20000). \n"
+				"No use of the stat_learning option is recommended to keep the accuracy.")
 			np.random.seed(self.stat_learning_seed)
 			X_mat = self._check_datatype(X)
-			cell_stat = np.random.choice(X_mat.shape[0],int(self.stat_learning_rate*X.shape[0]),replace=False)
+			cell_stat = np.random.choice(X_mat.shape[0],int(self.stat_learning_rate*X.shape[0]),replace=False)					
 			self.fit(X_mat[cell_stat])
 		else:
+			if X.shape[0] > 20000:
+				self.logger.warning("Warning: RECODE uses high computational resources for data with a large number of cells. \n"
+				"Use of the stat_learning option is recommended as \"RECODE(stat_learning=True)\". ")
 			self.fit(X)
 		X_RECODE = self.transform(X)
 		end_time = datetime.datetime.now()
@@ -351,7 +363,7 @@ class RECODE():
 		self.log_['#silent %ss' % self.unit] = sum(np.sum(X_mat,axis=0)==0)
 		self.log_['ell'] = self.recode_.ell
 		if self.recode_.ell == self.fast_algorithm_ell_ub:
-			warnings.warn("Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_ub.\n"
+			self.logger.warning("Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_ub.\n"
 			"Ex. X_new = screcode.RECODE(fast_algorithm=False).fit_transform(X)")
 		self.X_trans = np.round(X_mat,decimals=self.decimals)
 		self.X_RECODE = X_RECODE
@@ -371,10 +383,10 @@ class RECODE():
 
 		if type(X) == anndata._core.anndata.AnnData:
 			X_out = anndata.AnnData.copy(X)
-			X_out.obsm['RECODE'] = X_RECODE
-			X_out.var['noise_variance_RECODE'] = self.noise_variance_
-			X_out.var['normalized_variance_RECODE'] = self.normalized_variance_
-			X_out.var['significance_RECODE'] = self.significance_
+			X_out.obsm[self.RECODE_key] = X_RECODE
+			X_out.var['noise_variance_%s' % self.RECODE_key] = self.noise_variance_
+			X_out.var['normalized_variance_%s' % self.RECODE_key] = self.normalized_variance_
+			X_out.var['significance_%s' % self.RECODE_key] = self.significance_
 		else:
 			X_out = X_RECODE
 
@@ -1272,7 +1284,7 @@ class RECODE():
 		
 		if show_features:
 			if len(index) != self.X.shape[1]:
-				warnings.warn("Warning: no index opotion or length of index did not fit X.shape[1]. Use feature numbers")
+				self.logger.warning("Warning: no index opotion or length of index did not fit X.shape[1]. Use feature numbers")
 				index = np.arange(self.X.shape[1])+1
 			detect_rate = np.sum(np.where(self.X>0,1,0),axis=0)[self.idx_nonsilent]/self.X.shape[0]
 			idx_detect_rate_n = detect_rate <= cut_detect_rate
@@ -1329,7 +1341,7 @@ class RECODE():
 			Dots per inch.
 		"""
 		if self.seq_target != 'ATAC':
-			warnings.warn("Error: plot_ATAC_preprocessing is an option of scATAC-seq data")
+			self.logger.warning("Error: plot_ATAC_preprocessing is an option of scATAC-seq data")
 			return
 		ps = 1
 		fs_title = 16
@@ -1575,7 +1587,7 @@ class RECODE_core():
 			self.noise_var = self._noise_var_est(X)
 		thrshold = (dim-np.arange(n_pca))*noise_var
 		if np.sum(PCA_Ev_sum-thrshold<0) == 0:
-			warnings.warn("Acceleration error: the optimal value of ell is larger than fast_algorithm_ell_ub. Set larger fast_algorithm_ell_ub than %d or 'fast_algorithm=False'" % self.fast_algorithm_ell_ub)
+			self.logger.warning("Acceleration error: the optimal value of ell is larger than fast_algorithm_ell_ub. Set larger fast_algorithm_ell_ub than %d or 'fast_algorithm=False'" % self.fast_algorithm_ell_ub)
 			comp = n_pca
 		else:
 			comp = np.min(np.arange(n_pca)[PCA_Ev_sum-thrshold<0])
