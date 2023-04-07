@@ -82,6 +82,8 @@ class RECODE():
 		self.unit,self.Unit = 'gene','Gene'
 		if seq_target == 'ATAC':
 			self.unit,self.Unit = 'peak','Peak'
+		if seq_target == 'Hi-C':
+			self.unit,self.Unit = 'bin','Bin'
 		self.log_ = {}
 		self.log_['seq_target'] = self.seq_target
 		self.fit_idx = False
@@ -186,9 +188,8 @@ class RECODE():
 
 		"""	
 		X_mat = self._check_datatype(X)
-		if X_mat.dtype == np.int64:
-			self.logger.warning("Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_ub.\n"
-			"Ex. X_new = screcode.RECODE(fast_algorithm=False).fit_transform(X)")
+		if X_mat.dtype != np.int64:
+			self.logger.warning("Warning: RECODE is applicable for count data (integer matrix). Plese make sure the data type")
 		self.idx_nonsilent = np.sum(X_mat,axis=0) > 0
 		self.X_temp = X_mat[:,self.idx_nonsilent]
 		if self.seq_target == 'ATAC':
