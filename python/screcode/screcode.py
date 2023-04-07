@@ -39,7 +39,7 @@ class RECODE():
 		fast_algorithm_ell_ub : int, default=1000
 			Upper bound of parameter :math:`\ell` for the fast algorithm. Must be of range [1,:math:`\infity`).
 		
-		seq_target : {'RNA','ATAC'}, default='RNA'
+		seq_target : {'RNA','ATAC','Hi-C'}, default='RNA'
 			Sequencing target. If 'ATAC', the preprocessing (odd-even stabilization) will be performed before the regular algorithm. 
 
 		version : int default='1'
