@@ -188,8 +188,8 @@ class RECODE():
 
 		"""	
 		X_mat = self._check_datatype(X)
-		if X_mat.dtype != np.int64:
-			self.logger.warning("Warning: RECODE is applicable for count data (integer matrix). Plese make sure the data type")
+		if np.linalg.norm(X_mat-np.array(X_mat,dtype=int)) > 0:
+			self.logger.warning("Warning: RECODE is applicable for count data (integer matrix). Plese make sure the data type.")
 		self.idx_nonsilent = np.sum(X_mat,axis=0) > 0
 		self.X_temp = X_mat[:,self.idx_nonsilent]
 		if self.seq_target == 'ATAC':
@@ -636,7 +636,7 @@ class RECODE():
 		plot_EV_mod = np.zeros(n_EV)
 		plot_EV_mod[:self.recode_.ell] = self.recode_.PCA_Ev_NRM[:self.recode_.ell]
 		#
-		fig = plt.figure(figsize=(8.27,11.69))
+		fig = plt.figure(figsize=(8.27,11.69),facecolor='w')
 		plt.rcParams["xtick.direction"] = "in"
 		plt.rcParams["ytick.direction"] = "in"
 		plt.subplots_adjust(left=0.05, right=0.97, bottom=0.01, top=0.98)
