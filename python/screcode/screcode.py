@@ -311,7 +311,7 @@ class RECODE():
 			self.fit(X_mat[cell_stat])
 		else:
 			if X.shape[0] > 20000:
-				self.logger.warning("Warning: RECODE uses high computational resources for data with a large number of cells. \n"
+				self.logger.warning("Warning: Regular RECODE uses high computational resources for data with a large number of cells. \n"
 				"Use of the stat_learning option is recommended as \"RECODE(stat_learning=True)\". ")
 			self.fit(X)
 		X_RECODE = self.transform(X)
@@ -1553,24 +1553,6 @@ class RECODE_core():
 			PCA_Ev = svd.singular_values_
 			self.U = np.dot((svd.components_.T/np.sqrt(PCA_Ev)).T,(X - X_mean))/np.sqrt(X.shape[0]-1)
 		
-		# S = np.dot((X - X_mean).T,(X - X_mean))/(X.shape[0]-1)
-		# svd = sklearn.decomposition.TruncatedSVD(n_components=n_pca).fit(S)
-		# PCA_Ev1 = svd.singular_values_
-		# U1 = svd.components_
-
-		# SD = np.dot((X - X_mean),(X - X_mean).T)/(X.shape[0]-1)
-		# svd = sklearn.decomposition.TruncatedSVD(n_components=n_pca).fit(SD)
-		# PCA_Ev2 = svd.singular_values_
-		# U2 = np.dot((svd.components_.T/np.sqrt(PCA_Ev2)).T,(X - X_mean))/np.sqrt(X.shape[0]-1)
-
-		# svd = sklearn.decomposition.TruncatedSVD(n_components=n_pca).fit(X-X_mean)
-		# SVD_Sv = svd.singular_values_
-		# PCA_Ev = (SVD_Sv**2)/(n-1)
-		# U3 =  svd.components_
-		# print(self.U)
-		# print(U1.shape,U2.shape,U3.shape)
-		# print(PCA_Ev1.shape,PCA_Ev2.shape,PCA_Ev.shape)
-		# print(PCA_Ev1-PCA_Ev,PCA_Ev2-PCA_Ev)
 		PCA_Ev_sum_all = np.sum(np.var(X,axis=0,ddof=1))
 		PCA_Ev_NRM = np.array(PCA_Ev,dtype=float)
 		PCA_Ev_sum_diff = PCA_Ev_sum_all - np.sum(PCA_Ev)
