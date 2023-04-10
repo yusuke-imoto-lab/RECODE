@@ -88,8 +88,10 @@ class RECODE():
 		self.log_['seq_target'] = self.seq_target
 		self.fit_idx = False
 		self.logger = logging.getLogger("argument checking")
-		if self.verbose == True:
+		if verbose:
 			self.logger.setLevel(logging.WARNING)
+		else:
+			self.logger.setLevel(logging.ERROR)
 
 	def _check_datatype(
 		self,
