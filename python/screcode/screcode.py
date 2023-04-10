@@ -25,7 +25,7 @@ class RECODE():
 		stat_learning_seed = 0,
 		decimals = 5,
 		RECODE_key = 'RECODE',
-		anndata_key = 'obsm',
+		anndata_key = 'layers',
 		verbose = True,
 		):
 		""" 
@@ -88,7 +88,8 @@ class RECODE():
 		self.log_['seq_target'] = self.seq_target
 		self.fit_idx = False
 		self.logger = logging.getLogger("argument checking")
-		self.logger.setLevel(logging.WARNING)
+		if self.verbose == True:
+			self.logger.setLevel(logging.WARNING)
 
 	def _check_datatype(
 		self,
@@ -272,10 +273,10 @@ class RECODE():
 
 		if type(X) == anndata._core.anndata.AnnData:
 			X_out = anndata.AnnData.copy(X)
-			if self.anndata_key == 'layers':
-				X_out.layers['RECODE'] = X_RECODE
-			else:
+			if self.anndata_key == 'obsm':
 				X_out.obsm['RECODE'] = X_RECODE
+			else:
+				X_out.layers['RECODE'] = X_RECODE
 			X_out.var['noise_variance_RECODE'] = self.noise_variance_
 			X_out.var['normalized_variance_RECODE'] = self.normalized_variance_
 			X_out.var['significance_RECODE'] = self.significance_
@@ -1543,9 +1544,12 @@ class RECODE_core():
 		X_mean = np.mean(X,axis=0)
 
 		if n > d:
-			S = np.dot((X - X_mean).T,(X - X_mean))/(X.shape[0]-1)
-			svd = sklearn.decomposition.TruncatedSVD(n_components=n_pca).fit(S)
-			PCA_Ev = svd.singular_values_
+			# S = np.dot((X - X_mean).T,(X - X_mean))/(X.shape[0]-1)
+			# svd = sklearn.decomposition.TruncatedSVD(n_components=n_pca).fit(S)
+			# PCA_Ev = svd.singular_values_
+			svd = sklearn.decomposition.TruncatedSVD(n_components=n_pca).fit(X-X_mean)
+			SVD_Sv = svd.singular_values_
+			PCA_Ev = (SVD_Sv**2)/(n-1)
 			self.U = svd.components_
 		else:
 			SD = np.dot((X - X_mean),(X - X_mean).T)/(X.shape[0]-1)
