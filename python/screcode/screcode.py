@@ -39,7 +39,7 @@ class RECODE():
 		fast_algorithm_ell_ub : int, default=1000
 			Upper bound of parameter :math:`\ell` for the fast algorithm. Must be of range [1,:math:`\infity`).
 		
-		seq_target : {'RNA','ATAC','Hi-C'}, default='RNA'
+		seq_target : {'RNA','ATAC','Hi-C','Multiome'}, default='RNA'
 			Sequencing target. If 'ATAC', the preprocessing (odd-even stabilization) will be performed before the regular algorithm. 
 
 		version : int default='1'
@@ -84,6 +84,8 @@ class RECODE():
 			self.unit,self.Unit = 'peak','Peak'
 		if seq_target == 'Hi-C':
 			self.unit,self.Unit = 'bin','Bin'
+		if seq_target == 'Multiome':
+			self.unit,self.Unit = 'feature','Feature'
 		self.log_ = {}
 		self.log_['seq_target'] = self.seq_target
 		self.fit_idx = False
@@ -104,6 +106,15 @@ class RECODE():
 				return X.X
 			else:
 				raise TypeError("Data type error: ndarray or anndata is available.")
+			if 'feature_types' in adata.var.keys():
+				if (set(adata.var['feature_types']) == {'Gene Expression'}) & (self.seq_target != 'RNA'):
+					self.logger.warning('Warning: Input data may be scRNA-seq data. Please add option seq_target=\'RNA\' like screcode.RECODE(seq_target=\'RNA\'). ')
+				elif (set(adata.var['feature_types']) == {'Peaks'}) & (self.seq_target != 'ATAC'):
+					self.logger.warning('Warning: Input data may be scATAC-seq data. Please add option seq_target=\'ATAC\' like screcode.RECODE(seq_target=\'ATAC\'). ')
+				elif (set(adata.var['feature_types']) == {'Gene Expression', 'Peaks'}) & (self.seq_target != 'Multiome'):
+					self.logger.warning('Warning: Input data may be multiome (scRNA-seq + scATAC-seq) data. Please add option seq_target=\'Multiome\' like screcode.RECODE(seq_target=\'Multiome\'). ')
+		elif self.seq_target == 'Multiome':
+			raise TypeError("Data type error: only anndata type is acceptable for multiome (scRNA-seq + scATAC-seq) data.")
 		elif scipy.sparse.issparse(X):
 			self.logger.warning('RECODE does not support sparse input. The input and output are transformed as regular matricies. ')
 			return X.toarray()
@@ -197,7 +208,9 @@ class RECODE():
 		self.X_temp = X_mat[:,self.idx_nonsilent]
 		if self.seq_target == 'ATAC':
 			self.X_temp = self._ATAC_preprocessing(self.X_temp)
-		
+		if self.seq_target == 'Multiome':
+			self.idx_atac = X.var['feature_types'][self.idx_nonsilent] == 'Peaks'
+			self.X_temp[:,self.idx_atac] = self._ATAC_preprocessing(self.X_temp[:,self.idx_atac])
 		X_nUMI = np.sum(self.X_temp,axis=1)
 		X_scaled = (self.X_temp.T/X_nUMI).T
 		X_scaled_mean = np.mean(X_scaled,axis=0)
@@ -480,8 +493,14 @@ class RECODE():
 		plt.rcParams['ytick.direction'] = 'in'
 		spec = matplotlib.gridspec.GridSpec(ncols=2, nrows=1,width_ratios=[4, 1],wspace=0.)
 		ax0 = fig.add_subplot(spec[0])
-		ax0.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant %s' % self.unit,zorder=2)
-		ax0.scatter(x[idx_nonsig],y[idx_nonsig],color='r',s=ps,label='non-significant %s' % self.unit,zorder=3)
+		if self.seq_target == 'Multiome':
+			ax0.scatter(x[idx_sig & (self.idx_atac==False)],y[idx_sig & (self.idx_atac==False)],color='b',s=ps,label='significant genes' ,zorder=2,marker='x')
+			ax0.scatter(x[idx_sig & self.idx_atac],y[idx_sig & self.idx_atac],color='b',s=ps,label='significant peaks',zorder=2,marker='o',facecolor='None')
+			ax0.scatter(x[idx_nonsig & (self.idx_atac==False)],y[idx_nonsig & (self.idx_atac==False)],color='r',s=ps,label='non-significant genes',zorder=3,marker='x')
+			ax0.scatter(x[idx_nonsig & self.idx_atac],y[idx_nonsig & self.idx_atac],color='r',s=ps,label='non-significant peaks',zorder=3,marker='o',facecolor='None')
+		else:
+			ax0.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant %s' % self.unit,zorder=2)
+			ax0.scatter(x[idx_nonsig],y[idx_nonsig],color='r',s=ps,label='non-significant %s' % self.unit,zorder=3)
 		ax0.axhline(1,color='gray',ls='--',lw=2,zorder=1)
 		ax0.set_xscale('log')
 		ax0.set_yscale('log')
