@@ -316,7 +316,10 @@ class RECODE():
 		"""
 		start_time = datetime.datetime.now()
 		if self.verbose:
-			print('start RECODE for sc%s-seq' % self.seq_target)
+			if self.seq_target in ['RNA','ATAC','Hi-C']:
+				print('start RECODE for sc%s-seq data' % self.seq_target)
+			if self.seq_target in ['Multiome']:
+				print('start RECODE for %s data' % self.seq_target)
 		if self.stat_learning:
 			if X.shape[0] < 10000:
 				self.logger.warning("Warning: The stat_learning option is for data with a large number of cells (>20000). \n"
@@ -495,9 +498,9 @@ class RECODE():
 		ax0 = fig.add_subplot(spec[0])
 		if self.seq_target == 'Multiome':
 			ax0.scatter(x[idx_sig & (self.idx_atac==False)],y[idx_sig & (self.idx_atac==False)],color='b',s=ps,label='significant genes' ,zorder=2,marker='x')
-			ax0.scatter(x[idx_sig & self.idx_atac],y[idx_sig & self.idx_atac],color='b',s=ps,label='significant peaks',zorder=2,marker='o',facecolor='None')
+			ax0.scatter(x[idx_sig & self.idx_atac],y[idx_sig & self.idx_atac],color='lightblue',s=ps,label='significant peaks',zorder=2,marker='o',facecolor='None')
 			ax0.scatter(x[idx_nonsig & (self.idx_atac==False)],y[idx_nonsig & (self.idx_atac==False)],color='r',s=ps,label='non-significant genes',zorder=3,marker='x')
-			ax0.scatter(x[idx_nonsig & self.idx_atac],y[idx_nonsig & self.idx_atac],color='r',s=ps,label='non-significant peaks',zorder=3,marker='o',facecolor='None')
+			ax0.scatter(x[idx_nonsig & self.idx_atac],y[idx_nonsig & self.idx_atac],color='orange',s=ps,label='non-significant peaks',zorder=3,marker='o',facecolor='None')
 		else:
 			ax0.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant %s' % self.unit,zorder=2)
 			ax0.scatter(x[idx_nonsig],y[idx_nonsig],color='r',s=ps,label='non-significant %s' % self.unit,zorder=3)
@@ -706,8 +709,16 @@ class RECODE():
 		ax0 = fig.add_subplot(gs[0,0])
 		x,y = np.mean(X_scaled,axis=0),norm_var
 		idx_nonsig, idx_sig = y <= 1, y > 1
-		ax0.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant %ss' % self.unit,zorder=2)
-		ax0.scatter(x[idx_nonsig],y[idx_nonsig],color='r',s=ps,label='non-significant %ss' % self.unit,zorder=3)
+		if self.seq_target == 'Multiome':
+			ax0.scatter(x[idx_sig & (self.idx_atac==False)],y[idx_sig & (self.idx_atac==False)],color='b',s=ps,label='significant genes' ,zorder=2,marker='x')
+			ax0.scatter(x[idx_sig & self.idx_atac],y[idx_sig & self.idx_atac],color='lightblue',s=ps,label='significant peaks',zorder=2,marker='o',facecolor='None')
+			ax0.scatter(x[idx_nonsig & (self.idx_atac==False)],y[idx_nonsig & (self.idx_atac==False)],color='r',s=ps,label='non-significant genes',zorder=3,marker='x')
+			ax0.scatter(x[idx_nonsig & self.idx_atac],y[idx_nonsig & self.idx_atac],color='orange',s=ps,label='non-significant peaks',zorder=3,marker='o',facecolor='None')
+		else:
+			ax0.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant %s' % self.unit,zorder=2)
+			ax0.scatter(x[idx_nonsig],y[idx_nonsig],color='r',s=ps,label='non-significant %s' % self.unit,zorder=3)
+		# ax0.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant %ss' % self.unit,zorder=2)
+		# ax0.scatter(x[idx_nonsig],y[idx_nonsig],color='r',s=ps,label='non-significant %ss' % self.unit,zorder=3)
 		ax0.axhline(1,color='gray',ls='--',lw=2,zorder=1)
 		ax0.set_xscale('log')
 		ax0.set_yscale('log')
