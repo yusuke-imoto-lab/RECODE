@@ -205,7 +205,7 @@ class RECODE():
 		noise_var[noise_var==0] = 1
 		X_norm = (X_scaled-X_scaled_mean)/np.sqrt(noise_var)
 		X_norm_var = np.var(X_norm,axis=0)
-		recode_ = RECODE_core(variance_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_ub=self.fast_algorithm_ell_ub,version=self.version)
+		recode_ = RECODE_core(variance_estimate=False,fast_algorithm=self.fast_algorithm,fast_algorithm_ell_ub=self.fast_algorithm_ell_ub,version=self.version,verbose=self.verbose)
 		recode_.fit(X_norm)
 
 		# self.X_fit = X_mat
@@ -1391,7 +1391,8 @@ class RECODE_core():
 		fast_algorithm_ell_ub = 1000,
 		ell_manual = 10,
 		ell_min = 3,
-		version = 1
+		version = 1,
+		verbose = True,
 	):
 		"""
 		The core part of RECODE (for non-randam sampling data). 
@@ -1430,6 +1431,13 @@ class RECODE_core():
 		self.fit_idx = False
 		self.version = version 
 		self.RECODE_done = False
+		self.verbose = verbose
+		self.logger = logging.getLogger("argument checking")
+		if verbose:
+			self.logger.setLevel(logging.WARNING)
+		else:
+			self.logger.setLevel(logging.ERROR)
+
 	
 	def _noise_reductor(
 		self,
