@@ -497,10 +497,10 @@ class RECODE():
 		spec = matplotlib.gridspec.GridSpec(ncols=2, nrows=1,width_ratios=[4, 1],wspace=0.)
 		ax0 = fig.add_subplot(spec[0])
 		if self.seq_target == 'Multiome':
-			ax0.scatter(x[idx_sig & (self.idx_atac==False)],y[idx_sig & (self.idx_atac==False)],color='b',s=ps,label='significant genes' ,zorder=2,marker='x')
-			ax0.scatter(x[idx_sig & self.idx_atac],y[idx_sig & self.idx_atac],color='lightblue',s=ps,label='significant peaks',zorder=2,marker='o',facecolor='None')
+			ax0.scatter(x[idx_sig & (self.idx_atac==False)],y[idx_sig & (self.idx_atac==False)],color='b',s=ps,label='significant genes' ,zorder=2,marker='o',facecolor='None')
+			ax0.scatter(x[idx_sig & self.idx_atac],y[idx_sig & self.idx_atac],color='lightblue',s=ps,label='significant peaks',zorder=2,marker='o',facecolor='None',s=5)
 			ax0.scatter(x[idx_nonsig & (self.idx_atac==False)],y[idx_nonsig & (self.idx_atac==False)],color='r',s=ps,label='non-significant genes',zorder=3,marker='x')
-			ax0.scatter(x[idx_nonsig & self.idx_atac],y[idx_nonsig & self.idx_atac],color='orange',s=ps,label='non-significant peaks',zorder=3,marker='o',facecolor='None')
+			ax0.scatter(x[idx_nonsig & self.idx_atac],y[idx_nonsig & self.idx_atac],color='orange',s=ps,label='non-significant peaks',zorder=3,marker='x',s=5)
 		else:
 			ax0.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant %s' % self.unit,zorder=2)
 			ax0.scatter(x[idx_nonsig],y[idx_nonsig],color='r',s=ps,label='non-significant %s' % self.unit,zorder=3)
@@ -710,10 +710,10 @@ class RECODE():
 		x,y = np.mean(X_scaled,axis=0),norm_var
 		idx_nonsig, idx_sig = y <= 1, y > 1
 		if self.seq_target == 'Multiome':
-			ax0.scatter(x[idx_sig & (self.idx_atac==False)],y[idx_sig & (self.idx_atac==False)],color='b',s=ps,label='significant genes' ,zorder=2,marker='x')
-			ax0.scatter(x[idx_sig & self.idx_atac],y[idx_sig & self.idx_atac],color='lightblue',s=ps,label='significant peaks',zorder=2,marker='o',facecolor='None')
+			ax0.scatter(x[idx_sig & (self.idx_atac==False)],y[idx_sig & (self.idx_atac==False)],color='b',s=ps,label='significant genes' ,zorder=2,marker='o',facecolor='None')
+			ax0.scatter(x[idx_sig & self.idx_atac],y[idx_sig & self.idx_atac],color='lightblue',s=ps,label='significant peaks',zorder=2,marker='o',facecolor='None',s=5)
 			ax0.scatter(x[idx_nonsig & (self.idx_atac==False)],y[idx_nonsig & (self.idx_atac==False)],color='r',s=ps,label='non-significant genes',zorder=3,marker='x')
-			ax0.scatter(x[idx_nonsig & self.idx_atac],y[idx_nonsig & self.idx_atac],color='orange',s=ps,label='non-significant peaks',zorder=3,marker='o',facecolor='None')
+			ax0.scatter(x[idx_nonsig & self.idx_atac],y[idx_nonsig & self.idx_atac],color='orange',s=ps,label='non-significant peaks',zorder=3,marker='x',s=5)
 		else:
 			ax0.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant %s' % self.unit,zorder=2)
 			ax0.scatter(x[idx_nonsig],y[idx_nonsig],color='r',s=ps,label='non-significant %s' % self.unit,zorder=3)
@@ -794,10 +794,10 @@ class RECODE():
 		plt.rcParams['ytick.direction'] = 'in'
 		x,y = np.mean(X_ss_log,axis=0),np.var(X_ss_log,axis=0,ddof=1)
 		if self.seq_target == 'Multiome':
-			ax0.scatter(x[idx_sig & (self.idx_atac==False)],y[idx_sig & (self.idx_atac==False)],color='b',s=ps,label='significant genes' ,zorder=2,marker='x')
+			ax0.scatter(x[idx_sig & (self.idx_atac==False)],y[idx_sig & (self.idx_atac==False)],color='b',s=ps,label='significant genes' ,zorder=2,marker='o',facecolor='None')
 			ax0.scatter(x[idx_sig & self.idx_atac],y[idx_sig & self.idx_atac],color='lightblue',s=ps,label='significant peaks',zorder=2,marker='o',facecolor='None',s=5)
 			ax0.scatter(x[idx_nonsig & (self.idx_atac==False)],y[idx_nonsig & (self.idx_atac==False)],color='r',s=ps,label='non-significant genes',zorder=3,marker='x')
-			ax0.scatter(x[idx_nonsig & self.idx_atac],y[idx_nonsig & self.idx_atac],color='orange',s=ps,label='non-significant peaks',zorder=3,marker='o',facecolor='None',s=5)
+			ax0.scatter(x[idx_nonsig & self.idx_atac],y[idx_nonsig & self.idx_atac],color='orange',s=ps,label='non-significant peaks',zorder=3,marker='x',s=5)
 		else:
 			ax0.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant %s' % self.unit,zorder=2)
 			ax0.scatter(x[idx_nonsig],y[idx_nonsig],color='r',s=ps,label='non-significant %s' % self.unit,zorder=3)
