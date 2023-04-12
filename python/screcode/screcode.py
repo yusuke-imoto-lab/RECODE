@@ -812,7 +812,15 @@ class RECODE():
 		plt.gca().spines['top'].set_visible(False)
 		ax1 = fig.add_subplot(gs[0,1])
 		x,y = np.mean(X_RECODE_ss_log,axis=0),np.var(X_RECODE_ss_log,axis=0,ddof=1)
-		ax1.scatter(x,y,color='b',s=ps,label='significant %ss' % self.unit,zorder=2)
+		# ax1.scatter(x,y,color='b',s=ps,label='significant %ss' % self.unit,zorder=2)
+		if self.seq_target == 'Multiome':
+			ax1.scatter(x[idx_sig & (self.idx_atac==False)],y[idx_sig & (self.idx_atac==False)],color='b',s=ps,label='significant genes' ,zorder=2,marker='o',facecolor='None')
+			ax1.scatter(x[idx_sig & self.idx_atac],y[idx_sig & self.idx_atac],color='lightblue',s=ps,label='significant peaks',zorder=2,marker='o',facecolor='None')
+			ax1.scatter(x[idx_nonsig & (self.idx_atac==False)],y[idx_nonsig & (self.idx_atac==False)],color='r',s=ps,label='non-significant genes',zorder=3,marker='x')
+			ax1.scatter(x[idx_nonsig & self.idx_atac],y[idx_nonsig & self.idx_atac],color='orange',s=ps,label='non-significant peaks',zorder=3,marker='x')
+		else:
+			ax1.scatter(x[idx_sig],y[idx_sig],color='b',s=ps,label='significant %s' % self.unit,zorder=2)
+			ax1.scatter(x[idx_nonsig],y[idx_nonsig],color='r',s=ps,label='non-significant %s' % self.unit,zorder=3)
 		ax1.set_ylim(ylim)
 		ax1.axhline(0,color='gray',ls='--',lw=2,zorder=1)
 		ax1.set_xlabel('Mean',fontsize=fs_label)
