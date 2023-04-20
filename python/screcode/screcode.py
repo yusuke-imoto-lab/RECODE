@@ -826,6 +826,7 @@ class RECODE():
 		ax1.set_xlabel('Mean',fontsize=fs_label)
 		ax1.set_ylabel('Variance',fontsize=fs_label)
 		ax1.set_title(titles[1],fontsize=fs_title)
+		ax1.legend(loc='upper right',borderaxespad=0,fontsize=10,markerscale=3,handletextpad=0.).get_frame().set_alpha(0)
 		plt.gca().spines['right'].set_visible(False)
 		plt.gca().spines['top'].set_visible(False)
 		if save:
