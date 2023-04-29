@@ -1,0 +1,295 @@
+---
+title: "Tutorial: scRNA-seq data"
+output:
+  html_document:
+    number_sections: yes
+    toc: true
+    code_folding: show
+---
+
+**Re**solution of **c**urse **o**f **d**im**e**nsionality (RECODE) is a noise reduction method for single-cell sequencing data. This vignette briefly demonstrates how to run RECODE on single-cell RNA-seq data and integrate the result into [Seurat](https://satijalab.org/seurat/index.html) analysis pipeline.
+
+# Set up
+
+This tutorial utilizes the `screcode` Python package via the `reticulate` R package, and requires Python, the `screcode` Python package, and the `reticulate` R package installed in advance. You can install the `screcode` into your preferred Python environment using `pip`:
+
+```{python,eval=FALSE}
+# pip install screcode
+```
+
+You can also install the R packages as follows.
+
+```{r,eval=FALSE}
+# install.packages("reticulate") # For interfacing with Python
+# install.packages("Seurat") # For the downstream analysis
+# install.packages("Matrix") # For processing sparse matrices
+# install.packages("ggplot2") # For data visualization
+```
+
+## Import libraries
+
+Though we use Seurat v4 in this tutorial, we have checked Seurat v3 also works. 
+
+```{r}
+library(Seurat)
+library(Matrix)
+library(ggplot2)
+library(reticulate)
+set.seed(0)
+```
+
+You can select the Python environment to work in using the `use_python` function in the `reticulate` R package.
+
+```{r}
+reticulate::use_python("C:/Users/ashbi/anaconda3/envs/r", # Path to python.exe
+                       required=TRUE) 
+py_config() # Confirm which Python to be used
+```
+
+```{r}
+theme_set(theme(text = element_text(size = 18), 
+                panel.background = element_rect(fill = "white", color = "gray20"), 
+                panel.grid = element_line(color = "gray92"), 
+                legend.key = element_rect(colour = NA, fill = NA)))
+```
+
+## Import data
+
+**Sample data：**
+For this tutorial, we use sample 10k Human PBMCs, 3' v3.1, Chromium Controller (11,485 cells and 36,601 genes) in [10X Genomics Datasets](https://www.10xgenomics.com/resources/datasets). The test data is deposited as `Feature / cell matrix HDF5 (filterd)` [here](https://www.10xgenomics.com/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-controller-3-1-high) (registration required).
+
+```{r}
+seurat <- Read10X_h5("10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.h5")
+seurat <- CreateSeuratObject(seurat)
+seurat[["percent.mt"]] <- PercentageFeatureSet(seurat, pattern = "^MT-")
+```
+
+# Pre-processing
+## Run RECODE
+We apply RECODE on a count matrix where each row is a gene and each column is a cell (gene x cell). The output is a denoised count matrix (gene x cell).
+
+```{r}
+plt <- reticulate::import(module="matplotlib.pyplot")
+screcode <- reticulate::import(module="screcode.screcode")
+recode<-screcode$RECODE()
+
+data<-t(as.matrix(seurat[["RNA"]]@counts))
+data_RECODE <- recode$fit_transform(data)
+rownames(data_RECODE)<-colnames(seurat)
+colnames(data_RECODE)<-rownames(seurat)
+```
+
+```{r,fig.height=12,fig.width=8}
+recode$report()
+plt$show()
+```
+
+We store the denoised count matrix in `seurat[["RECODE"]]@counts`.
+
+```{r}
+seurat[["RECODE"]] <- CreateAssayObject(counts = Matrix(t(data_RECODE), sparse = TRUE))
+DefaultAssay(seurat) <- "RECODE"
+```
+
+## Quality control
+
+We remove low-quality cells using the following thresholds.   
+  
+700 $\leq$ No. of detected genes $\leq$ 6000    
+% Mitochondrial transcript $\leq$ 15   
+1000 $\leq$ Total UMI $\leq$ 25000   
+
+```{r}
+ngene_low <- 700
+ngene_high <- 6000
+mito_high <- 15
+numi_low <- 1000
+numi_high <- 25000
+```
+
+```{r}
+meta.data <- seurat@meta.data
+meta.data$quality <- rep("High", nrow(meta.data))
+meta.data$quality[meta.data$nFeature_RNA<ngene_low|ngene_high<meta.data$nFeature_RNA] <- "Low"
+meta.data$quality[meta.data$nCount_RNA<numi_low|numi_high<meta.data$nCount_RNA] <- "Low"
+meta.data$quality[meta.data$percent.mt>mito_high] <- "Low"
+meta.data$quality <- factor(meta.data$quality)
+```
+
+```{r, fig.width = 10, fig.height = 5}
+p1 <- ggplot(meta.data, aes(x = nFeature_RNA, y = percent.mt, color = quality))+
+  geom_point(size = 0.1, show.legend = F)+
+  scale_color_manual(values = c("High"="black", "Low"="red"))+
+  xlab("nGene")
+p2 <- ggplot(meta.data, aes(x = nCount_RNA, y = nFeature_RNA, color = quality))+
+  geom_point(size = 0.1)+
+  scale_color_manual(values = c("High"="black", "Low"="red"))+
+  xlab("nUMI")+
+  ylab("nGene")+
+  guides(color = guide_legend(override.aes = list(size = 5)))
+p1+p2
+```
+
+```{r, fig.width = 12, fig.height = 6}
+VlnPlot(seurat, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"),  
+        ncol = 3, 
+        pt.size = 0)
+```
+
+```{r}
+seurat <- subset(seurat, subset = nFeature_RNA > ngene_low & nFeature_RNA < ngene_high & percent.mt < mito_high & nCount_RNA > numi_low & nCount_RNA < numi_high)
+dim(seurat)
+```
+
+## Normalization, centering, and PCA
+
+Then, we perform library size normalization and run PCA on 2000 highly variable genes. To retain as much biological information as possible, We do not scale gene expression variance to 1 in this tutorial.
+
+```{r}
+seurat <- NormalizeData(seurat,scale.factor=10^5)
+seurat <- FindVariableFeatures(seurat, selection.method = "vst", nfeatures = 2000)
+seurat <- ScaleData(seurat, features = rownames(seurat), do.scale = FALSE, do.center = TRUE)
+seurat <- RunPCA(seurat, features = VariableFeatures(seurat))
+```
+
+# Analysis
+## Clustering
+
+```{r}
+seurat <- FindNeighbors(seurat, dims = 1:50)
+seurat <- FindClusters(seurat, resolution = 1.2)
+```
+
+## Run UMAP
+
+```{r}
+seurat <- RunUMAP(seurat, dims = 1:50, seed.use = 42)
+```
+
+```{r}
+DimPlot(seurat, reduction = "umap", label = TRUE, label.size = 5)
+```
+
+## Marker gene expression
+
+```{r, fig.width = 17, fig.height = 15}
+DefaultAssay(seurat) <- "RECODE"
+FeaturePlot(seurat, features = c("CD3D", "CD4", "CD8B", "CCR7", "GZMK", "PRF1", "KLRB1", "TRDC", "NKG7", "CD14", "FCGR3A", "CD19", "TCL1A", "FCER1A", "LILRA4"), ncol = 4)
+```
+
+## Annotation
+
+```{r}
+use.switch <- function(x)
+{
+  sapply(x, function(y){
+    switch(y, 
+           "2" = "Naive CD8+ T cells", 
+           "1" = "Naive CD4+ T cells", 
+           "3" = "Memory CD4+ T cells", 
+           "16" = "Memory CD4+ T cells", 
+           "11" = "Central memory CD8+ T cells", 
+           "7" = "Effector memory CD8+ T cells", 
+           "14" = "gd T cells", 
+           "10" = "Natural Killer cells", 
+           "6" = "Memory B cells", 
+           "9" = "Naive B cells", 
+           "0" = "CD14+ monocytes", 
+           "4" = "CD14+ monocytes", 
+           "5" = "CD14+ monocytes", 
+           "8" = "FCGR3A+ monocytes", 
+           "13" = "Myeloid dendritic cells", 
+           "15" = "Plasmacytoid dendritic cells", 
+           "18" = "Plasmacytoid dendritic cells", 
+           "12" = "Doublets",
+           "17" = "Doublets", 
+           y
+    )
+  })
+}
+seurat$cluster <- as.character(seurat$seurat_clusters)
+seurat$cluster <- use.switch(seurat$cluster)
+seurat$cluster <- factor(seurat$cluster, levels = c("Naive CD8+ T cells", "Naive CD4+ T cells", "Memory CD4+ T cells", "Central memory CD8+ T cells", "Effector memory CD8+ T cells", "gd T cells", "Natural Killer cells", "Memory B cells", "Naive B cells", "CD14+ monocytes", "FCGR3A+ monocytes", "Myeloid dendritic cells", "Plasmacytoid dendritic cells", "Doublets"))
+```
+
+```{r}
+DimPlot(seurat, group.by = "cluster")
+```
+
+## Check noise reduction effect of RECODE
+
+```{r}
+seurat <- NormalizeData(seurat, assay = "RNA",scale.factor=10^5)
+```
+
+```{r, fig.width = 7, fig.height = 8}
+genes <- c("CD14", "FCGR3A")
+
+# Check gene expression value before RECODE
+dat <- data.frame(A = seurat[["RNA"]]@data[genes[1], ],
+                  B = seurat[["RNA"]]@data[genes[2], ],
+                  cluster = seurat$cluster)
+dat <- dat[(grep("monocytes", dat$cluster)), ]
+p1 <- ggplot(dat, aes(x = A, y = B, color = cluster))+
+  geom_point(size = 0.7)+
+  xlab(genes[1])+
+  ylab(genes[2])+
+  guides(color = guide_legend(override.aes = list(size = 5)))+
+  ggtitle("Original")
+
+# Check gene expression value after RECODE
+dat <- data.frame(A = seurat[["RECODE"]]@data[genes[1], ],
+                  B = seurat[["RECODE"]]@data[genes[2], ],
+                  cluster = seurat$cluster)
+dat <- dat[(grep("monocytes", dat$cluster)), ]
+p2 <- ggplot(dat, aes(x = A, y = B, color = cluster))+
+  geom_point(size = 0.7)+
+  xlab(genes[1])+
+  ylab(genes[2])+
+  guides(color = guide_legend(override.aes = list(size = 5)))+
+  ggtitle("RECODE")
+
+p1/p2
+```
+
+The distribution of two monocyte populations (CD14+ cells and FCGR3A+ cells) is clearly captured with RECODE. 
+
+```{r, fig.width = 7, fig.height = 8}
+genes <- c("CCR7", "S100A4")
+
+# Check gene expression value before RECODE
+dat <- data.frame(A = seurat[["RNA"]]@data[genes[1], ],
+                  B = seurat[["RNA"]]@data[genes[2], ],
+                  cluster = seurat$cluster)
+dat <- dat[(grep("CD8", dat$cluster)), ]
+p1 <- ggplot(dat, aes(x = A, y = B, color = cluster))+
+  geom_point(size = 0.7)+
+  xlab(genes[1])+
+  ylab(genes[2])+
+  guides(color = guide_legend(override.aes = list(size = 5)))+
+  ggtitle("Original")
+
+# Check gene expression value after RECODE
+dat <- data.frame(A = seurat[["RECODE"]]@data[genes[1], ],
+                  B = seurat[["RECODE"]]@data[genes[2], ],
+                  cluster = seurat$cluster)
+dat <- dat[(grep("CD8", dat$cluster)), ]
+p2 <- ggplot(dat, aes(x = A, y = B, color = cluster))+
+  geom_point(size = 0.7)+
+  xlab(genes[1])+
+  ylab(genes[2])+
+  guides(color = guide_legend(override.aes = list(size = 5)))+
+  ggtitle("RECODE")
+
+p1/p2
+```
+
+This data includes three CD8+ T cell subsets: naive cells (CCR7+, S100A4-), central memory cells (CCR7+, S100A4+), and effector memory cells (CCR7-, S100A4+). This expression pattern is visible with RECODE.
+
+While the original expression values are sparse and discontinuous due to random sampling effects, RECODE can reconstruct the continuous denoised data, which more accurately reflects the biological information. These two simple examples demonstrate the successful noise reduction by RECODE.
+
+# Session information
+
+```{r}
+sessionInfo()
+```
