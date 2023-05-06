@@ -525,7 +525,7 @@ class RECODE():
 		ax1.patch.set_alpha(0)
 		#
 		x = np.linspace(ax1.set_ylim()[0],ax1.set_ylim()[1],1000)
-		dens = scipy.stats.kde.gaussian_kde(np.log10(norm_var[norm_var>0]))(x)
+		dens = scipy.stats.gaussian_kde(np.log10(norm_var[norm_var>0]))(x)
 		peak_val = x[np.argmax(dens)]
 		rate_low_var = np.sum(norm_var[norm_var>0] < 0.90)/len(norm_var[norm_var>0])
 		applicability = 'Unknown'
@@ -738,7 +738,7 @@ class RECODE():
 		ax1.tick_params(left=False)
 		ax1.patch.set_alpha(0)
 		x = np.linspace(ax1.set_ylim()[0],ax1.set_ylim()[1],1000)
-		dens = scipy.stats.kde.gaussian_kde(np.log10(norm_var[norm_var>0]))(x)
+		dens = scipy.stats.gaussian_kde(np.log10(norm_var[norm_var>0]))(x)
 		peak_val = x[np.argmax(dens)]
 		rate_low_var = np.sum(norm_var[norm_var>0] < 0.90)/len(norm_var[norm_var>0])
 		applicability = 'Unknown'
