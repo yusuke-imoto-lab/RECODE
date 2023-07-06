@@ -20,7 +20,7 @@ class RECODE():
 		fast_algorithm_ell_ub = 1000,
 		seq_target = 'RNA',
 		version = 1,
-		stat_learning = False,
+		stat_learning = "Auto",
 		stat_learning_rate = 0.2,
 		stat_learning_seed = 0,
 		decimals = 5,
@@ -320,6 +320,10 @@ class RECODE():
 				print('start RECODE for sc%s-seq data' % self.seq_target)
 			if self.seq_target in ['Multiome']:
 				print('start RECODE for %s data' % self.seq_target)
+		
+		if type(self.stat_learning) != bool:
+			self.stat_learning = False if X.shape[0] < 10000 else True
+
 		if self.stat_learning:
 			if X.shape[0] < 10000:
 				self.logger.warning("Warning: The stat_learning option is for data with a large number of cells (>20000). \n"
@@ -341,6 +345,8 @@ class RECODE():
 		milliseconds = int(elapsed_time.microseconds / 1000)
 		self.elapsed_time =  f"{hours}h {minutes}m {seconds}s"
 		self.log_['Elapsed time'] = f"{hours}h {minutes}m {seconds}s {milliseconds:03}ms"
+		self.log_['stat_learning'] = self.stat_learning
+		self.log_['#test_data'] = int(self.stat_learning_rate*X.shape[0])
 		if self.verbose:
 			print('end RECODE for sc%s-seq' % self.seq_target)
 			print('log:',self.log_)
