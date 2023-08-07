@@ -1,15 +1,16 @@
 import anndata
 import adjustText
 import datetime
-import harmonypy
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
 import numpy as np
 import sklearn.decomposition
 import scipy.sparse
+import scanpy
 import seaborn as sns
 import logging
+import pandas as pd
 
 
 class RECODE:
@@ -33,7 +34,7 @@ class RECODE:
         Parameters
         ----------
         fast_algorithm : boolean, default=True
-                If True, the fast algorithm is conducted. The upper bound of parameter :math:`\ell` is set in ``fast_algorithm_ell_ub``.
+                If True, the fast algorithm is conducted. The upper bound of parameter :math:`\ell` is set by ``fast_algorithm_ell_ub``.
 
         fast_algorithm_ell_ub : int, default=1000
                 Upper bound of parameter :math:`\ell` for the fast algorithm. Must be of range [1,:math:`\infity`).
@@ -53,7 +54,7 @@ class RECODE:
                     run learning process involving computing SVD and estimating the essential dimension using downsampled data with the rate ``downsampling_rate``. 
         
         downsampling_rate : float, default=1000
-                This parameter is only relevant when ``solver='randomized'``. 
+                Downsampling rate, which is only relevant when ``solver='randomized'``. 
 
         decimals : int default='5'
                 Number of decimals for round processed matrices.
@@ -260,7 +261,6 @@ class RECODE:
         )
         recode_.fit(X_norm)
 
-        # self.X_fit = X_mat
         self.n_all = X_mat.shape[0]
         self.d_all = X_mat.shape[1]
         self.d_nonsilent = sum(self.idx_nonsilent)
@@ -413,8 +413,8 @@ class RECODE:
     def transform_integration(
         self,
         X,
-        meta_data,
-        vers_use="batch",
+        meta_data=None,
+        batch_key="batch",
     ):
         """
         Transform X into RECODE-denoised data.
@@ -424,7 +424,10 @@ class RECODE:
         X : ndarray or anndata of shape (n_samples, n_features)
                 Single-cell sequencing data matrix (row:cell, culumn:gene/peak).
 
-        meta_data : DataFrame (n_samples, *)
+        meta_data : ndarray (n_samples, 1) or DataFrame (n_samples, *)
+
+        batch_key : string, default='batch'
+                Key name in ``meta_data`` denoting batch. 
 
         Returns
         -------
@@ -438,13 +441,38 @@ class RECODE:
             raise TypeError(
                 "RECODE requires the same dimension as that of fitted data."
             )
-        X_ = X_mat[:, self.idx_nonsilent]
+        if X_mat.shape[1] == len(self.idx_nonsilent):
+            X_ = X_mat[:, self.idx_nonsilent]
+        else:
+            X_ = X_mat
         X_norm = self._noise_variance_stabilizing_normalization(X_)
         X_norm_RECODE = self.recode_.transform(X_norm)
-        self.harmony = harmonypy.run_harmony(
-            X_norm_RECODE, meta_data, vers_use, verbose=False
+        # self.harmony = harmonypy.run_harmony(
+        #     X_norm_RECODE, meta_data, batch_key, verbose=False
+        # )
+        # X_norm_RECODE_merge = self.harmony.Z_corr.T
+        if type(X) == anndata._core.anndata.AnnData:
+            if batch_key not in X.obs.keys():
+                raise ValueError(
+                    "No batch key \"%s\" in adata.obs. Add batch key or specify a \"batch_key\"" % batch_key
+                )
+            else:
+                meta_data_ = X.obs
+        elif type(meta_data) == np.ndarray:
+            meta_data_ = {batch_key:meta_data}
+        else:
+            raise TypeError(
+                    "No batch data. Add batch indices in \"meta_data\""
+                    )
+            
+        adata_ = anndata.AnnData(
+            X_norm_RECODE,
+            obs = meta_data_,
+            obsm = {"X":X_norm_RECODE},
+            dtype=X_norm_RECODE.dtype,
         )
-        X_norm_RECODE_merge = self.harmony.Z_corr.T
+        scanpy.external.pp.harmony_integrate(adata_, basis='X',adjusted_basis='X_integrated',key=batch_key,verbose=False)
+        X_norm_RECODE_merge = adata_.obsm["X_integrated"]
         X_RECODE = np.zeros(X_mat.shape, dtype=float)
         X_RECODE[
             :, self.idx_nonsilent
@@ -495,8 +523,8 @@ class RECODE:
     def fit_transform_integration(
         self,
         X,
-        meta_data,
-        vers_use="batch",
+        meta_data=None,
+        batch_key="batch",
     ):
         """
         Fit the model with X and transform X into RECODE-denoised data.
@@ -515,7 +543,7 @@ class RECODE:
         if self.verbose:
             print("start RECODE for sc%s-seq" % self.seq_target)
         self.fit(X)
-        X_RECODE = self.transform_integration(X, meta_data, vers_use)
+        X_RECODE = self.transform_integration(X, meta_data, batch_key)
         end_time = datetime.datetime.now()
         elapsed_time = end_time - start_time
         hours, remainder = divmod(elapsed_time.seconds, 3600)
@@ -529,6 +557,50 @@ class RECODE:
             print("end RECODE for sc%s-seq" % self.seq_target)
             print("log:", self.log_)
         return X_RECODE
+    
+    def lognormalize(
+            self,
+            X,
+            base=None,
+            target_sum=1e4,
+    ):
+        """
+        Standard normalization: Normalize counts per cell and then logarithmize it:
+        :math:`x_{ij}^{\\rm log} = \\log(x_{ij}^{\\rm norm} + 1)`, where :math:`x_{ij}^{\\rm norm} = c*x_{ij}/\\sum_{i}x_{ij}` and :math:`x_{ij}' is the count calue of :math:`i'th cell and :math:`j'th gene.
+
+        Parameters
+        ----------
+        X : ndarray or anndata of shape (n_samples, n_features).
+                single-cell sequencing data matrix (row:cell, culumn:gene/peak).
+        
+        base : positive number or None, default=None
+                Base of the logarithm. If None, natural logarithm is used.
+
+        target_sum : float, default=1e4,
+                Total value after count normalization, corresponding the coefficient :math:`c` above.
+
+        """
+        if type(X) == anndata._core.anndata.AnnData:
+            if self.anndata_key == "obsm":
+                X_mat_ = X.obsm[self.RECODE_key]
+            else:
+                X_mat_ = X.layers[self.RECODE_key]
+        else:
+            X_mat_ = self._check_datatype(X)
+        X_ss = (target_sum*X_mat_.T/np.sum(X_mat_,axis=1)).T
+        X_log = np.log(X_ss+1) if base==None else np.log(X_ss+1)/np.log(base)
+        if type(X) == anndata._core.anndata.AnnData:
+            if self.anndata_key == "obsm":
+                X.obsm[self.RECODE_key+ "_norm"] = X_ss
+                X.obsm[self.RECODE_key+ "_log"] = X_log
+            else:
+                X.layers[self.RECODE_key+ "_norm"] = X_ss
+                X.layers[self.RECODE_key+ "_log"] = X_log
+            if self.verbose:
+                print("Normalized data are stored in \"%s\" and \"%s\"" % (self.RECODE_key+ "_norm",self.RECODE_key+ "_log"))
+            return X
+        else:
+            return X_log
 
     def check_applicability(
         self,

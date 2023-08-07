@@ -17,7 +17,7 @@ matplotlib = ">=3.4.3"
 adjustText = ">=0.7"
 anndata = "^0.8.0"
 numpy = ">=1.20"
-harmonypy = ">=0.0.9"
+scanpy = ">=1.9.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
