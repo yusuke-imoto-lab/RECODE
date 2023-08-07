@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "scRECODE"
-version = "0.1.3"
+version = "0.1.4"
 description = "RECODE - resolution of the curse of dimensionality in single-cell data analysis"
 authors = ["Yusuke Imoto"]
 readme = "README.md"
@@ -17,7 +17,7 @@ matplotlib = ">=3.4.3"
 adjustText = ">=0.7"
 anndata = "^0.8.0"
 numpy = ">=1.20"
-harmonypy = ">=0.09"
+harmonypy = ">=0.0.9"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
