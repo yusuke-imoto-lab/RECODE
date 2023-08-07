@@ -19,8 +19,8 @@ class RECODE:
         fast_algorithm_ell_ub=1000,
         seq_target="RNA",
         version=1,
-        stat_learning="Auto",
-        stat_learning_rate=0.2,
+        solver="auto",
+        downsampling_rate=0.2,
         decimals=5,
         RECODE_key="RECODE",
         anndata_key="layers",
@@ -43,12 +43,33 @@ class RECODE:
 
         version : int default='1'
                 Version of RECODE.
-
-        verbose : boolean, default=True
-                If False, all running messages are not displayed.
+        
+        solver : {'auto', 'full', 'randomized'}, default="auto"
+                If auto:
+                    set ``solver='randomized'`` if the number of samples (cells) are larger than 20,000. Otherwise set ``solver='full'``. 
+                If full:
+                    run learning process using the full input matrix. 
+                If randomized:
+                    run learning process involving computing SVD and estimating the essential dimension using downsampled data with the rate ``downsampling_rate``. 
+        
+        downsampling_rate : float, default=1000
+                This parameter is only relevant when ``solver='randomized'``. 
 
         decimals : int default='5'
                 Number of decimals for round processed matrices.
+        
+        RECODE_key : string, default='RECODE'
+                Key name of anndata to store the output. 
+        
+        anndata_key : {'layers','obsm'}, default='layers'
+                Attribute of anndata where the output stored. 
+        
+        random_state : int or None, default=0
+                Used when the 'randomized' solver is used.
+        
+        verbose : boolean, default=True
+                If False, all running messages are not displayed.
+
 
         Attributes
         ----------
@@ -71,8 +92,8 @@ class RECODE:
         self.fast_algorithm_ell_ub = fast_algorithm_ell_ub
         self.seq_target = seq_target
         self.version = version
-        self.stat_learning = stat_learning
-        self.stat_learning_rate = stat_learning_rate
+        self.solver = solver
+        self.downsampling_rate = downsampling_rate
         self.random_state = random_state
         self.decimals = decimals
         self.RECODE_key = RECODE_key
@@ -350,26 +371,26 @@ class RECODE:
             if self.seq_target in ["Multiome"]:
                 print("start RECODE for %s data" % self.seq_target)
 
-        if type(self.stat_learning) != bool:
-            self.stat_learning = False if X.shape[0] < 10000 else True
+        if self.solver == "auto":
+            self.solver = "full" if X.shape[0] < 10000 else "randomized"
 
-        if self.stat_learning:
+        if self.solver ==  "randomized":
             if X.shape[0] < 10000:
                 self.logger.warning(
-                    "Warning: The stat_learning option is for data with a large number of cells (>20000). \n"
-                    "No use of the stat_learning option is recommended to keep the accuracy."
+                    "Warning: randomized algorithm is for data with a large number of cells (>20000). \n"
+                    "solver=\"full\" is recommended to keep the accuracy."
                 )
             np.random.seed(self.random_state)
             X_mat = self._check_datatype(X)
             cell_stat = np.random.choice(
-                X_mat.shape[0], int(self.stat_learning_rate * X.shape[0]), replace=False
+                X_mat.shape[0], int(self.downsampling_rate * X.shape[0]), replace=False
             )
             self.fit(X_mat[cell_stat])
         else:
             if X.shape[0] > 20000:
                 self.logger.warning(
                     "Warning: Regular RECODE uses high computational resources for data with a large number of cells. \n"
-                    'Use of the stat_learning option is recommended as "RECODE(stat_learning=True)". '
+                    'solver=\"randomized\" is recommended. '
                 )
             self.fit(X)
         X_RECODE = self.transform(X)
@@ -382,8 +403,8 @@ class RECODE:
         self.log_[
             "Elapsed time"
         ] = f"{hours}h {minutes}m {seconds}s {milliseconds:03}ms"
-        self.log_["stat_learning"] = self.stat_learning
-        self.log_["#test_data"] = int(self.stat_learning_rate * X.shape[0])
+        self.log_["solver"] = self.solver
+        self.log_["#test_data"] = int(self.downsampling_rate * X.shape[0])
         if self.verbose:
             print("end RECODE for sc%s-seq" % self.seq_target)
             print("log:", self.log_)
@@ -626,7 +647,7 @@ class RECODE:
         ).get_frame().set_alpha(0)
         ylim = ax0.set_ylim()
         ax1 = fig.add_subplot(spec[1])
-        sns.kdeplot(y=np.log10(norm_var[norm_var > 0]), color="k", shade=True, ax=ax1)
+        sns.kdeplot(y=np.log10(norm_var[norm_var > 0]), color="k", fill=True, ax=ax1)
         ax1.axhline(0, c="gray", ls="--", lw=2, zorder=1)
         ax1.axvline(0, c="k", ls="-", lw=1, zorder=1)
         ax1.set_ylim(np.log10(ax0.set_ylim()))
@@ -1008,7 +1029,7 @@ class RECODE:
         ).get_frame().set_alpha(0)
         ylim = ax0.set_ylim()
         ax1 = fig.add_subplot(gs[0, 1])
-        sns.kdeplot(y=np.log10(norm_var[norm_var > 0]), color="k", shade=True, ax=ax1)
+        sns.kdeplot(y=np.log10(norm_var[norm_var > 0]), color="k", fill=True, ax=ax1)
         ax1.axhline(0, c="gray", ls="--", lw=2, zorder=1)
         ax1.axvline(0, c="k", ls="-", lw=1, zorder=1)
         ax1.set_ylim(np.log10(ax0.set_ylim()))
@@ -2021,7 +2042,7 @@ class RECODE:
 class RECODE_core:
     def __init__(
         self,
-        solver="variance",
+        method="variance",
         variance_estimate=True,
         fast_algorithm=True,
         fast_algorithm_ell_ub=1000,
@@ -2036,21 +2057,21 @@ class RECODE_core:
 
         Parameters
         ----------
-        solver : {'variance','manual'}
+        method : {'variance','manual'}
                 If 'variance', regular variance-based algorithm.
-                If 'manual', parameter ell, which identifies essential and noise parts in the PCA space, is manually set. The manual parameter is given by ``ell_manual``.
+                If 'manual', parameter :math:`\ell`, which identifies essential and noise parts in the PCA space, is manually set. The manual parameter is given by ``ell_manual``.
 
         variance_estimate : boolean, default=True
-                If True and ``solver='variance'``, the parameter estimation method will be conducted.
+                If True and ``method='variance'``, the parameter estimation method will be done.
 
         fast_algorithm : boolean, default=True
-                If True, the fast algorithm is conducted. The upper bound of essential dimension :math:`\ell` is set in ``fast_algorithm_ell_ub``.
+                If True, the fast algorithm is done. The upper bound of essential dimension :math:`\ell` is set in ``fast_algorithm_ell_ub``.
 
         fast_algorithm_ell_ub : int, default=1000
                 Upper bound of parameter :math:`\ell` for the fast algorithm. Must be of range [1, infinity).
 
         ell_manual : int, default=10
-                Manual essential dimension :math:`\ell` computed by ``solver='manual'``. Must be of range [1, infinity).
+                Manual essential dimension :math:`\ell` computed by ``method='manual'``. Must be of range [1, infinity).
 
         ell_min : int, default=3
                 Minimam value of essential dimension :math:`\ell`
@@ -2059,7 +2080,7 @@ class RECODE_core:
                 Version of RECODE.
 
         """
-        self.solver = solver
+        self.method = method
         self.variance_estimate = variance_estimate
         self.fast_algorithm = fast_algorithm
         self.fast_algorithm_ell_ub = fast_algorithm_ell_ub
@@ -2248,9 +2269,9 @@ class RECODE_core:
         """
         if self.fit_idx == False:
             raise TypeError("Run fit before transform.")
-        if self.solver == "variance":
+        if self.method == "variance":
             return self._noise_reduct_noise_var(X, self.noise_var)
-        elif self.solver == "manual":
+        elif self.method == "manual":
             self.ell = self.ell_manual
             return self._noise_reductor(
                 X, self.L, self.U, self.X_mean, self.ell, self.version, self.TO_CR
