@@ -447,10 +447,6 @@ class RECODE:
             X_ = X_mat
         X_norm = self._noise_variance_stabilizing_normalization(X_)
         X_norm_RECODE = self.recode_.transform(X_norm)
-        # self.harmony = harmonypy.run_harmony(
-        #     X_norm_RECODE, meta_data, batch_key, verbose=False
-        # )
-        # X_norm_RECODE_merge = self.harmony.Z_corr.T
         if type(X) == anndata._core.anndata.AnnData:
             if batch_key not in X.obs.keys():
                 raise ValueError(

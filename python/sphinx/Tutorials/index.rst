@@ -5,5 +5,5 @@ Tutorials
 .. toctree::
     :maxdepth: 2
     
-    Tutorial_RNA.ipynb
-    Tutorial_ATAC.ipynb
+    ../../Tutorial/Tutorial_RNA.ipynb
+    ../../Tutorial/Tutorial_ATAC.ipynb

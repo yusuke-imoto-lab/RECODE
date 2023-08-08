@@ -43,7 +43,12 @@ python/screcode/test.py
 python/screcode/*.ipynb
 python/screcode/__pycache__
 python/screcode/.ipynb_checkpoints
+python/screcode/integrecode_test.ipynb
+python/Tutorials/.ipynb_checkpoints
+python/Tutorials/data
 python/sphinx/Tutorials/.ipynb_checkpoints
+python/sphinx/Tutorials/data
+
 
 # Others
 .vscode
