@@ -39,7 +39,7 @@ PyPi downloads (by PePy)
 
 ## R code
 
-Remark: The current version of the R code is not fast because of the lower speed of the PCA algorithm on R. Therefore, we recommend using the python code for large-scale data.
+Remark: The current version of the R code is not fast because of the lower speed of the PCA algorithm on R. So, we recommend using the python code or R code with Python calling (bellow) for large-scale data.
 
 ### Installation
 
@@ -77,6 +77,43 @@ For a detailed analysis, please see below:
 
 [Tutorial (Run, QC, Clustering, Annotating etc.)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_example.html)
 
+
+## R code (Python calling)
+
+### Installation
+
+After installing reticulate (`install.packages("reticulate")`), you can install "recodeinstaller" with the following command:
+
+``` r
+remotes::install_github("yusuke-imoto-lab/recodeinstaller")
+```
+
+Then, the following command installs the Python version of RECODE.
+
+``` r
+library(recodeinstaller)
+
+install_screcode()
+```
+
+
+### Tutorials
+For the single-cell sequeincing data *X* (rows: genes/epigenomes, columns: cells), we can apply RECODE as follows. 
+
+
+``` r
+library(reticulate)
+
+source("recodeloader/load_recodeenv.R")
+
+plt <- reticulate::import(module="matplotlib.pyplot")
+screcode <- reticulate::import(module="screcode.screcode")
+X.RECODE<-screcode$RECODE(X)
+
+```
+Below is a more detailed analysis:
+
+[Tutorial (Python calling)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_tutorial3_reticulate.html)
 
 ## Desktop Application
 
