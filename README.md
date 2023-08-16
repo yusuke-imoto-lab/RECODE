@@ -82,7 +82,7 @@ For a detailed analysis, please see below:
 
 ### Installation
 
-After installing reticulate (`install.packages("reticulate")`), you can install "recodeinstaller" with the following command:
+After installing remotes (`install.packages("remotes")`), you can install "recodeinstaller" with the following command:
 
 ``` r
 remotes::install_github("yusuke-imoto-lab/recodeinstaller")
