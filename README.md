@@ -39,7 +39,7 @@ PyPi downloads (by PePy)
 
 ## R code
 
-Remark: The current version of the R code is not fast because of the lower speed of the PCA algorithm on R. So, we recommend using the python code or R code with Python calling (bellow) for large-scale data.
+Remark: The current version of the R code is not fast because of the lower speed of the PCA algorithm on R. So, we recommend using the Python code or R code with Python calling (below) for large-scale data.
 
 ### Installation
 
@@ -113,7 +113,7 @@ X.RECODE<-screcode$RECODE(X)
 ```
 Below is a more detailed analysis:
 
-[Tutorial (Python calling)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_tutorial3_reticulate.html)
+[Tutorial (Python calling)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_tutorial3_reticulate-recodeinstaller.html)
 
 ## Desktop Application
 
