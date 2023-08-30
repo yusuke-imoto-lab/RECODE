@@ -339,9 +339,9 @@ class RECODE:
         if type(X) == anndata._core.anndata.AnnData:
             X_out = anndata.AnnData.copy(X)
             if self.anndata_key == "obsm":
-                X_out.obsm["RECODE"] = X_RECODE
+                X_out.obsm[self.RECODE_key] = X_RECODE
             else:
-                X_out.layers["RECODE"] = X_RECODE
+                X_out.layers[self.RECODE_key] = X_RECODE
             X_out.var["noise_variance_RECODE"] = self.noise_variance_
             X_out.var["normalized_variance_RECODE"] = self.normalized_variance_
             X_out.var["significance_RECODE"] = self.significance_
@@ -559,6 +559,8 @@ class RECODE:
             X,
             base=None,
             target_sum=1e4,
+            RECODE_key = None,
+            
     ):
         """
         Standard normalization: Normalize counts per cell and then logarithmize it:
@@ -574,6 +576,9 @@ class RECODE:
 
         target_sum : float, default=1e4,
                 Total value after count normalization, corresponding the coefficient :math:`c` above.
+        
+        RECODE_key : string, default=None
+                Key name of anndata to store the output. If None, the RECODE_key that is set initially is used. 
 
         """
         if type(X) == anndata._core.anndata.AnnData:
@@ -585,13 +590,17 @@ class RECODE:
             X_mat_ = self._check_datatype(X)
         X_ss = (target_sum*X_mat_.T/np.sum(X_mat_,axis=1)).T
         X_log = np.log(X_ss+1) if base==None else np.log(X_ss+1)/np.log(base)
+        
+        if RECODE_key = None:
+            RECODE_key = self.RECODE_key
+        
         if type(X) == anndata._core.anndata.AnnData:
             if self.anndata_key == "obsm":
-                X.obsm[self.RECODE_key+ "_norm"] = X_ss
-                X.obsm[self.RECODE_key+ "_log"] = X_log
+                X.obsm[RECODE_key+ "_norm"] = X_ss
+                X.obsm[RECODE_key+ "_log"] = X_log
             else:
-                X.layers[self.RECODE_key+ "_norm"] = X_ss
-                X.layers[self.RECODE_key+ "_log"] = X_log
+                X.layers[RECODE_key+ "_norm"] = X_ss
+                X.layers[RECODE_key+ "_log"] = X_log
             if self.verbose:
                 print("Normalized data are stored in \"%s\" and \"%s\"" % (self.RECODE_key+ "_norm",self.RECODE_key+ "_log"))
             return X
