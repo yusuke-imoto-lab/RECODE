@@ -591,7 +591,7 @@ class RECODE:
         X_ss = (target_sum*X_mat_.T/np.sum(X_mat_,axis=1)).T
         X_log = np.log(X_ss+1) if base==None else np.log(X_ss+1)/np.log(base)
         
-        if RECODE_key = None:
+        if RECODE_key == None:
             RECODE_key = self.RECODE_key
         
         if type(X) == anndata._core.anndata.AnnData:

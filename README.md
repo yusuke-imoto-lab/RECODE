@@ -95,6 +95,7 @@ library(recodeinstaller)
 
 install_screcode()
 ```
+Regarding the detail of installer, please see [recodeinstaller](https://github.com/yusuke-imoto-lab/recodeinstaller). 
 
 
 ### Tutorials
