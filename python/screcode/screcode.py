@@ -2180,7 +2180,7 @@ class RECODE_core:
             L_ell = L[:ell, :ell]
             for i in range(ell):
                 idx_order = np.argsort(U[i] ** 2)[::-1]
-                idx_sparce = np.sort(U[i] ** 2)[::-1].cumsum() > L_ell[i, i]
+                idx_sparce = np.sort(U[i] ** 2)[::-1].cumsum() > L_ell[i, i]**2
                 U_ell[i, idx_order[idx_sparce]] = 0
                 U_ell[i] = U_ell[i] / np.sqrt(np.sum(U_ell[i] ** 2))
             return np.dot(np.dot(np.dot(X - Xmean, U_ell.T), L_ell), U_ell) + Xmean
@@ -2307,15 +2307,15 @@ class RECODE_core:
                 "Acceleration error: the optimal value of ell is larger than fast_algorithm_ell_ub. Set larger fast_algorithm_ell_ub than %d or 'fast_algorithm=False'"
                 % self.fast_algorithm_ell_ub
             )
-            comp = n_pca
+            comp = n_pca-1
         else:
             comp = np.min(np.arange(n_pca)[PCA_Ev_sum - thrshold < 0])
-        self.ell_max = np.min([n, d, np.sum(PCA_Ev > 1.0e-10)])
+        self.ell_max = np.min([n, d, np.sum(PCA_Ev > 1.0e-10)])-1
         self.ell = comp
         if self.ell > self.ell_max:
             self.ell = self.ell_max
         if self.ell < self.ell_min:
-            self.ell = self.ell_max
+            self.ell = self.ell_min
         self.TO_CR = PCA_CCR[self.ell]
         self.TO_CR_NRM = PCA_CCR_NRM[self.ell]
         self.PCA_Ev = PCA_Ev
