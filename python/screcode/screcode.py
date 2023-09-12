@@ -301,12 +301,14 @@ class RECODE:
             )
         X_ = X_mat[:, self.idx_nonsilent]
         X_norm = self._noise_variance_stabilizing_normalization(X_)
-        X_norm_RECODE = self.recode_.transform(X_norm)
+        X_norm_RECODE_ = self.recode_.transform(X_norm)
+        X_norm_RECODE = np.zeros(X_mat.shape, dtype=float)
+        X_norm_RECODE[:, self.idx_nonsilent] = X_norm_RECODE_
         X_RECODE = np.zeros(X_mat.shape, dtype=float)
-        X_RECODE[
-            :, self.idx_nonsilent
-        ] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE)
+        X_RECODE[:, self.idx_nonsilent] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE_)
         X_RECODE = np.where(X_RECODE > 0, X_RECODE, 0)
+        X_RECODE = np.round(X_RECODE, decimals=self.decimals)
+        X_norm_RECODE = np.round(X_norm_RECODE, decimals=self.decimals)
         self.log_["#silent %ss" % self.unit] = sum(np.sum(X_mat, axis=0) == 0)
         self.log_["ell"] = self.recode_.ell
         if self.recode_.ell == self.fast_algorithm_ell_ub:
@@ -340,8 +342,10 @@ class RECODE:
             X_out = anndata.AnnData.copy(X)
             if self.anndata_key == "obsm":
                 X_out.obsm[self.RECODE_key] = X_RECODE
+                X_out.obsm[self.RECODE_key+"_NVSN"] = X_norm_RECODE
             else:
                 X_out.layers[self.RECODE_key] = X_RECODE
+                X_out.layers[self.RECODE_key+"_NVSN"] = X_norm_RECODE
             X_out.var["noise_variance_RECODE"] = self.noise_variance_
             X_out.var["normalized_variance_RECODE"] = self.normalized_variance_
             X_out.var["significance_RECODE"] = self.significance_
@@ -482,7 +486,7 @@ class RECODE:
                 "Ex. X_new = screcode.RECODE(fast_algorithm=False).fit_transform(X)"
             )
         self.X_trans = np.round(X_mat, decimals=self.decimals)
-        self.X_RECODE = X_RECODE
+        self.X_RECODE = np.round(X_RECODE, decimals=self.decimals)
         self.noise_variance_ = np.zeros(X_mat.shape[1], dtype=float)
         self.noise_variance_[self.idx_nonsilent] = self.noise_var
         self.normalized_variance_ = np.zeros(X_mat.shape[1], dtype=float)
@@ -927,12 +931,12 @@ class RECODE:
         X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
         norm_var = np.var(X_norm, axis=0, ddof=1)
         size_factor = np.median(np.sum(self.X_trans, axis=1))
-        X_ss_log = np.log2(
+        X_ss_log = np.log(
             size_factor
             * (self.X_trans[:, self.idx_nonsilent].T / np.sum(self.X_trans, axis=1)).T
             + 1
         )
-        X_RECODE_ss_log = np.log2(
+        X_RECODE_ss_log = np.log(
             size_factor
             * (self.X_RECODE[:, self.idx_nonsilent].T / np.sum(self.X_RECODE, axis=1)).T
             + 1
@@ -1823,12 +1827,12 @@ class RECODE:
         else:
             size_factor = np.median(np.sum(self.X_trans, axis=1))
             size_factor_RECODE = np.median(np.sum(self.X_RECODE, axis=1))
-        X_ss_log = np.log2(
+        X_ss_log = np.log(
             size_factor
             * (self.X_trans[:, self.idx_nonsilent].T / np.sum(self.X_trans, axis=1)).T
             + 1
         )
-        X_RECODE_ss_log = np.log2(
+        X_RECODE_ss_log = np.log(
             size_factor_RECODE
             * (self.X_RECODE[:, self.idx_nonsilent].T / np.sum(self.X_RECODE, axis=1)).T
             + 1
@@ -2174,7 +2178,7 @@ class RECODE_core:
         else:
             self.logger.setLevel(logging.ERROR)
 
-    def _noise_reductor(self, X, L, U, Xmean, ell, version=1, TO_CR=1):
+    def _noise_reductor(self, X, L, U, Xmean, ell, version=1, TO_CR=1, return_ess=False):
         if version == 2 and self.RECODE_done == False:
             U_ell = U[:ell, :]
             L_ell = L[:ell, :ell]
@@ -2183,11 +2187,18 @@ class RECODE_core:
                 idx_sparce = np.sort(U[i] ** 2)[::-1].cumsum() > L_ell[i, i]**2
                 U_ell[i, idx_order[idx_sparce]] = 0
                 U_ell[i] = U_ell[i] / np.sqrt(np.sum(U_ell[i] ** 2))
-            return np.dot(np.dot(np.dot(X - Xmean, U_ell.T), L_ell), U_ell) + Xmean
+            X_ess = np.dot(np.dot(X - Xmean, U_ell.T), L_ell)
+            X_recode = np.dot(X_ess, U_ell) + Xmean
+            return 
         else:
             U_ell = U[:ell, :]
             L_ell = L[:ell, :ell]
-            return np.dot(np.dot(np.dot(X - Xmean, U_ell.T), L_ell), U_ell) + Xmean
+            X_ess = np.dot(np.dot(X - Xmean, U_ell.T), L_ell)
+            X_recode = np.dot(X_ess, U_ell) + Xmean
+        if return_ess:
+            return X_recode, X_ess
+        else:
+            return X_recode
 
     def _noise_reduct_param(self, X, delta=0.05):
         comp = max(np.sum(self.PCA_Ev_NRM > delta * self.PCA_Ev_NRM[0]), 3)

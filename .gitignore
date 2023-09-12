@@ -54,3 +54,5 @@ python/sphinx/Tutorials/data
 .vscode
 images/Logo_RECODE.ai
 python/screcode/integrecode_test.ipynb
+python/Tutorials/screcode.py
+python/sphinx/Tutorials/screcode.py
