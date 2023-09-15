@@ -305,6 +305,8 @@ class RECODE:
         X_norm_RECODE = np.zeros(X_mat.shape, dtype=float)
         X_norm_RECODE[:, self.idx_nonsilent] = X_norm_RECODE_
         X_RECODE = np.zeros(X_mat.shape, dtype=float)
+        # print(X_norm_RECODE_)
+        # print(np.sum(np.isnan(X_norm_RECODE_)))
         X_RECODE[:, self.idx_nonsilent] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE_)
         X_RECODE = np.where(X_RECODE > 0, X_RECODE, 0)
         X_RECODE = np.round(X_RECODE, decimals=self.decimals)
@@ -450,7 +452,8 @@ class RECODE:
         else:
             X_ = X_mat
         X_norm = self._noise_variance_stabilizing_normalization(X_)
-        X_norm_RECODE = self.recode_.transform(X_norm)
+        _, X_ess, U_ell, Xmean = self.recode_.transform(X_norm,return_ess=True)
+        # X_norm_RECODE = self.recode_.transform(X_norm,return_ess=True)
         if type(X) == anndata._core.anndata.AnnData:
             if batch_key not in X.obs.keys():
                 raise ValueError(
@@ -466,13 +469,14 @@ class RECODE:
                     )
             
         adata_ = anndata.AnnData(
-            X_norm_RECODE,
+            X_ess,
             obs = meta_data_,
-            obsm = {"X":X_norm_RECODE},
-            dtype=X_norm_RECODE.dtype,
+            obsm = {"X":X_ess},
+            dtype=X_ess.dtype,
         )
         scanpy.external.pp.harmony_integrate(adata_, basis='X',adjusted_basis='X_integrated',key=batch_key,verbose=False)
-        X_norm_RECODE_merge = adata_.obsm["X_integrated"]
+        X_ess_merge = adata_.obsm["X_integrated"]
+        X_norm_RECODE_merge = np.dot(X_ess_merge, U_ell) + Xmean
         X_RECODE = np.zeros(X_mat.shape, dtype=float)
         X_RECODE[
             :, self.idx_nonsilent
@@ -509,12 +513,15 @@ class RECODE:
 
         if type(X) == anndata._core.anndata.AnnData:
             X_out = anndata.AnnData.copy(X)
-            X_out.layers[self.RECODE_key] = X_RECODE
-            X_out.var["noise_variance_%s" % self.RECODE_key] = self.noise_variance_
-            X_out.var[
-                "normalized_variance_%s" % self.RECODE_key
-            ] = self.normalized_variance_
-            X_out.var["significance_%s" % self.RECODE_key] = self.significance_
+            if self.anndata_key == "obsm":
+                X_out.obsm[self.RECODE_key] = X_RECODE
+                X_out.obsm[self.RECODE_key+"_NVSN"] = X_norm_RECODE_merge
+            else:
+                X_out.layers[self.RECODE_key] = X_RECODE
+                X_out.layers[self.RECODE_key+"_NVSN"] = X_norm_RECODE_merge
+            X_out.var["noise_variance_RECODE"] = self.noise_variance_
+            X_out.var["normalized_variance_RECODE"] = self.normalized_variance_
+            X_out.var["significance_RECODE"] = self.significance_
         else:
             X_out = X_RECODE
 
@@ -541,7 +548,7 @@ class RECODE:
         """
         start_time = datetime.datetime.now()
         if self.verbose:
-            print("start RECODE for sc%s-seq" % self.seq_target)
+            print("start RECODE (integration) for sc%s-seq" % self.seq_target)
         self.fit(X)
         X_RECODE = self.transform_integration(X, meta_data, batch_key)
         end_time = datetime.datetime.now()
@@ -557,6 +564,7 @@ class RECODE:
             print("end RECODE for sc%s-seq" % self.seq_target)
             print("log:", self.log_)
         return X_RECODE
+        
     
     def lognormalize(
             self,
@@ -2178,7 +2186,7 @@ class RECODE_core:
         else:
             self.logger.setLevel(logging.ERROR)
 
-    def _noise_reductor(self, X, L, U, Xmean, ell, version=1, TO_CR=1, return_ess=False):
+    def _noise_reductor(self, X, L, U, Xmean, ell, version=1, return_ess=False):
         if version == 2 and self.RECODE_done == False:
             U_ell = U[:ell, :]
             L_ell = L[:ell, :ell]
@@ -2186,17 +2194,17 @@ class RECODE_core:
                 idx_order = np.argsort(U[i] ** 2)[::-1]
                 idx_sparce = np.sort(U[i] ** 2)[::-1].cumsum() > L_ell[i, i]**2
                 U_ell[i, idx_order[idx_sparce]] = 0
-                U_ell[i] = U_ell[i] / np.sqrt(np.sum(U_ell[i] ** 2))
+                if np.sqrt(np.sum(U_ell[i] ** 2)) >0:
+                    U_ell[i] = U_ell[i] / np.sqrt(np.sum(U_ell[i] ** 2))
             X_ess = np.dot(np.dot(X - Xmean, U_ell.T), L_ell)
             X_recode = np.dot(X_ess, U_ell) + Xmean
-            return 
         else:
             U_ell = U[:ell, :]
             L_ell = L[:ell, :ell]
             X_ess = np.dot(np.dot(X - Xmean, U_ell.T), L_ell)
             X_recode = np.dot(X_ess, U_ell) + Xmean
         if return_ess:
-            return X_recode, X_ess
+            return X_recode, X_ess, U_ell, Xmean
         else:
             return X_recode
 
@@ -2341,7 +2349,7 @@ class RECODE_core:
         self.noise_var = noise_var
         self.fit_idx = True
 
-    def transform(self, X):
+    def transform(self, X, return_ess=False):
         """
         Apply RECODE to X.
 
@@ -2362,7 +2370,7 @@ class RECODE_core:
         elif self.method == "manual":
             self.ell = self.ell_manual
             return self._noise_reductor(
-                X, self.L, self.U, self.X_mean, self.ell, self.version, self.TO_CR
+                X, self.L, self.U, self.X_mean, self.ell, self.version, return_ess
             )
 
         self.RECODE_done = True
