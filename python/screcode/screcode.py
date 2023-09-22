@@ -301,12 +301,10 @@ class RECODE:
             )
         X_ = X_mat[:, self.idx_nonsilent]
         X_norm = self._noise_variance_stabilizing_normalization(X_)
-        X_norm_RECODE_ = self.recode_.transform(X_norm)
+        X_norm_RECODE_, X_ess, _, _ = self.recode_.transform(X_norm,return_ess=True)
         X_norm_RECODE = np.zeros(X_mat.shape, dtype=float)
         X_norm_RECODE[:, self.idx_nonsilent] = X_norm_RECODE_
         X_RECODE = np.zeros(X_mat.shape, dtype=float)
-        # print(X_norm_RECODE_)
-        # print(np.sum(np.isnan(X_norm_RECODE_)))
         X_RECODE[:, self.idx_nonsilent] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE_)
         X_RECODE = np.where(X_RECODE > 0, X_RECODE, 0)
         X_RECODE = np.round(X_RECODE, decimals=self.decimals)
@@ -348,6 +346,7 @@ class RECODE:
             else:
                 X_out.layers[self.RECODE_key] = X_RECODE
                 X_out.layers[self.RECODE_key+"_NVSN"] = X_norm_RECODE
+            X_out.uns[self.RECODE_key+"_ess"] = X_ess
             X_out.var["noise_variance_RECODE"] = self.noise_variance_
             X_out.var["normalized_variance_RECODE"] = self.normalized_variance_
             X_out.var["significance_RECODE"] = self.significance_
@@ -421,6 +420,7 @@ class RECODE:
         X,
         meta_data=None,
         batch_key="batch",
+        integration_method = "harmony",
     ):
         """
         Transform X into RECODE-denoised data.
@@ -474,13 +474,27 @@ class RECODE:
             obsm = {"X":X_ess},
             dtype=X_ess.dtype,
         )
-        scanpy.external.pp.harmony_integrate(adata_, basis='X',adjusted_basis='X_integrated',key=batch_key,verbose=False)
-        X_ess_merge = adata_.obsm["X_integrated"]
-        X_norm_RECODE_merge = np.dot(X_ess_merge, U_ell) + Xmean
+        if integration_method == "harmony":
+            scanpy.external.pp.harmony_integrate(adata_, basis='X',adjusted_basis='X_integrated',key=batch_key,verbose=False)
+            X_ess_merge = adata_.obsm["X_integrated"]
+        elif integration_method == "bbknn":
+            scanpy.external.pp.bbknn(adata_, batch_key=batch_key, use_rep='X')
+            X_ess_merge = adata_.X
+        elif integration_method == "scanorama":
+            scanpy.external.pp.scanorama_integrate(adata_, key=batch_key, basis='X',adjusted_basis='X_integrated',verbose=False)
+            X_ess_merge = adata_.obsm["X_integrated"]
+        elif integration_method == "mnn":
+            scanpy.external.pp.mnn_correct(adata_, batch_key=batch_key,verbose=False)
+            X_ess_merge = adata_.X
+        else:
+            raise ValueError("No integration method \"%s\". Choice from %s" % integration_method,["harmony","bbknn","scanorama","mnn"])
+        X_norm_RECODE_merge_ = np.dot(X_ess_merge, U_ell) + Xmean
+        X_norm_RECODE_merge = np.zeros(X_mat.shape, dtype=float)
+        X_norm_RECODE_merge[:, self.idx_nonsilent] = X_norm_RECODE_merge_
         X_RECODE = np.zeros(X_mat.shape, dtype=float)
         X_RECODE[
             :, self.idx_nonsilent
-        ] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE_merge)
+        ] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE_merge_)
         X_RECODE = np.where(X_RECODE > 0, X_RECODE, 0)
         self.log_["#silent %ss" % self.unit] = sum(np.sum(X_mat, axis=0) == 0)
         self.log_["ell"] = self.recode_.ell
@@ -519,6 +533,7 @@ class RECODE:
             else:
                 X_out.layers[self.RECODE_key] = X_RECODE
                 X_out.layers[self.RECODE_key+"_NVSN"] = X_norm_RECODE_merge
+            X_out.uns[self.RECODE_key+"_ess"] = X_ess
             X_out.var["noise_variance_RECODE"] = self.noise_variance_
             X_out.var["normalized_variance_RECODE"] = self.normalized_variance_
             X_out.var["significance_RECODE"] = self.significance_
@@ -532,6 +547,7 @@ class RECODE:
         X,
         meta_data=None,
         batch_key="batch",
+        integration_method = "harmony",
     ):
         """
         Fit the model with X and transform X into RECODE-denoised data.
@@ -550,7 +566,7 @@ class RECODE:
         if self.verbose:
             print("start RECODE (integration) for sc%s-seq" % self.seq_target)
         self.fit(X)
-        X_RECODE = self.transform_integration(X, meta_data, batch_key)
+        X_RECODE = self.transform_integration(X, meta_data, batch_key, integration_method)
         end_time = datetime.datetime.now()
         elapsed_time = end_time - start_time
         hours, remainder = divmod(elapsed_time.seconds, 3600)

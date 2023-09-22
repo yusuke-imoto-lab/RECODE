@@ -56,3 +56,12 @@ images/Logo_RECODE.ai
 python/screcode/integrecode_test.ipynb
 python/Tutorials/screcode.py
 python/sphinx/Tutorials/screcode.py
+python/Test/integrating-data-using-ingest.ipynb
+python/Test/data/pbmc3k_processed.h5ad
+python/Test/data/pancreas.h5ad
+python/Test/screcode.py
+python/Test/data/99_1_Jurkat_293T_Cell_Mixture/matrix.mtx
+python/Test/data/99_1_Jurkat_293T_Cell_Mixture/genes.tsv
+python/Test/data/99_1_Jurkat_293T_Cell_Mixture/barcodes.tsv
+python/Test/data/pbmc3k_raw.h5ad
+python/Test/screcode_test.ipynb
