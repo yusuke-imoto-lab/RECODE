@@ -477,7 +477,7 @@ class RECODE:
             raise TypeError(
                     "No batch data. Add batch indices in \"meta_data\""
                     )
-            
+        meta_data_[batch_key] = np.array(meta_data_[batch_key].values,dtype="object")
         adata_ = anndata.AnnData(
             X_ess,
             obs = meta_data_,

@@ -69,4 +69,3 @@ python/Test/integrating-data-using-ingest_RECODE.ipynb
 python/Test/data/pancreas.h5ad
 *.h5ad
 python/Test/screcode.py
-python/sphinx/Tutorials/Tutorial_RNA.ipynb
