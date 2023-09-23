@@ -65,3 +65,4 @@ python/Test/data/99_1_Jurkat_293T_Cell_Mixture/genes.tsv
 python/Test/data/99_1_Jurkat_293T_Cell_Mixture/barcodes.tsv
 python/Test/data/pbmc3k_raw.h5ad
 python/Test/screcode_test.ipynb
+python/Test/integrating-data-using-ingest_RECODE.ipynb
