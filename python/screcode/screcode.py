@@ -5,6 +5,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
 import numpy as np
+import pandas as pd
 import sklearn.decomposition
 import scipy.sparse
 import scanpy
@@ -122,6 +123,8 @@ class RECODE:
                 return X.X.toarray()
             elif type(X.X) == np.ndarray:
                 return X.X
+            elif type(X.X) == anndata._core.views.ArrayView:
+                return np.array(X.X)
             else:
                 raise TypeError("Data type error: ndarray or anndata is available.")
             if "feature_types" in adata.var.keys():
@@ -463,6 +466,13 @@ class RECODE:
                 meta_data_ = X.obs
         elif type(meta_data) == np.ndarray:
             meta_data_ = {batch_key:meta_data}
+        elif (type(meta_data) == anndata._core.views.DataFrameView) | (type(meta_data) == pd.core.frame.DataFrame):
+            if batch_key not in meta_data.keys():
+                raise ValueError(
+                    "No batch key \"%s\" in meta_data. Add batch key or specify a \"batch_key\"" % batch_key
+                )
+            else:
+                meta_data_ = meta_data
         else:
             raise TypeError(
                     "No batch data. Add batch indices in \"meta_data\""
