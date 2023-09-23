@@ -56,7 +56,6 @@ images/Logo_RECODE.ai
 python/screcode/integrecode_test.ipynb
 python/Tutorials/screcode.py
 python/sphinx/Tutorials/screcode.py
-<<<<<<< Updated upstream
 python/Test/integrating-data-using-ingest.ipynb
 python/Test/data/pbmc3k_processed.h5ad
 python/Test/data/pancreas.h5ad
@@ -67,12 +66,7 @@ python/Test/data/99_1_Jurkat_293T_Cell_Mixture/barcodes.tsv
 python/Test/data/pbmc3k_raw.h5ad
 python/Test/screcode_test.ipynb
 python/Test/integrating-data-using-ingest_RECODE.ipynb
-=======
-*.ipynb
 python/Test/data/pancreas.h5ad
 *.h5ad
 python/Test/screcode.py
->>>>>>> Stashed changes
-python/sphinx/Tutorials/Tutorial_RNA.ipynb
-python/sphinx/Tutorials/Tutorial_RNA.ipynb
 python/sphinx/Tutorials/Tutorial_RNA.ipynb
