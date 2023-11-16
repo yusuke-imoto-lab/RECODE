@@ -105,7 +105,7 @@ class RECODE:
         if seq_target == "ATAC":
             self.unit, self.Unit = "peak", "Peak"
         if seq_target == "Hi-C":
-            self.unit, self.Unit = "bin", "Bin"
+            self.unit, self.Unit = "contact", "Contact"
         if seq_target == "Multiome":
             self.unit, self.Unit = "feature", "Feature"
         self.log_ = {}
@@ -371,9 +371,9 @@ class RECODE:
             else:
                 X_out.layers[self.RECODE_key] = X_RECODE
                 X_out.layers[self.RECODE_key+"_NVSN"] = X_norm_RECODE
-            X_out.uns[self.RECODE_key+"_ess"] = X_ess
-            X_out.var["noise_variance_RECODE"] = self.noise_variance_
-            X_out.var["normalized_variance_RECODE"] = self.normalized_variance_
+            X_out.uns[self.RECODE_key+"_essential"] = X_ess
+            X_out.var["noise_variance"] = self.noise_variance_
+            X_out.var["normalized_variance"] = self.normalized_variance_
             X_out.var["significance_RECODE"] = self.significance_
         else:
             X_out = X_RECODE
@@ -413,7 +413,8 @@ class RECODE:
             "Elapsed time"
         ] = f"{hours}h {minutes}m {seconds}s {milliseconds:03}ms"
         self.log_["solver"] = self.solver
-        self.log_["#test_data"] = int(self.downsampling_rate * X.shape[0])
+        if self.log_["solver"] == "randomized":
+            self.log_["#test_data"] = int(self.downsampling_rate * X.shape[0])
         if self.verbose:
             print("end RECODE for sc%s-seq" % self.seq_target)
             print("log:", self.log_)
@@ -464,16 +465,29 @@ class RECODE:
                     "No batch key \"%s\" in adata.obs. Add batch key or specify a \"batch_key\"" % batch_key
                 )
             else:
+<<<<<<< Updated upstream
                 meta_data_ = {batch_key:np.array(X.obs[batch_key],dtype="object")}
         elif type(meta_data) == np.ndarray:
             meta_data_ = {batch_key:np.array(meta_data,dtype="object")}
+=======
+                meta_data_ = {batch_key:np.array(X.obs[batch_key].values,dtype="object")}
+        elif type(meta_data) == np.ndarray:
+            if len(meta_data.shape) == 1:
+                meta_data_ = {batch_key:meta_data}
+            else:
+                raise ValueError("meta_data should be 1-dimension")
+>>>>>>> Stashed changes
         elif (type(meta_data) == anndata._core.views.DataFrameView) | (type(meta_data) == pd.core.frame.DataFrame):
             if batch_key not in meta_data.keys():
                 raise ValueError(
                     "No batch key \"%s\" in meta_data. Add batch key or specify a \"batch_key\"" % batch_key
                 )
             else:
+<<<<<<< Updated upstream
                 meta_data_ = {batch_key:np.array(meta_data[batch_key].values,dtype="object")}
+=======
+                meta_data_ = {batch_key:meta_data[batch_key].values}
+>>>>>>> Stashed changes
         else:
             raise TypeError(
                     "No batch data. Add batch indices in \"meta_data\""
@@ -494,17 +508,16 @@ class RECODE:
             scanpy.external.pp.scanorama_integrate(adata_, key=batch_key, basis='X',adjusted_basis='X_integrated',verbose=False)
             X_ess_merge = adata_.obsm["X_integrated"]
         elif integration_method == "mnn":
-            scanpy.external.pp.mnn_correct(adata_, batch_key=batch_key,verbose=False)
-            X_ess_merge = adata_.X
+            data_ = [adata_.X[adata_.obs[batch_key]==b_] for b_ in np.unique(adata_.obs[batch_key])]
+            mnn_out = scanpy.external.pp.mnn_correct(*data_, var_index=np.arange(adata_.shape[1]),verbose=False)
+            X_ess_merge = mnn_out[0]
         else:
             raise ValueError("No integration method \"%s\". Choice from %s" % integration_method,["harmony","bbknn","scanorama","mnn"])
         X_norm_RECODE_merge_ = np.dot(X_ess_merge, U_ell) + Xmean
         X_norm_RECODE_merge = np.zeros(X_mat.shape, dtype=float)
         X_norm_RECODE_merge[:, self.idx_nonsilent] = X_norm_RECODE_merge_
         X_RECODE = np.zeros(X_mat.shape, dtype=float)
-        X_RECODE[
-            :, self.idx_nonsilent
-        ] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE_merge_)
+        X_RECODE[:, self.idx_nonsilent] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE_merge_)
         X_RECODE = np.where(X_RECODE > 0, X_RECODE, 0)
         self.log_["#silent %ss" % self.unit] = sum(np.sum(X_mat, axis=0) == 0)
         self.log_["ell"] = self.recode_.ell
@@ -543,7 +556,7 @@ class RECODE:
             else:
                 X_out.layers[self.RECODE_key] = X_RECODE
                 X_out.layers[self.RECODE_key+"_NVSN"] = X_norm_RECODE_merge
-            X_out.uns[self.RECODE_key+"_ess"] = X_ess
+            X_out.uns[self.RECODE_key+"_essential"] = X_ess
             X_out.var["noise_variance_RECODE"] = self.noise_variance_
             X_out.var["normalized_variance_RECODE"] = self.normalized_variance_
             X_out.var["significance_RECODE"] = self.significance_
@@ -575,11 +588,40 @@ class RECODE:
         start_time = datetime.datetime.now()
         if self.verbose:
             if self.seq_target in ["RNA", "ATAC", "Hi-C"]:
+<<<<<<< Updated upstream
                 print("start RECODE for sc%s-seq data" % self.seq_target)
             if self.seq_target in ["Multiome"]:
                 print("start RECODE for %s data" % self.seq_target)
         
         self.fit(X)
+=======
+                print("start RECODE (integration)  for sc%s-seq data" % self.seq_target)
+            if self.seq_target in ["Multiome"]:
+                print("start RECODE (integration)  for %s data" % self.seq_target)
+
+        if self.solver == "auto":
+            self.solver = "full" if X.shape[0] < 10000 else "randomized"
+
+        if self.solver ==  "randomized":
+            if X.shape[0] < 10000:
+                self.logger.warning(
+                    "Warning: randomized algorithm is for data with a large number of cells (>20000). \n"
+                    "solver=\"full\" is recommended to keep the accuracy."
+                )
+            np.random.seed(self.random_state)
+            X_mat = self._check_datatype(X)
+            cell_stat = np.random.choice(
+                X_mat.shape[0], int(self.downsampling_rate * X.shape[0]), replace=False
+            )
+            self.fit(X_mat[cell_stat])
+        else:
+            if X.shape[0] > 20000:
+                self.logger.warning(
+                    "Warning: Regular RECODE uses high computational resources for data with a large number of cells. \n"
+                    'solver=\"randomized\" is recommended. '
+                )
+            self.fit(X)
+>>>>>>> Stashed changes
         X_RECODE = self.transform_integration(X, meta_data, batch_key, integration_method)
         end_time = datetime.datetime.now()
         elapsed_time = end_time - start_time
@@ -587,9 +629,10 @@ class RECODE:
         minutes, seconds = divmod(remainder, 60)
         milliseconds = int(elapsed_time.microseconds / 1000)
         self.elapsed_time = f"{hours}h {minutes}m {seconds}s"
-        self.log_[
-            "Elapsed time"
-        ] = f"{hours}h {minutes}m {seconds}s {milliseconds:03}ms"
+        self.log_["Elapsed time"] = f"{hours}h {minutes}m {seconds}s {milliseconds:03}ms"
+        self.log_["solver"] = self.solver
+        if self.log_["solver"] == "randomized":
+            self.log_["#test_data"] = int(self.downsampling_rate * X.shape[0])
         if self.verbose:
             print("end RECODE for sc%s-seq" % self.seq_target)
             print("log:", self.log_)
@@ -623,18 +666,18 @@ class RECODE:
                 Key name of anndata to store the output. If None, the RECODE_key that is set initially is used. 
 
         """
+        if RECODE_key == None:
+            RECODE_key = self.RECODE_key
+        
         if type(X) == anndata._core.anndata.AnnData:
             if self.anndata_key == "obsm":
-                X_mat_ = X.obsm[self.RECODE_key]
+                X_mat_ = X.obsm[RECODE_key]
             else:
-                X_mat_ = X.layers[self.RECODE_key]
+                X_mat_ = X.layers[RECODE_key]
         else:
             X_mat_ = self._check_datatype(X)
         X_ss = (target_sum*X_mat_.T/np.sum(X_mat_,axis=1)).T
         X_log = np.log(X_ss+1) if base==None else np.log(X_ss+1)/np.log(base)
-        
-        if RECODE_key == None:
-            RECODE_key = self.RECODE_key
         
         if type(X) == anndata._core.anndata.AnnData:
             if self.anndata_key == "obsm":
@@ -644,7 +687,7 @@ class RECODE:
                 X.layers[RECODE_key+ "_norm"] = X_ss
                 X.layers[RECODE_key+ "_log"] = X_log
             if self.verbose:
-                print("Normalized data are stored in \"%s\" and \"%s\"" % (self.RECODE_key+ "_norm",self.RECODE_key+ "_log"))
+                print("Normalized data are stored in \"%s\" and \"%s\"" % (RECODE_key+ "_norm",RECODE_key+ "_log"))
             return X
         else:
             return X_log
@@ -762,7 +805,7 @@ class RECODE:
         ax0.set_xlabel("Mean of scaled data", fontsize=14)
         ax0.set_ylabel("NVSN variance", fontsize=14)
         ax0.legend(
-            loc="upper left", borderaxespad=0, fontsize=14, markerscale=2
+            loc="upper left", borderaxespad=0, fontsize=14, markerscale=5
         ).get_frame().set_alpha(0)
         ylim = ax0.set_ylim()
         ax1 = fig.add_subplot(spec[1])
@@ -2305,7 +2348,7 @@ class RECODE_core:
                 Returns the instance itself.
         """
         n, d = X.shape
-        n_pca = min(n - 1, d - 1)
+        n_pca = min(n - 1, d)
         if self.fast_algorithm:
             n_pca = min(n_pca, self.fast_algorithm_ell_ub)
         X_mean = np.mean(X, axis=0)
@@ -2318,14 +2361,12 @@ class RECODE_core:
             PCA_Ev = (SVD_Sv**2) / (n - 1)
             self.U = svd.components_
         else:
-            SD = np.dot((X - X_mean), (X - X_mean).T) / (X.shape[0] - 1)
+            SD = (X - X_mean) @ (X - X_mean).T / (n - 1)
             svd = sklearn.decomposition.TruncatedSVD(
                 n_components=n_pca, random_state=self.random_state
             ).fit(SD)
             PCA_Ev = svd.singular_values_
-            self.U = np.dot(
-                (svd.components_.T / np.sqrt(PCA_Ev)).T, (X - X_mean)
-            ) / np.sqrt(X.shape[0] - 1)
+            self.U = (svd.components_.T / np.sqrt(PCA_Ev)).T @ (X - X_mean) / np.sqrt(n - 1)
 
         PCA_Ev_sum_all = np.sum(np.var(X, axis=0, ddof=1))
         PCA_Ev_NRM = np.array(PCA_Ev, dtype=float)
@@ -2359,7 +2400,7 @@ class RECODE_core:
             comp = n_pca-1
         else:
             comp = np.min(np.arange(n_pca)[PCA_Ev_sum - thrshold < 0])
-        self.ell_max = np.min([n, d, np.sum(PCA_Ev > 1.0e-10)])-1
+        self.ell_max = np.min([n-1, d, len(PCA_CCR), np.sum(PCA_Ev > 1.0e-10)])
         self.ell = comp
         if self.ell > self.ell_max:
             self.ell = self.ell_max
@@ -2371,9 +2412,7 @@ class RECODE_core:
         self.PCA_CCR = PCA_CCR
         self.n_pca = n_pca
         self.PCA_Ev_NRM = PCA_Ev_NRM
-        self.L = np.diag(
-            np.sqrt(self.PCA_Ev_NRM[: self.ell_max] / self.PCA_Ev[: self.ell_max])
-        )
+        self.L = np.diag(np.sqrt(PCA_Ev_NRM[: self.ell_max] / PCA_Ev[: self.ell_max]))
         self.X_mean = np.mean(X, axis=0)
         self.PCA_Ev_sum_all = PCA_Ev_sum_all
         self.noise_var = noise_var
