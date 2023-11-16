@@ -231,6 +231,28 @@ class RECODE:
 
         """
         X_mat = self._check_datatype(X)
+
+        if self.solver == "auto":
+            self.solver = "full" if X_mat.shape[0] < 10000 else "randomized"
+
+        if self.solver ==  "randomized":
+            if X_mat.shape[0] < 10000:
+                self.logger.warning(
+                    "Warning: randomized algorithm is for data with a large number of cells (>20000). \n"
+                    "solver=\"full\" is recommended to keep the accuracy."
+                )
+            np.random.seed(self.random_state)
+            cell_stat = np.random.choice(
+                X_mat.shape[0], int(self.downsampling_rate * X.shape[0]), replace=False
+            )
+            X_mat = X_mat[cell_stat]
+        else:
+            if X.shape[0] > 20000:
+                self.logger.warning(
+                    "Warning: Regular RECODE uses high computational resources for data with a large number of cells. \n"
+                    'solver=\"randomized\" is recommended. '
+                )
+
         if np.linalg.norm(X_mat - np.array(X_mat, dtype=int)) > 0:
             self.logger.warning(
                 "Warning: RECODE is applicable for count data (integer matrix). Plese make sure the data type."
@@ -379,28 +401,7 @@ class RECODE:
             if self.seq_target in ["Multiome"]:
                 print("start RECODE for %s data" % self.seq_target)
 
-        if self.solver == "auto":
-            self.solver = "full" if X.shape[0] < 10000 else "randomized"
-
-        if self.solver ==  "randomized":
-            if X.shape[0] < 10000:
-                self.logger.warning(
-                    "Warning: randomized algorithm is for data with a large number of cells (>20000). \n"
-                    "solver=\"full\" is recommended to keep the accuracy."
-                )
-            np.random.seed(self.random_state)
-            X_mat = self._check_datatype(X)
-            cell_stat = np.random.choice(
-                X_mat.shape[0], int(self.downsampling_rate * X.shape[0]), replace=False
-            )
-            self.fit(X_mat[cell_stat])
-        else:
-            if X.shape[0] > 20000:
-                self.logger.warning(
-                    "Warning: Regular RECODE uses high computational resources for data with a large number of cells. \n"
-                    'solver=\"randomized\" is recommended. '
-                )
-            self.fit(X)
+        self.fit(X)
         X_RECODE = self.transform(X)
         end_time = datetime.datetime.now()
         elapsed_time = end_time - start_time
@@ -463,21 +464,20 @@ class RECODE:
                     "No batch key \"%s\" in adata.obs. Add batch key or specify a \"batch_key\"" % batch_key
                 )
             else:
-                meta_data_ = X.obs
+                meta_data_ = {batch_key:np.array(X.obs[batch_key],dtype="object")}
         elif type(meta_data) == np.ndarray:
-            meta_data_ = {batch_key:meta_data}
+            meta_data_ = {batch_key:np.array(meta_data,dtype="object")}
         elif (type(meta_data) == anndata._core.views.DataFrameView) | (type(meta_data) == pd.core.frame.DataFrame):
             if batch_key not in meta_data.keys():
                 raise ValueError(
                     "No batch key \"%s\" in meta_data. Add batch key or specify a \"batch_key\"" % batch_key
                 )
             else:
-                meta_data_ = meta_data
+                meta_data_ = {batch_key:np.array(meta_data[batch_key].values,dtype="object")}
         else:
             raise TypeError(
                     "No batch data. Add batch indices in \"meta_data\""
                     )
-        meta_data_[batch_key] = np.array(meta_data_[batch_key].values,dtype="object")
         adata_ = anndata.AnnData(
             X_ess,
             obs = meta_data_,
@@ -574,7 +574,11 @@ class RECODE:
         """
         start_time = datetime.datetime.now()
         if self.verbose:
-            print("start RECODE (integration) for sc%s-seq" % self.seq_target)
+            if self.seq_target in ["RNA", "ATAC", "Hi-C"]:
+                print("start RECODE for sc%s-seq data" % self.seq_target)
+            if self.seq_target in ["Multiome"]:
+                print("start RECODE for %s data" % self.seq_target)
+        
         self.fit(X)
         X_RECODE = self.transform_integration(X, meta_data, batch_key, integration_method)
         end_time = datetime.datetime.now()
