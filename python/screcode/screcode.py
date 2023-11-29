@@ -231,6 +231,8 @@ class RECODE:
 
         """
         X_mat = self._check_datatype(X)
+        self.n_all = X_mat.shape[0]
+        self.d_all = X_mat.shape[1]
 
         if self.solver == "auto":
             self.solver = "full" if X_mat.shape[0] < 10000 else "randomized"
@@ -286,8 +288,6 @@ class RECODE:
         )
         recode_.fit(X_norm)
 
-        self.n_all = X_mat.shape[0]
-        self.d_all = X_mat.shape[1]
         self.d_nonsilent = sum(self.idx_nonsilent)
         self.noise_var = noise_var
         self.recode_ = recode_
