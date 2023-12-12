@@ -118,7 +118,8 @@ class RECODE:
             self.logger.setLevel(logging.ERROR)
 
     def _check_datatype(self, X):
-        if type(X) == anndata._core.anndata.AnnData:
+        # if type(X) == anndata._core.anndata.AnnData:
+        if isinstance(X, anndata.AnnData):
             if scipy.sparse.issparse(X.X):
                 return X.X.toarray()
             elif type(X.X) == np.ndarray:
@@ -155,7 +156,8 @@ class RECODE:
                 "RECODE does not support sparse input. The input and output are transformed as regular matricies. "
             )
             return X.toarray()
-        elif type(X) == np.ndarray:
+        # elif type(X) == np.ndarray:
+        if isinstance(X, np.ndarray):
             return X
         else:
             raise TypeError("Data type error: ndarray or anndata is available.")
