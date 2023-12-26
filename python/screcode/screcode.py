@@ -181,7 +181,7 @@ class RECODE:
 
         ## scaled X
         self.X_nUMI = np.sum(X_, axis=1)
-        X_scaled = (X_.T / self.X_nUMI).T
+        X_scaled = X_ / self.X_nUMI[:,np.newaxis]
         ## normalization
         X_norm = (X_scaled - self.X_scaled_mean) / np.sqrt(self.noise_var)
 
@@ -202,7 +202,7 @@ class RECODE:
                 Data matrix
         """
         X_norm_inv_temp = X * np.sqrt(self.noise_var) + self.X_scaled_mean
-        X_norm_inv = (X_norm_inv_temp.T * self.X_nUMI).T
+        X_norm_inv = X_norm_inv_temp * self.X_nUMI[:,np.newaxis]
         return X_norm_inv
 
     def _ATAC_preprocessing(self, X):
@@ -269,11 +269,12 @@ class RECODE:
                 self.X_temp[:, self.idx_atac]
             )
         X_nUMI = np.sum(self.X_temp, axis=1)
-        X_scaled = (self.X_temp.T / X_nUMI).T
+        # X_scaled = (self.X_temp.T / X_nUMI).T
+        X_scaled = self.X_temp / X_nUMI[:,np.newaxis]
         X_scaled_mean = np.mean(X_scaled, axis=0)
         noise_var = np.mean(
-            self.X_temp.T / np.sum(self.X_temp, axis=1) / np.sum(self.X_temp, axis=1),
-            axis=1,
+            self.X_temp / np.sum(self.X_temp, axis=1)[:,np.newaxis] / np.sum(self.X_temp, axis=1)[:,np.newaxis],
+            axis=0,
         )
         noise_var[noise_var == 0] = 1
         X_norm = (X_scaled - X_scaled_mean) / np.sqrt(noise_var)
@@ -352,9 +353,9 @@ class RECODE:
 
         X_RECODE_ss = (
             np.median(np.sum(X_RECODE[:, self.idx_nonsilent], axis=1))
-            * X_RECODE[:, self.idx_nonsilent].T
-            / np.sum(X_RECODE[:, self.idx_nonsilent], axis=1)
-        ).T
+            * X_RECODE[:, self.idx_nonsilent]
+            / np.sum(X_RECODE[:, self.idx_nonsilent], axis=1)[:,np.newaxis]
+        )
         self.cv_ = np.zeros(X.shape[1], dtype=float)
         self.cv_[self.idx_nonsilent] = np.std(X_RECODE_ss, axis=0) / np.mean(
             X_RECODE_ss, axis=0
@@ -527,11 +528,16 @@ class RECODE:
         self.normalized_variance_ = np.zeros(X_mat.shape[1], dtype=float)
         self.normalized_variance_[self.idx_nonsilent] = self.X_norm_var
 
+        # X_RECODE_ss = (
+        #     np.median(np.sum(X_RECODE[:, self.idx_nonsilent], axis=1))
+        #     * X_RECODE[:, self.idx_nonsilent].T
+        #     / np.sum(X_RECODE[:, self.idx_nonsilent], axis=1)
+        # ).T
         X_RECODE_ss = (
             np.median(np.sum(X_RECODE[:, self.idx_nonsilent], axis=1))
-            * X_RECODE[:, self.idx_nonsilent].T
-            / np.sum(X_RECODE[:, self.idx_nonsilent], axis=1)
-        ).T
+            * X_RECODE[:, self.idx_nonsilent]
+            / np.sum(X_RECODE[:, self.idx_nonsilent], axis=1)[:,np.newaxis]
+        )
         self.cv_ = np.zeros(X.shape[1], dtype=float)
         self.cv_[self.idx_nonsilent] = np.std(X_RECODE_ss, axis=0) / np.mean(
             X_RECODE_ss, axis=0
@@ -641,7 +647,8 @@ class RECODE:
                 X_mat_ = X.layers[RECODE_key]
         else:
             X_mat_ = self._check_datatype(X)
-        X_ss = (target_sum*X_mat_.T/np.sum(X_mat_,axis=1)).T
+        # X_ss = (target_sum*X_mat_.T/np.sum(X_mat_,axis=1)).T
+        X_ss = target_sum*X_mat_/np.sum(X_mat_,axis=1)[:,np.newaxis]
         X_log = np.log(X_ss+1) if base==None else np.log(X_ss+1)/np.log(base)
         
         if type(X) == anndata._core.anndata.AnnData:
@@ -695,7 +702,8 @@ class RECODE:
         dpi: float or None, default=None
                 Dots per inch.
         """
-        X_scaled = (self.X_temp.T / np.sum(self.X_temp, axis=1)).T
+        # X_scaled = (self.X_temp.T / np.sum(self.X_temp, axis=1)).T
+        X_scaled = self.X_temp / np.sum(self.X_temp, axis=1)[:,np.newaxis]
         X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
         norm_var = np.var(X_norm, axis=0, ddof=1)
         x, y = np.mean(X_scaled, axis=0), norm_var
@@ -973,20 +981,23 @@ class RECODE:
                 Dots per inch.
         """
         fs_label = 14
-        X_scaled = (self.X_temp.T / np.sum(self.X_temp, axis=1)).T
+        # X_scaled = (self.X_temp.T / np.sum(self.X_temp, axis=1)).T
+        X_scaled = self.X_temp / np.sum(self.X_temp, axis=1)[:,np.newaxis]
         X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
         norm_var = np.var(X_norm, axis=0, ddof=1)
         size_factor = np.median(np.sum(self.X_trans, axis=1))
-        X_ss_log = np.log(
-            size_factor
-            * (self.X_trans[:, self.idx_nonsilent].T / np.sum(self.X_trans, axis=1)).T
-            + 1
-        )
-        X_RECODE_ss_log = np.log(
-            size_factor
-            * (self.X_RECODE[:, self.idx_nonsilent].T / np.sum(self.X_RECODE, axis=1)).T
-            + 1
-        )
+        # X_ss_log = np.log(
+        #     size_factor
+        #     * (self.X_trans[:, self.idx_nonsilent].T / np.sum(self.X_trans, axis=1)).T
+        #     + 1
+        # )
+        # X_RECODE_ss_log = np.log(
+        #     size_factor
+        #     * (self.X_RECODE[:, self.idx_nonsilent].T / np.sum(self.X_RECODE, axis=1)).T
+        #     + 1
+        # )
+        X_ss_log = np.log(size_factor * self.X_trans[:, self.idx_nonsilent] / np.sum(self.X_trans, axis=1)[:,np.newaxis] + 1)
+        X_RECODE_ss_log = np.log(size_factor * self.X_RECODE[:, self.idx_nonsilent] / np.sum(self.X_RECODE, axis=1)[:,np.newaxis] + 1)
         plot_EV = self.recode_.PCA_Ev[self.recode_.PCA_Ev > 0]
         n_EV = len(plot_EV)
         plot_EV_mod = np.zeros(n_EV)
@@ -1468,11 +1479,12 @@ class RECODE:
         fs_title = 16
         fs_label = 14
         X_nUMI = np.sum(self.X_temp, axis=1)
-        X_scaled = (self.X_temp.T / X_nUMI).T
-        X_scaled_mean = np.mean(X_scaled, axis=0)
-        noise_var = np.mean(self.X_temp.T / X_nUMI / X_nUMI, axis=1)
+        # X_scaled = (self.X_temp.T / X_nUMI).T
+        X_scaled = self.X_temp / X_nUMI[:,np.newaxis]
+        # X_scaled_mean = np.mean(X_scaled, axis=0)
+        noise_var = np.mean(self.X_temp / X_nUMI[:,np.newaxis] / X_nUMI[:,np.newaxis], axis=0)
         noise_var[noise_var == 0] = 1
-        X_norm = (X_scaled - np.mean(X_scaled, axis=0)) / np.sqrt(noise_var)
+        # X_norm = (X_scaled - np.mean(X_scaled, axis=0)) / np.sqrt(noise_var)
         fig, ax = plt.subplots(figsize=figsize)
         plt.rcParams["xtick.direction"] = "in"
         plt.rcParams["ytick.direction"] = "in"
@@ -1546,9 +1558,11 @@ class RECODE:
         fs_title = 16
         fs_label = 14
         X_nUMI = np.sum(self.X_temp, axis=1)
-        X_scaled = (self.X_temp.T / X_nUMI).T
-        X_scaled_mean = np.mean(X_scaled, axis=0)
-        noise_var = np.mean(self.X_temp.T / X_nUMI / X_nUMI, axis=1)
+        # X_scaled = (self.X_temp.T / X_nUMI).T
+        X_scaled = self.X_temp / X_nUMI[:,np.newaxis]
+        # X_scaled_mean = np.mean(X_scaled, axis=0)
+        # noise_var = np.mean(self.X_temp.T / X_nUMI / X_nUMI, axis=1)
+        noise_var = np.mean(self.X_temp / X_nUMI[:,np.newaxis] / X_nUMI[:,np.newaxis], axis=0)
         noise_var[noise_var == 0] = 1
         X_norm = (X_scaled - np.mean(X_scaled, axis=0)) / np.sqrt(noise_var)
         fig, ax = plt.subplots(figsize=figsize)
@@ -1615,9 +1629,9 @@ class RECODE:
 
         plot_EV = self.recode_.PCA_Ev[self.recode_.PCA_Ev > 0]
         n_EV = len(plot_EV)
-        X_scaled = (self.X_temp.T / np.sum(self.X_temp, axis=1)).T
-        idx_sort = np.argsort(np.mean(X_scaled, axis=0))
-
+        # X_scaled = (self.X_temp.T / np.sum(self.X_temp, axis=1)).T
+        X_scaled = self.X_temp / np.sum(self.X_temp, axis=1)[:,np.newaxis]
+        # idx_sort = np.argsort(np.mean(X_scaled, axis=0))
         fig, ax = plt.subplots(figsize=figsize)
         plt.rcParams["xtick.direction"] = "in"
         plt.rcParams["ytick.direction"] = "in"
@@ -1684,9 +1698,9 @@ class RECODE:
         n_EV = len(plot_EV)
         plot_EV_mod = np.zeros(n_EV)
         plot_EV_mod[: self.recode_.ell] = self.recode_.PCA_Ev_NRM[: self.recode_.ell]
-        X_scaled = (self.X_temp.T / np.sum(self.X_temp, axis=1)).T
-        idx_sort = np.argsort(np.mean(X_scaled, axis=0))
-
+        # X_scaled = (self.X_temp.T / np.sum(self.X_temp, axis=1)).T
+        X_scaled = self.X_temp / np.sum(self.X_temp, axis=1)[:,np.newaxis]
+        # idx_sort = np.argsort(np.mean(X_scaled, axis=0))
         fig, ax = plt.subplots(figsize=figsize)
         plt.rcParams["xtick.direction"] = "in"
         plt.rcParams["ytick.direction"] = "in"
@@ -1779,10 +1793,12 @@ class RECODE:
         ps = 2
         fs_title = 16
         fs_label = 14
-        X_scaled = (self.X_temp.T / np.sum(self.X_temp, axis=1)).T
-        X_RECODE_scaled = (
-            self.X_RECODE[:, self.idx_nonsilent].T / np.sum(self.X_RECODE, axis=1)
-        ).T
+        # X_scaled = (self.X_temp.T / np.sum(self.X_temp, axis=1)).T
+        # X_RECODE_scaled = (
+        #     self.X_RECODE[:, self.idx_nonsilent].T / np.sum(self.X_RECODE, axis=1)
+        # ).T
+        X_scaled = self.X_temp / np.sum(self.X_temp, axis=1)[:,np.newaxis]
+        X_RECODE_scaled = self.X_RECODE[:, self.idx_nonsilent] / np.sum(self.X_RECODE, axis=1)[:,np.newaxis]
         idx_sort = np.argsort(np.mean(X_scaled, axis=0))
         fig, ax = plt.subplots(figsize=figsize)
         plt.rcParams["xtick.direction"] = "in"
@@ -1873,16 +1889,18 @@ class RECODE:
         else:
             size_factor = np.median(np.sum(self.X_trans, axis=1))
             size_factor_RECODE = np.median(np.sum(self.X_RECODE, axis=1))
-        X_ss_log = np.log(
-            size_factor
-            * (self.X_trans[:, self.idx_nonsilent].T / np.sum(self.X_trans, axis=1)).T
-            + 1
-        )
-        X_RECODE_ss_log = np.log(
-            size_factor_RECODE
-            * (self.X_RECODE[:, self.idx_nonsilent].T / np.sum(self.X_RECODE, axis=1)).T
-            + 1
-        )
+        # X_ss_log = np.log(
+        #     size_factor
+        #     * (self.X_trans[:, self.idx_nonsilent].T / np.sum(self.X_trans, axis=1)).T
+        #     + 1
+        # )
+        # X_RECODE_ss_log = np.log(
+        #     size_factor_RECODE
+        #     * (self.X_RECODE[:, self.idx_nonsilent].T / np.sum(self.X_RECODE, axis=1)).T
+        #     + 1
+        # )
+        X_ss_log = np.log(size_factor * self.X_trans[:, self.idx_nonsilent] / np.sum(self.X_trans, axis=1)[:,np.newaxis]+ 1)
+        X_RECODE_ss_log = np.log(size_factor_RECODE * self.X_RECODE[:, self.idx_nonsilent] / np.sum(self.X_RECODE, axis=1)[:,np.newaxis] + 1)
         fig, ax0 = plt.subplots(figsize=figsize)
         plt.rcParams["xtick.direction"] = "in"
         plt.rcParams["ytick.direction"] = "in"
@@ -1977,11 +1995,12 @@ class RECODE:
         """
         fs_label = 14
         fs_title = 14
-        X_ss = (
-            np.median(np.sum(self.X_trans[:, self.idx_nonsilent], axis=1))
-            * self.X_trans[:, self.idx_nonsilent].T
-            / np.sum(self.X_trans[:, self.idx_nonsilent], axis=1)
-        ).T
+        # X_ss = (
+        #     np.median(np.sum(self.X_trans[:, self.idx_nonsilent], axis=1))
+        #     * self.X_trans[:, self.idx_nonsilent].T
+        #     / np.sum(self.X_trans[:, self.idx_nonsilent], axis=1)
+        # ).T
+        X_ss = (np.median(np.sum(self.X_trans[:, self.idx_nonsilent], axis=1)) * self.X_trans[:, self.idx_nonsilent] / np.sum(self.X_trans[:, self.idx_nonsilent], axis=1)[:,np.newaxis])
         fig, ax0 = plt.subplots(figsize=figsize)
         plt.rcParams["xtick.direction"] = "in"
         plt.rcParams["ytick.direction"] = "in"
@@ -2002,11 +2021,12 @@ class RECODE:
                 bbox_inches="tight",
             )
 
-        X_RECODE_ss = (
-            np.median(np.sum(self.X_RECODE[:, self.idx_nonsilent], axis=1))
-            * self.X_RECODE[:, self.idx_nonsilent].T
-            / np.sum(self.X_RECODE[:, self.idx_nonsilent], axis=1)
-        ).T
+        # X_RECODE_ss = (
+        #     np.median(np.sum(self.X_RECODE[:, self.idx_nonsilent], axis=1))
+        #     * self.X_RECODE[:, self.idx_nonsilent].T
+        #     / np.sum(self.X_RECODE[:, self.idx_nonsilent], axis=1)
+        # ).T
+        X_RECODE_ss = np.median(np.sum(self.X_RECODE[:, self.idx_nonsilent], axis=1)) * self.X_RECODE[:, self.idx_nonsilent] / np.sum(self.X_RECODE[:, self.idx_nonsilent], axis=1)[:,np.newaxis]
         fig, ax1 = plt.subplots(figsize=figsize)
         x = np.mean(X_RECODE_ss, axis=0)
         cv = np.std(X_RECODE_ss, axis=0) / np.mean(X_RECODE_ss, axis=0)
