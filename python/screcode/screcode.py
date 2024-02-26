@@ -429,6 +429,7 @@ class RECODE:
         meta_data=None,
         batch_key="batch",
         integration_method = "harmony",
+        integration_method_params = {},
     ):
         """
         Transform X into RECODE-denoised data.
@@ -494,17 +495,17 @@ class RECODE:
             dtype=X_ess.dtype,
         )
         if integration_method == "harmony":
-            scanpy.external.pp.harmony_integrate(adata_, basis='X',adjusted_basis='X_integrated',key=batch_key,verbose=False)
+            scanpy.external.pp.harmony_integrate(adata_, basis='X',adjusted_basis='X_integrated',key=batch_key,verbose=False,**integration_method_params)
             X_ess_merge = adata_.obsm["X_integrated"]
         elif integration_method == "bbknn":
-            scanpy.external.pp.bbknn(adata_, batch_key=batch_key, use_rep='X')
+            scanpy.external.pp.bbknn(adata_, batch_key=batch_key, use_rep='X',**integration_method_params)
             X_ess_merge = adata_.X
         elif integration_method == "scanorama":
-            scanpy.external.pp.scanorama_integrate(adata_, key=batch_key, basis='X',adjusted_basis='X_integrated',verbose=False)
+            scanpy.external.pp.scanorama_integrate(adata_, key=batch_key, basis='X',adjusted_basis='X_integrated',verbose=False,**integration_method_params)
             X_ess_merge = adata_.obsm["X_integrated"]
         elif integration_method == "mnn":
             data_ = [adata_.X[adata_.obs[batch_key]==b_] for b_ in np.unique(adata_.obs[batch_key])]
-            mnn_out = scanpy.external.pp.mnn_correct(*data_, var_index=np.arange(adata_.shape[1]),verbose=False)
+            mnn_out = scanpy.external.pp.mnn_correct(*data_, var_index=np.arange(adata_.shape[1]),verbose=False,cos_norm_out=False,**integration_method_params)
             X_ess_merge = mnn_out[0]
         else:
             raise ValueError("No integration method \"%s\". Choice from %s" % integration_method,["harmony","bbknn","scanorama","mnn"])
@@ -1220,7 +1221,8 @@ class RECODE:
             nrows=1, ncols=1, subplot_spec=gs_master[105:145, 8:80]
         )
         ps = 10
-        n_plot = min(n_EV, 1000)
+        n_plot = n_EV if n_EV < 1000 else 1000
+        n_plot = self.recode_.ell if self.recode_.ell > 1000 else n_plot
         ax = fig.add_subplot(gs[0, 0])
         plt.rcParams["xtick.direction"] = "in"
         plt.rcParams["ytick.direction"] = "in"
