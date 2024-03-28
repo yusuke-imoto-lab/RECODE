@@ -572,6 +572,7 @@ class RECODE:
         meta_data=None,
         batch_key="batch",
         integration_method = "harmony",
+        integration_method_params = {},
     ):
         """
         Fit the model with X and transform X into RECODE-denoised data.
@@ -589,12 +590,12 @@ class RECODE:
         start_time = datetime.datetime.now()
         if self.verbose:
             if self.seq_target in ["RNA", "ATAC", "Hi-C"]:
-                print("start RECODE for sc%s-seq data" % self.seq_target)
+                print("start RECODE integration for sc%s-seq data" % self.seq_target)
             if self.seq_target in ["Multiome"]:
-                print("start RECODE for %s data" % self.seq_target)
+                print("start RECODE integration for %s data" % self.seq_target)
         
         self.fit(X)
-        X_RECODE = self.transform_integration(X, meta_data, batch_key, integration_method)
+        X_RECODE = self.transform_integration(X, meta_data, batch_key, integration_method, integration_method_params)
         end_time = datetime.datetime.now()
         elapsed_time = end_time - start_time
         hours, remainder = divmod(elapsed_time.seconds, 3600)
@@ -616,7 +617,7 @@ class RECODE:
             X,
             base=None,
             target_sum=1e4,
-            RECODE_key = None,
+            key = None,
             
     ):
         """
@@ -638,14 +639,14 @@ class RECODE:
                 Key name of anndata to store the output. If None, the RECODE_key that is set initially is used. 
 
         """
-        if RECODE_key == None:
-            RECODE_key = self.RECODE_key
+        if key == None:
+            key = self.RECODE_key
         
         if type(X) == anndata._core.anndata.AnnData:
             if self.anndata_key == "obsm":
-                X_mat_ = X.obsm[RECODE_key]
+                X_mat_ = X.obsm[key]
             else:
-                X_mat_ = X.layers[RECODE_key]
+                X_mat_ = X.layers[key]
         else:
             X_mat_ = self._check_datatype(X)
         # X_ss = (target_sum*X_mat_.T/np.sum(X_mat_,axis=1)).T
@@ -654,13 +655,13 @@ class RECODE:
         
         if type(X) == anndata._core.anndata.AnnData:
             if self.anndata_key == "obsm":
-                X.obsm[RECODE_key+ "_norm"] = X_ss
-                X.obsm[RECODE_key+ "_log"] = X_log
+                X.obsm[key+ "_norm"] = X_ss
+                X.obsm[key+ "_log"] = X_log
             else:
-                X.layers[RECODE_key+ "_norm"] = X_ss
-                X.layers[RECODE_key+ "_log"] = X_log
+                X.layers[key+ "_norm"] = X_ss
+                X.layers[key+ "_log"] = X_log
             if self.verbose:
-                print("Normalized data are stored in \"%s\" and \"%s\"" % (RECODE_key+ "_norm",RECODE_key+ "_log"))
+                print("Normalized data are stored in \"%s\" and \"%s\"" % (key+ "_norm",key+ "_log"))
             return X
         else:
             return X_log
@@ -1221,8 +1222,9 @@ class RECODE:
             nrows=1, ncols=1, subplot_spec=gs_master[105:145, 8:80]
         )
         ps = 10
-        n_plot = n_EV if n_EV < 1000 else 1000
-        n_plot = self.recode_.ell if self.recode_.ell > 1000 else n_plot
+        # n_plot = n_EV if n_EV < 1000 else 1000
+        # n_plot = self.recode_.ell if self.recode_.ell > 1000 else n_plot
+        n_plot = len(plot_EV)
         ax = fig.add_subplot(gs[0, 0])
         plt.rcParams["xtick.direction"] = "in"
         plt.rcParams["ytick.direction"] = "in"
