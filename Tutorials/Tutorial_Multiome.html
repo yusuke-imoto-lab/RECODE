@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutorial: multiome (scRNA-seq + scATAC-seq) data &mdash; RECODE 0.2.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=37f418d5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tutorial: Spatial transcriptome data" href="Tutorial_SpatialTranscriptome.html" />
+    <link rel="prev" title="Tutorial: scATAC-seq data" href="Tutorial_ATAC.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            RECODE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Tutorial_RNA.html">Tutorial: scRNA-seq data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Tutorial_ATAC.html">Tutorial: scATAC-seq data</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Tutorial: multiome (scRNA-seq + scATAC-seq) data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Apply-RECODE">Apply RECODE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Performance-verification">Performance verification</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Tutorial_SpatialTranscriptome.html">Tutorial: Spatial transcriptome data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Tutorial_Integration.html">Tutorial: RECODE integration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">RECODE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Tutorial: multiome (scRNA-seq + scATAC-seq) data</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Tutorials/Tutorial_Multiome.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Tutorial:-multiome-(scRNA-seq-+-scATAC-seq)-data">
+<h1>Tutorial: multiome (scRNA-seq + scATAC-seq) data<a class="headerlink" href="#Tutorial:-multiome-(scRNA-seq-+-scATAC-seq)-data" title="Link to this heading"></a></h1>
+<p>We show an example of scRNA-seq data produced by 10X Chromium. We are using scATAC-seq data <code class="docutils literal notranslate"><span class="pre">PBMC</span> <span class="pre">from</span> <span class="pre">a</span> <span class="pre">Healthy</span> <span class="pre">Donor</span> <span class="pre">-</span> <span class="pre">No</span> <span class="pre">Cell</span> <span class="pre">Sorting</span> <span class="pre">(3k)</span></code> (3,009 cells and 117,757 features) from <a class="reference external" href="https://www.10xgenomics.com/resources/datasets">10X Genomics Datasets</a>. The test data is directly available from <code class="docutils literal notranslate"><span class="pre">Peak</span> <span class="pre">by</span> <span class="pre">cell</span> <span class="pre">matrix</span> <span class="pre">HDF5</span> <span class="pre">(filtered)</span></code> in <a class="reference external" href="https://www.10xgenomics.com/resources/datasets/pbmc-from-a-healthy-donor-no-cell-sorting-3-k-1-standard-2-0-0">here</a> (registration required).</p>
+<p>We use <a class="reference external" href="https://scanpy.readthedocs.io/en/stable/">scanpy</a> to read/write 10X data. Import numpy and scanpy in addlition to screcode.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import screcode
+import numpy as np
+import scanpy as sc
+import warnings
+warnings.simplefilter(&#39;ignore&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Intel(R) Extension for Scikit-learn* enabled (https://github.com/intel/scikit-learn-intelex)
+</pre></div></div>
+</div>
+<p>Read in the count matrix into an <a class="reference external" href="https://anndata.readthedocs.io/en/latest/">AnnData</a> object.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>input_filename = &#39;data/pbmc_unsorted_3k_filtered_feature_bc_matrix.h5&#39;
+adata = sc.read_10x_h5(input_filename,gex_only=False)
+adata.var_names_make_unique()
+adata.layers[&quot;Raw&quot;] = adata.X.toarray()
+adata
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+AnnData object with n_obs × n_vars = 3009 × 117757
+    var: &#39;gene_ids&#39;, &#39;feature_types&#39;, &#39;genome&#39;
+    layers: &#39;Raw&#39;
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>np.unique(adata.var[&#39;feature_types&#39;].values,return_counts=True)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(array([&#39;Gene Expression&#39;, &#39;Peaks&#39;], dtype=object),
+ array([36601, 81156], dtype=int64))
+</pre></div></div>
+</div>
+<section id="Apply-RECODE">
+<h2>Apply RECODE<a class="headerlink" href="#Apply-RECODE" title="Link to this heading"></a></h2>
+<p>Apply RECODE to the count matrix. <strong>Only anndata data format is available for multiome data</strong>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>recode = screcode.RECODE(seq_target=&#39;Multiome&#39;)
+adata = recode.fit_transform(adata)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+start RECODE for Multiome data
+end RECODE for scMultiome-seq
+log: {&#39;seq_target&#39;: &#39;Multiome&#39;, &#39;#significant features&#39;: 87901, &#39;#non-significant features&#39;: 19119, &#39;#silent features&#39;: 10737, &#39;ell&#39;: 102, &#39;Elapsed time&#39;: &#39;0h 1m 3s 830ms&#39;, &#39;solver&#39;: &#39;full&#39;}
+</pre></div></div>
+</div>
+<p>With anndata format, outputs of RECODE are included in anndata objects: - denoised matrix -&gt; adata.obsm[‘RECODE’] - noise variance -&gt; adata.var[‘noise_variance_RECODE’] - normalized variance (NVSN variance) -&gt; adata.var[‘normalized_variance_RECODE’] - clasification of genes (significant/non-significant/silent) -&gt; adata.var[‘significance_RECODE’]</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+AnnData object with n_obs × n_vars = 3009 × 117757
+    var: &#39;gene_ids&#39;, &#39;feature_types&#39;, &#39;genome&#39;, &#39;noise_variance&#39;, &#39;normalized_variance&#39;, &#39;significance_RECODE&#39;
+    uns: &#39;RECODE_essential&#39;
+    layers: &#39;Raw&#39;, &#39;RECODE&#39;, &#39;RECODE_NVSN&#39;
+</pre></div></div>
+</div>
+</section>
+<section id="Performance-verification">
+<h2>Performance verification<a class="headerlink" href="#Performance-verification" title="Link to this heading"></a></h2>
+<p>Show report:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>recode.report()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_Multiome_12_0.png" src="../_images/Tutorials_Tutorial_Multiome_12_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>target_sum = 1e6
+adata.X = adata.layers[&quot;RECODE&quot;]
+adata = recode.lognormalize(adata,target_sum=target_sum)
+sc.pp.normalize_total(adata, target_sum=target_sum)
+sc.pp.log1p(adata)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Normalized data are stored in &#34;RECODE_norm&#34; and &#34;RECODE_log&#34;
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.layers[&quot;Raw_log&quot;] = np.log(target_sum*adata.layers[&quot;Raw&quot;]/np.sum(adata.layers[&quot;Raw&quot;],axis=1)[:,np.newaxis]+1)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import sklearn.decomposition
+n_pcs = 50
+adata.obsm[&quot;X_pca&quot;] = sklearn.decomposition.PCA(n_components=n_pcs).fit_transform(adata.layers[&quot;RECODE_log&quot;])
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>sc.tl.pca(adata, svd_solver=&#39;arpack&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>plot_genes = [&#39;CD19&#39;,&#39;CD3D&#39;,&#39;CD4&#39;,&#39;CD8A&#39;]
+sc.pl.pca(adata, color=plot_genes,layer=&quot;Raw_log&quot;)
+sc.pl.pca(adata, color=plot_genes,layer=&quot;RECODE_log&quot;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_Multiome_17_0.png" src="../_images/Tutorials_Tutorial_Multiome_17_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_Multiome_17_1.png" src="../_images/Tutorials_Tutorial_Multiome_17_1.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>sc.pp.neighbors(adata, n_neighbors=10, n_pcs=0)
+sc.tl.umap(adata)
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>sc.pl.umap(adata, color=plot_genes,layer=&quot;Raw_log&quot;)
+sc.pl.umap(adata, color=plot_genes,layer=&quot;RECODE_log&quot;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_Multiome_19_0.png" src="../_images/Tutorials_Tutorial_Multiome_19_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_Multiome_19_1.png" src="../_images/Tutorials_Tutorial_Multiome_19_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>sc.tl.leiden(adata,resolution=1)
+sc.pl.umap(adata, color=[&#39;leiden&#39;])
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_Multiome_20_0.png" src="../_images/Tutorials_Tutorial_Multiome_20_0.png" />
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Tutorial_ATAC.html" class="btn btn-neutral float-left" title="Tutorial: scATAC-seq data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Tutorial_SpatialTranscriptome.html" class="btn btn-neutral float-right" title="Tutorial: Spatial transcriptome data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Yusuke Imoto.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

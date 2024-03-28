@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutorial: scRNA-seq data &mdash; RECODE 0.2.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=37f418d5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tutorial: scATAC-seq data" href="Tutorial_ATAC.html" />
+    <link rel="prev" title="Tutorials" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            RECODE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Tutorial: scRNA-seq data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Apply-RECODE">Apply RECODE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Performance-check">Performance check</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Downstream-analysis-based-on-scanpy">Downstream analysis based on scanpy</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#log-normalization">log normalization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#PCA">PCA</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#UMAP">UMAP</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Clustering">Clustering</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Find-marker-genes">Find marker genes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Gene-expression-distributions">Gene expression distributions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Tutorial_ATAC.html">Tutorial: scATAC-seq data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Tutorial_Multiome.html">Tutorial: multiome (scRNA-seq + scATAC-seq) data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Tutorial_SpatialTranscriptome.html">Tutorial: Spatial transcriptome data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Tutorial_Integration.html">Tutorial: RECODE integration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">RECODE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Tutorial: scRNA-seq data</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Tutorials/Tutorial_RNA.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Tutorial:-scRNA-seq-data">
+<h1>Tutorial: scRNA-seq data<a class="headerlink" href="#Tutorial:-scRNA-seq-data" title="Link to this heading"></a></h1>
+<p>We show an example of scRNA-seq data produced by 10X Chromium. We are using scRNA-seq data <code class="docutils literal notranslate"><span class="pre">10k</span> <span class="pre">Human</span> <span class="pre">PBMCs,</span> <span class="pre">3’</span> <span class="pre">v3.1,</span> <span class="pre">Chromium</span> <span class="pre">Controller</span></code> (11,485 cells and 36,601 genes) from <a class="reference external" href="https://www.10xgenomics.com/resources/datasets">10X Genomics Datasets</a>. The test data is directly available from <code class="docutils literal notranslate"><span class="pre">Feature</span> <span class="pre">/</span> <span class="pre">cell</span> <span class="pre">matrix</span> <span class="pre">HDF5</span> <span class="pre">(filtered)</span></code> in <a class="reference external" href="https://www.10xgenomics.com/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-controller-3-1-high">here</a> (registration required).</p>
+<p>We use <a class="reference external" href="https://scanpy.readthedocs.io/en/stable/">scanpy</a> to read/write 10X data. Import numpy and scanpy in addlition to screcode.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import screcode
+import scanpy as sc
+import warnings
+warnings.simplefilter(&#39;ignore&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Intel(R) Extension for Scikit-learn* enabled (https://github.com/intel/scikit-learn-intelex)
+</pre></div></div>
+</div>
+<p>Read in the count matrix into an <a class="reference external" href="https://anndata.readthedocs.io/en/latest/">AnnData</a> object.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>input_filename = &#39;data/10k_PBMC_3p_nextgem_Chromium_Controller_filtered_feature_bc_matrix.h5&#39;
+adata = sc.read_10x_h5(input_filename)
+adata.layers[&quot;Raw&quot;] = adata.X.toarray()
+adata
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+AnnData object with n_obs × n_vars = 11485 × 36601
+    var: &#39;gene_ids&#39;, &#39;feature_types&#39;, &#39;genome&#39;
+    layers: &#39;Raw&#39;
+</pre></div></div>
+</div>
+<section id="Apply-RECODE">
+<h2>Apply RECODE<a class="headerlink" href="#Apply-RECODE" title="Link to this heading"></a></h2>
+<p>Apply RECODE to the count matrix. The <strong>anndata</strong> or <strong>ndarray</strong> data format is available.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>recode = screcode.RECODE()
+adata = recode.fit_transform(adata)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+start RECODE for scRNA-seq data
+end RECODE for scRNA-seq
+log: {&#39;seq_target&#39;: &#39;RNA&#39;, &#39;#significant genes&#39;: 12439, &#39;#non-significant genes&#39;: 8969, &#39;#silent genes&#39;: 11490, &#39;ell&#39;: 64, &#39;Elapsed time&#39;: &#39;0h 0m 32s 765ms&#39;, &#39;solver&#39;: &#39;randomized&#39;, &#39;#test_data&#39;: 2297}
+</pre></div></div>
+</div>
+<p>With anndata format, outputs of RECODE are included in anndata objects: - denoised matrix -&gt; adata.obsm[‘RECODE’] - noise variance -&gt; adata.var[‘noise_variance_RECODE’] - normalized variance (NVSN variance) -&gt; adata.var[‘normalized_variance_RECODE’] - clasification of genes (significant/non-significant/silent) -&gt; adata.var[‘significance_RECODE’]</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+AnnData object with n_obs × n_vars = 11485 × 36601
+    var: &#39;gene_ids&#39;, &#39;feature_types&#39;, &#39;genome&#39;, &#39;noise_variance&#39;, &#39;normalized_variance&#39;, &#39;significance_RECODE&#39;
+    uns: &#39;RECODE_essential&#39;
+    layers: &#39;Raw&#39;, &#39;RECODE&#39;, &#39;RECODE_NVSN&#39;
+</pre></div></div>
+</div>
+<section id="Performance-check">
+<h3>Performance check<a class="headerlink" href="#Performance-check" title="Link to this heading"></a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>recode.report()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_11_0.png" src="../_images/Tutorials_Tutorial_RNA_11_0.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="Downstream-analysis-based-on-scanpy">
+<h2>Downstream analysis based on <a class="reference external" href="https://scanpy.readthedocs.io/en/stable/index.html">scanpy</a><a class="headerlink" href="#Downstream-analysis-based-on-scanpy" title="Link to this heading"></a></h2>
+<section id="log-normalization">
+<h3>log normalization<a class="headerlink" href="#log-normalization" title="Link to this heading"></a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>target_sum = 1e4
+adata = recode.lognormalize(adata,target_sum=target_sum)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Normalized data are stored in &#34;RECODE_norm&#34; and &#34;RECODE_log&#34;
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.X = adata.layers[&quot;RECODE_log&quot;]
+</pre></div>
+</div>
+</div>
+</section>
+<section id="PCA">
+<h3>PCA<a class="headerlink" href="#PCA" title="Link to this heading"></a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>sc.tl.pca(adata, svd_solver=&#39;arpack&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>plot_genes = [&#39;CD19&#39;,&#39;CD3D&#39;,&#39;CD4&#39;,&#39;CD8A&#39;]
+sc.pl.pca(adata, color=plot_genes)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_18_0.png" src="../_images/Tutorials_Tutorial_RNA_18_0.png" />
+</div>
+</div>
+</section>
+<section id="UMAP">
+<h3>UMAP<a class="headerlink" href="#UMAP" title="Link to this heading"></a></h3>
+<p>Note that we do not use the PCA dimentionaly reduction as a preprocessing of UMAP (<code class="docutils literal notranslate"><span class="pre">n_pca=0</span></code>).</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>sc.pp.neighbors(adata, n_neighbors=10, n_pcs=0)
+sc.tl.umap(adata)
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>sc.pl.umap(adata, color=plot_genes)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_22_0.png" src="../_images/Tutorials_Tutorial_RNA_22_0.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="Clustering">
+<h2>Clustering<a class="headerlink" href="#Clustering" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>sc.tl.leiden(adata,resolution=0.3)
+sc.pl.umap(adata, color=[&#39;leiden&#39;],legend_loc=&#39;on data&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_24_0.png" src="../_images/Tutorials_Tutorial_RNA_24_0.png" />
+</div>
+</div>
+</section>
+<section id="Find-marker-genes">
+<h2>Find marker genes<a class="headerlink" href="#Find-marker-genes" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import numpy as np
+threshold_mean = 0.5
+adata_marker = adata[:,np.mean(adata.X,axis=0)&gt;threshold_mean]
+sc.tl.rank_genes_groups(adata_marker, &#39;leiden&#39;, method=&#39;t-test&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>marker_genes = list(adata_marker.uns[&#39;rank_genes_groups&#39;][&#39;names&#39;][0]) # The top marker genes for each cluster
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>marker_genes = [&#39;IL7R&#39;, &#39;CD79A&#39;, &#39;MS4A1&#39;, &#39;CD8A&#39;, &#39;CD8B&#39;, &#39;LYZ&#39;, &#39;CD14&#39;,
+                &#39;LGALS3&#39;, &#39;S100A8&#39;, &#39;GNLY&#39;, &#39;NKG7&#39;, &#39;KLRB1&#39;,
+                &#39;FCGR3A&#39;, &#39;MS4A7&#39;, &#39;FCER1A&#39;, &#39;CST3&#39;, &#39;PPBP&#39;]
+adata.var_names_make_unique()
+n_cols = 3
+for i in range(0, len(marker_genes),n_cols):
+    sc.pl.violin(adata, marker_genes[i:i+n_cols], groupby=&#39;leiden&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_28_0.png" src="../_images/Tutorials_Tutorial_RNA_28_0.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_28_1.png" src="../_images/Tutorials_Tutorial_RNA_28_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_28_2.png" src="../_images/Tutorials_Tutorial_RNA_28_2.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_28_3.png" src="../_images/Tutorials_Tutorial_RNA_28_3.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_28_4.png" src="../_images/Tutorials_Tutorial_RNA_28_4.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_28_5.png" src="../_images/Tutorials_Tutorial_RNA_28_5.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>sc.pl.dotplot(adata, marker_genes, groupby=&#39;leiden&#39;,expression_cutoff=0.5)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_29_0.png" src="../_images/Tutorials_Tutorial_RNA_29_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>new_cluster_names = [
+    &#39;CD14 Monocytes&#39;,&#39;CD4 T 1&#39;, &#39;NK&#39;, &#39;CD4 T 2&#39;,&#39;FCGR3A Monocytes&#39;,
+    &#39;B&#39;, &#39;Middle 1&#39;, &#39;Middle 2&#39;, &#39;Dendritic 1&#39;, &#39;Dendritic 2&#39;, &#39;Megakaryocytes&#39;]
+adata.obs[&quot;leiden_name&quot;] = [new_cluster_names[int(i)] for i in adata.obs[&quot;leiden&quot;].values]
+sc.pl.umap(adata, color=&#39;leiden_name&#39;, legend_loc=&#39;on data&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_30_0.png" src="../_images/Tutorials_Tutorial_RNA_30_0.png" />
+</div>
+</div>
+<section id="Gene-expression-distributions">
+<h3>Gene expression distributions<a class="headerlink" href="#Gene-expression-distributions" title="Link to this heading"></a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import matplotlib.pyplot as plt
+
+size_factor = 1e4
+alpha = 0.8
+ps = 5
+fontsize_label = 14
+adata = recode.lognormalize(adata,target_sum=target_sum,key=&quot;Raw&quot;)
+plot_data = [adata.layers[&quot;Raw_log&quot;],adata.X]
+names = [&#39;Raw&#39;,&#39;RECODE&#39;]
+color = np.array(adata.obs[&#39;leiden&#39;].values,dtype=int)
+
+n_col_genes = 1
+
+n_plot = len(names)
+n_ax =  n_plot * n_col_genes
+for k in range(0, len(marker_genes),2):
+    if k+1 &gt;= len(marker_genes): break
+    fig,ax = plt.subplots(1,n_ax,figsize=(5*n_ax,5),tight_layout=True)
+    for i in range(n_plot):
+        i_ax = i
+        g1_,g2_ = marker_genes[k],marker_genes[k+1]
+        ax[i_ax].scatter(plot_data[i][:,adata.var.index==g1_], plot_data[i][:,adata.var.index==g2_], c=color, alpha=alpha,zorder=10,s=ps,cmap=&#39;tab20&#39;)
+        ax[i_ax].set_xlabel(g1_,fontsize=fontsize_label)
+        ax[i_ax].set_ylabel(g2_,fontsize=fontsize_label)
+        ax[i_ax].set_title(names[i])
+        ax[i_ax].grid(ls=&#39;--&#39;,color=&#39;gray&#39;,zorder=0)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Normalized data are stored in &#34;Raw_norm&#34; and &#34;Raw_log&#34;
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_32_1.png" src="../_images/Tutorials_Tutorial_RNA_32_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_32_2.png" src="../_images/Tutorials_Tutorial_RNA_32_2.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_32_3.png" src="../_images/Tutorials_Tutorial_RNA_32_3.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_32_4.png" src="../_images/Tutorials_Tutorial_RNA_32_4.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_32_5.png" src="../_images/Tutorials_Tutorial_RNA_32_5.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_32_6.png" src="../_images/Tutorials_Tutorial_RNA_32_6.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_32_7.png" src="../_images/Tutorials_Tutorial_RNA_32_7.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_RNA_32_8.png" src="../_images/Tutorials_Tutorial_RNA_32_8.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Tutorial_ATAC.html" class="btn btn-neutral float-right" title="Tutorial: scATAC-seq data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Yusuke Imoto.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

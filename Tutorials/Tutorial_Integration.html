@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutorial: RECODE integration &mdash; RECODE 0.2.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=37f418d5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="API Reference" href="../reference/index.html" />
+    <link rel="prev" title="Tutorial: Spatial transcriptome data" href="Tutorial_SpatialTranscriptome.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            RECODE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Tutorial_RNA.html">Tutorial: scRNA-seq data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Tutorial_ATAC.html">Tutorial: scATAC-seq data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Tutorial_Multiome.html">Tutorial: multiome (scRNA-seq + scATAC-seq) data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Tutorial_SpatialTranscriptome.html">Tutorial: Spatial transcriptome data</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Tutorial: RECODE integration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Apply-RECODE-integration">Apply RECODE integration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Performance-check">Performance check</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Downstream-analysis">Downstream analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#log-normalization">log normalization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#PCA">PCA</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#UMAP">UMAP</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">RECODE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Tutorial: RECODE integration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Tutorials/Tutorial_Integration.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Tutorial:-RECODE-integration">
+<h1>Tutorial: RECODE integration<a class="headerlink" href="#Tutorial:-RECODE-integration" title="Link to this heading"></a></h1>
+<p>We demonstrate RECODE integration for scRNA-seq data produced by 10X Chromium. We use scRNA-seq datasets encompassing three batches and two cell lines (HEK293T and Jurkat). The test data is directly available from GitHub page of <a class="reference external" href="https://github.com/JinmiaoChenLab/Batch-effect-removal-benchmarking/tree/master/Data/dataset6">JinmiaoChenLab</a>.</p>
+<p>We use <a class="reference external" href="https://scanpy.readthedocs.io/en/stable/">scanpy</a> to read/write 10X data. Import numpy and scanpy in addlition to screcode.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import screcode
+import scanpy as sc
+import anndata
+import numpy as np
+import pandas as pd
+import sklearn
+import warnings
+warnings.simplefilter(&#39;ignore&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Intel(R) Extension for Scikit-learn* enabled (https://github.com/intel/scikit-learn-intelex)
+</pre></div></div>
+</div>
+<p>Read in the count matrix into an <a class="reference external" href="https://anndata.readthedocs.io/en/latest/">AnnData</a> object.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>input_dir = &#39;data/dataset6&#39;
+input_filenames = [&#39;b1_exprs&#39;,&#39;b2_exprs&#39;,&#39;b3_exprs&#39;]
+input_filenames_meta = [&#39;b1_celltype&#39;,&#39;b2_celltype&#39;,&#39;b3_celltype&#39;]
+
+data_input = pd.concat([pd.read_csv(&#39;%s/%s.txt.gz&#39; % (input_dir,file),index_col=0,delimiter=&#39;\t&#39;).T for file in input_filenames])
+data_input_meta = pd.DataFrame()
+for i in range(len(input_filenames)):
+    df_ = pd.read_csv(&#39;%s/%s.txt.gz&#39; % (input_dir,input_filenames_meta[i]),index_col=0,delimiter=&#39;\t&#39;)
+    df_[&quot;batch&quot;] = np.full(len(df_.index),input_filenames[i],dtype=object)
+    data_input_meta = pd.concat([data_input_meta,df_])
+adata = anndata.AnnData(X=data_input,obs=data_input_meta)
+adata = adata[:,np.sum(adata.X,axis=0)&gt;0]
+adata.layers[&quot;Raw&quot;] = adata.X
+adata
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+AnnData object with n_obs × n_vars = 9531 × 21474
+    obs: &#39;CellType&#39;, &#39;batch&#39;
+    layers: &#39;Raw&#39;
+</pre></div></div>
+</div>
+<section id="Apply-RECODE-integration">
+<h2>Apply RECODE integration<a class="headerlink" href="#Apply-RECODE-integration" title="Link to this heading"></a></h2>
+<p>Apply RECODE integration to the count matrix. The <strong>anndata</strong> or <strong>ndarray</strong> data formats are available. If your data format is ndarray, prepare meta_data including batch infromation by DataFrame format.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>recode = screcode.RECODE()
+adata = recode.fit_transform_integration(adata)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+start RECODE integration for scRNA-seq data
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2024-03-28 18:47:25,553 - harmonypy - INFO - Computing initial centroids with sklearn.KMeans...
+2024-03-28 18:47:26,044 - harmonypy - INFO - sklearn.KMeans initialization complete.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+end RECODE for scRNA-seq
+log: {&#39;seq_target&#39;: &#39;RNA&#39;, &#39;#significant genes&#39;: 14462, &#39;#non-significant genes&#39;: 7012, &#39;#silent genes&#39;: 0, &#39;ell&#39;: 154, &#39;Elapsed time&#39;: &#39;0h 0m 44s 503ms&#39;, &#39;solver&#39;: &#39;full&#39;}
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>## Case of ndarray format
+## data: single-cell count matrix [ndarray], meta_data: meta data including batch labels [DataFrame]
+# recode = screcode.RECODE()
+# data_RECODE = recode.fit_transform_integration(data, meta_data=meta_data, batch_key=&quot;batch&quot;)
+</pre></div>
+</div>
+</div>
+<p>With anndata format, outputs of RECODE are included in anndata objects: - denoised matrix -&gt; adata.obsm[‘RECODE’] - noise variance -&gt; adata.var[‘noise_variance_RECODE’] - normalized variance (NVSN variance) -&gt; adata.var[‘normalized_variance_RECODE’] - clasification of genes (significant/non-significant/silent) -&gt; adata.var[‘significance_RECODE’]</p>
+<section id="Performance-check">
+<h3>Performance check<a class="headerlink" href="#Performance-check" title="Link to this heading"></a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>recode.report()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_Integration_11_0.png" src="../_images/Tutorials_Tutorial_Integration_11_0.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="Downstream-analysis">
+<h2>Downstream analysis<a class="headerlink" href="#Downstream-analysis" title="Link to this heading"></a></h2>
+<section id="log-normalization">
+<h3>log normalization<a class="headerlink" href="#log-normalization" title="Link to this heading"></a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>target_sum = 1e4
+
+adata.layers[&quot;Raw_log&quot;] = np.log(target_sum*adata.layers[&quot;Raw&quot;]/np.sum(adata.layers[&quot;Raw&quot;],axis=1)[:,np.newaxis]+1)
+adata.layers[&quot;RECODE_log&quot;] = np.log(target_sum*adata.layers[&quot;RECODE&quot;]/np.sum(adata.layers[&quot;RECODE&quot;],axis=1)[:,np.newaxis]+1)
+</pre></div>
+</div>
+</div>
+</section>
+<section id="PCA">
+<h3>PCA<a class="headerlink" href="#PCA" title="Link to this heading"></a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>n_components = 50
+adata.obsm[&quot;Raw_PCA&quot;] = sklearn.decomposition.PCA(n_components=n_components).fit_transform(adata.layers[&quot;Raw_log&quot;])
+adata.obsm[&quot;RECODE_PCA&quot;] = sklearn.decomposition.PCA(n_components=n_components).fit_transform(adata.layers[&quot;RECODE_log&quot;])
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import matplotlib
+import matplotlib.pyplot as plt
+
+def plot_2d(
+    adata,
+    data_lables = [&quot;Raw&quot;, &quot;RECODE&quot;],
+    data_type = &quot;PCA&quot;,
+    color_labels = [&#39;batch&#39;,&#39;CellType&#39;],
+    fig_size = 4,
+    fs_title = 16,
+    fs_label = 14,
+    fs_legend = 14,
+    labels = [&quot;PC1&quot;,&quot;PC2&quot;],
+    cmaps = [&quot;tab10&quot;,&quot;tab10_r&quot;],
+    vmaxs = [10,10]
+    ):
+    fig,ax = plt.subplots(2,2,figsize=((len(data_lables)+0.5)*fig_size,len(color_labels)*fig_size),tight_layout=True)
+    for i in range(len(color_labels)):
+        colors = np.copy(adata.obs[color_labels[i]].values)
+        color_set = np.unique(colors)
+        colors_num = np.copy(colors)
+        [np.place(colors_num,colors_num==color_set[i],i) for i in range(len(color_set))]
+        for j in range(len(data_lables)):
+            ax_ = ax[i,j]
+            name_  = data_lables[j] + &quot;_&quot; + data_type
+            plot_data = adata.obsm[name_]
+            idx_rdm_ = np.random.permutation(plot_data.shape[0])
+            ax_.scatter(plot_data[idx_rdm_,0],plot_data[idx_rdm_,1],c=colors_num[idx_rdm_],s=1,cmap=cmaps[i],vmax=vmaxs[i],zorder=100)
+            ax_.tick_params(bottom=False, left=False, right=False, top=False, labelbottom=False, labelleft=False, labelright=False, labeltop=False)
+            if j==len(data_lables)-1:
+                for c_ in np.unique(colors):
+                    idx_ = colors == c_
+                    ax_.scatter(plot_data[idx_,0],plot_data[idx_,1],c=colors_num[idx_],s=1,cmap=cmaps[i],vmin=0,vmax=vmaxs[i],label=c_,zorder=0)
+                    ax_.legend(bbox_to_anchor=(1.0,0.5), loc=&quot;center left&quot;, borderaxespad=0, fontsize=fs_legend,markerscale=10,ncol=1,frameon=False,handletextpad=0.,borderpad=0)
+            if i == 0:
+                ax_.set_title(data_lables[j],fontsize=fs_title)
+    plt.gcf().text(0.435,0.0,labels[0], ha=&quot;center&quot;,va=&quot;center&quot;,fontsize=fs_label)
+    plt.gcf().text(0.0,0.49,labels[1], ha=&quot;center&quot;,va=&quot;center&quot;,rotation=90, fontsize=fs_label)
+
+
+plot_2d(
+    adata,
+    data_lables = [&quot;Raw&quot;, &quot;RECODE&quot;],
+    data_type = &quot;PCA&quot;,
+    color_labels = [&#39;batch&#39;,&#39;CellType&#39;],
+    labels = [&quot;PC1&quot;,&quot;PC2&quot;]
+)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_Integration_17_0.png" src="../_images/Tutorials_Tutorial_Integration_17_0.png" />
+</div>
+</div>
+</section>
+<section id="UMAP">
+<h3>UMAP<a class="headerlink" href="#UMAP" title="Link to this heading"></a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import umap
+n_components = 2
+adata.obsm[&quot;Raw_UMAP&quot;] = umap.UMAP(n_components=n_components).fit_transform(adata.obsm[&quot;Raw_PCA&quot;])
+adata.obsm[&quot;RECODE_UMAP&quot;] = umap.UMAP(n_components=n_components).fit_transform(adata.obsm[&quot;RECODE_PCA&quot;])
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>plot_2d(
+    adata,
+    data_lables = [&quot;Raw&quot;, &quot;RECODE&quot;],
+    data_type = &quot;UMAP&quot;,
+    color_labels = [&#39;batch&#39;,&#39;CellType&#39;],
+    labels = [&quot;UMAP1&quot;,&quot;UMAP2&quot;]
+)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_Integration_20_0.png" src="../_images/Tutorials_Tutorial_Integration_20_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def plot_gex(
+    adata,
+    genes,
+    data_lables = [&quot;Raw_log&quot;, &quot;RECODE_log&quot;],
+    color_labels = [&#39;batch&#39;,&#39;CellType&#39;],
+    fig_size = 4,
+    fs_title = 16,
+    fs_label = 14,
+    fs_legend = 14,
+    cmaps = [&quot;tab10&quot;,&quot;tab10_r&quot;],
+    vmaxs = [10,10]
+    ):
+    for gene_ in genes:
+        fig,ax = plt.subplots(2,len(data_lables),figsize=((len(data_lables)+0.5)*fig_size,len(color_labels)*fig_size),tight_layout=True)
+        for i in range(len(color_labels)):
+            colors = np.copy(adata.obs[color_labels[i]].values)
+            color_set = np.unique(colors)
+            colors_num = np.copy(colors)
+            [np.place(colors_num,colors_num==color_set[i],i) for i in range(len(color_set))]
+            for j in range(len(data_lables)):
+                ax_ = ax[i,j]
+                name_  = data_lables[j]
+                plot_data = adata.layers[name_]
+                idx_x_ = adata.var.index == gene_[0]
+                idx_y_ = adata.var.index == gene_[1]
+                idx_rdm_ = np.random.permutation(plot_data.shape[0])
+                ax_.scatter(plot_data[idx_rdm_][:,idx_x_],plot_data[idx_rdm_][:,idx_y_],c=colors_num[idx_rdm_],s=1,cmap=cmaps[i],vmax=vmaxs[i],zorder=100)
+                ax_.tick_params(bottom=False, left=False, right=False, top=False, labelbottom=False, labelleft=False, labelright=False, labeltop=False)
+                if j==len(data_lables)-1:
+                    for c_ in np.unique(colors):
+                        idx_ = colors == c_
+                        ax_.scatter(plot_data[idx_][:,idx_x_],plot_data[idx_][:,idx_y_],c=colors_num[idx_],s=1,cmap=cmaps[i],vmin=0,vmax=vmaxs[i],label=c_,zorder=0)
+                        ax_.legend(bbox_to_anchor=(1.0,0.5), loc=&quot;center left&quot;, borderaxespad=0, fontsize=fs_legend,markerscale=10,ncol=1,frameon=False,handletextpad=0.,borderpad=0)
+                if i == 0:
+                    ax_.set_title(data_lables[j],fontsize=fs_title)
+                ax_.grid(ls=&quot;--&quot;,alpha=0.5,zorder=0)
+        plt.gcf().text(0.435,0.0,&quot;$\it{%s}$&quot; % gene_[0], ha=&quot;center&quot;, va=&quot;center&quot;, fontsize=fs_label)
+        plt.gcf().text(0.0,0.490,&quot;$\it{%s}$&quot; % gene_[1], ha=&quot;center&quot;, va=&quot;center&quot;, fontsize=fs_label,rotation=90)
+
+genes = [[&quot;CD3D&quot;, &quot;CDKN2A&quot;]]
+plot_gex(adata,genes)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_Integration_21_0.png" src="../_images/Tutorials_Tutorial_Integration_21_0.png" />
+</div>
+</div>
+<p>Adjust parameters of batch correction</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>recode = screcode.RECODE(RECODE_key=&quot;RECODE_theta&quot;)
+adata = recode.fit_transform_integration(adata,integration_method_params = {&quot;theta&quot;:0.1})
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+start RECODE integration for scRNA-seq data
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2024-03-28 18:49:20,795 - harmonypy - INFO - Computing initial centroids with sklearn.KMeans...
+2024-03-28 18:49:21,261 - harmonypy - INFO - sklearn.KMeans initialization complete.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+end RECODE for scRNA-seq
+log: {&#39;seq_target&#39;: &#39;RNA&#39;, &#39;#significant genes&#39;: 14462, &#39;#non-significant genes&#39;: 7012, &#39;#silent genes&#39;: 0, &#39;ell&#39;: 154, &#39;Elapsed time&#39;: &#39;0h 0m 44s 714ms&#39;, &#39;solver&#39;: &#39;full&#39;}
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata = recode.lognormalize(adata,key=&quot;RECODE_theta&quot;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Normalized data are stored in &#34;RECODE_theta_norm&#34; and &#34;RECODE_theta_log&#34;
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>genes = [[&quot;CD3D&quot;, &quot;CDKN2A&quot;]]
+plot_gex(adata,genes,data_lables = [&quot;Raw_log&quot;, &quot;RECODE_log&quot;, &quot;RECODE_theta_log&quot;])
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_Integration_25_0.png" src="../_images/Tutorials_Tutorial_Integration_25_0.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Tutorial_SpatialTranscriptome.html" class="btn btn-neutral float-left" title="Tutorial: Spatial transcriptome data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../reference/index.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Yusuke Imoto.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

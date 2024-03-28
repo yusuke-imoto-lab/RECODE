@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutorial: Spatial transcriptome data &mdash; RECODE 0.2.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=37f418d5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tutorial: RECODE integration" href="Tutorial_Integration.html" />
+    <link rel="prev" title="Tutorial: multiome (scRNA-seq + scATAC-seq) data" href="Tutorial_Multiome.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            RECODE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Tutorial_RNA.html">Tutorial: scRNA-seq data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Tutorial_ATAC.html">Tutorial: scATAC-seq data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Tutorial_Multiome.html">Tutorial: multiome (scRNA-seq + scATAC-seq) data</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Tutorial: Spatial transcriptome data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Apply-RECODE">Apply RECODE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Performance-check">Performance check</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Tutorial_Integration.html">Tutorial: RECODE integration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">RECODE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Tutorial: Spatial transcriptome data</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Tutorials/Tutorial_SpatialTranscriptome.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Tutorial:-Spatial-transcriptome-data">
+<h1>Tutorial: Spatial transcriptome data<a class="headerlink" href="#Tutorial:-Spatial-transcriptome-data" title="Link to this heading"></a></h1>
+<p>We demonstrate a noise reduction with RECODE for spatial transcriptome data. We use spatial transcriptome data of mouse embryos at E16.5, which is generated by Stereo-seq. The dataset is available from <a class="reference external" href="https://db.cngb.org/stomics/mosta/download/">MOSTA</a>.</p>
+<p>We use <a class="reference external" href="https://scanpy.readthedocs.io/en/stable/">scanpy</a> to read/write 10X data. Import numpy and scanpy in addlition to screcode.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import scanpy as sc
+import numpy as np
+import screcode
+import warnings
+warnings.simplefilter(&#39;ignore&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Intel(R) Extension for Scikit-learn* enabled (https://github.com/intel/scikit-learn-intelex)
+</pre></div></div>
+</div>
+<p>Read in the count matrix into an <a class="reference external" href="https://anndata.readthedocs.io/en/latest/">AnnData</a> object.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>input_filename = &#39;data/E16.5_E1S1.MOSTA.h5ad&#39;
+Raw_key = &quot;count&quot;
+adata = sc.read_h5ad(&quot;%s&quot; % (input_filename))
+adata.var_names_make_unique()
+adata = adata[:,np.sum(adata.X,axis=0)&gt;0]
+adata.layers[&quot;Raw&quot;] = adata.layers[Raw_key].toarray()
+adata.layers[&quot;Proceed&quot;] = adata.X
+adata.X = adata.layers[&quot;Raw&quot;]
+adata
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+AnnData object with n_obs × n_vars = 121767 × 28204
+    obs: &#39;n_genes_by_counts&#39;, &#39;log1p_n_genes_by_counts&#39;, &#39;total_counts&#39;, &#39;log1p_total_counts&#39;, &#39;annotation&#39;, &#39;Regulon - AI987944&#39;, &#39;Regulon - Alx1&#39;, &#39;Regulon - Alx4&#39;, &#39;Regulon - Arid3a&#39;, &#39;Regulon - Arnt2&#39;, &#39;Regulon - Arx&#39;, &#39;Regulon - Atf1&#39;, &#39;Regulon - Atf2&#39;, &#39;Regulon - Atf3&#39;, &#39;Regulon - Atf4&#39;, &#39;Regulon - Atf6&#39;, &#39;Regulon - Atoh1&#39;, &#39;Regulon - Bach2&#39;, &#39;Regulon - Barhl1&#39;, &#39;Regulon - Barhl2&#39;, &#39;Regulon - Barx1&#39;, &#39;Regulon - Bcl6&#39;, &#39;Regulon - Bclaf1&#39;, &#39;Regulon - Bdp1&#39;, &#39;Regulon - Bhlhe40&#39;, &#39;Regulon - Bmyc&#39;, &#39;Regulon - Brca1&#39;, &#39;Regulon - Brf1&#39;, &#39;Regulon - Brf2&#39;, &#39;Regulon - Cdx1&#39;, &#39;Regulon - Cdx2&#39;, &#39;Regulon - Cebpa&#39;, &#39;Regulon - Cebpb&#39;, &#39;Regulon - Cebpe&#39;, &#39;Regulon - Cic&#39;, &#39;Regulon - Clock&#39;, &#39;Regulon - Creb1&#39;, &#39;Regulon - Creb3l1&#39;, &#39;Regulon - Creb3l2&#39;, &#39;Regulon - Creb5&#39;, &#39;Regulon - Crebl2&#39;, &#39;Regulon - Ctcf&#39;, &#39;Regulon - Ctcfl&#39;, &#39;Regulon - Cux1&#39;, &#39;Regulon - Dbp&#39;, &#39;Regulon - Dbx1&#39;, &#39;Regulon - Ddit3&#39;, &#39;Regulon - Dlx1&#39;, &#39;Regulon - Dlx2&#39;, &#39;Regulon - Dlx3&#39;, &#39;Regulon - Dlx5&#39;, &#39;Regulon - Dlx6&#39;, &#39;Regulon - Dmbx1&#39;, &#39;Regulon - E2f1&#39;, &#39;Regulon - E2f2&#39;, &#39;Regulon - E2f3&#39;, &#39;Regulon - E2f4&#39;, &#39;Regulon - E2f5&#39;, &#39;Regulon - E2f6&#39;, &#39;Regulon - E2f7&#39;, &#39;Regulon - E2f8&#39;, &#39;Regulon - Ebf1&#39;, &#39;Regulon - Egr1&#39;, &#39;Regulon - Egr3&#39;, &#39;Regulon - Elf1&#39;, &#39;Regulon - Elf2&#39;, &#39;Regulon - Elf3&#39;, &#39;Regulon - Elf4&#39;, &#39;Regulon - Elk3&#39;, &#39;Regulon - Elk4&#39;, &#39;Regulon - Emx1&#39;, &#39;Regulon - Emx2&#39;, &#39;Regulon - En1&#39;, &#39;Regulon - En2&#39;, &#39;Regulon - Ep300&#39;, &#39;Regulon - Erg&#39;, &#39;Regulon - Esrra&#39;, &#39;Regulon - Esrrg&#39;, &#39;Regulon - Ets1&#39;, &#39;Regulon - Ets2&#39;, &#39;Regulon - Etv6&#39;, &#39;Regulon - Evx1&#39;, &#39;Regulon - Ezh2&#39;, &#39;Regulon - Fli1&#39;, &#39;Regulon - Fos&#39;, &#39;Regulon - Fosl1&#39;, &#39;Regulon - Fosl2&#39;, &#39;Regulon - Foxa1&#39;, &#39;Regulon - Foxa2&#39;, &#39;Regulon - Foxa3&#39;, &#39;Regulon - Foxc1&#39;, &#39;Regulon - Foxc2&#39;, &#39;Regulon - Foxd1&#39;, &#39;Regulon - Foxd2&#39;, &#39;Regulon - Foxd3&#39;, &#39;Regulon - Foxf1&#39;, &#39;Regulon - Foxf2&#39;, &#39;Regulon - Foxg1&#39;, &#39;Regulon - Foxi1&#39;, &#39;Regulon - Foxj1&#39;, &#39;Regulon - Foxj2&#39;, &#39;Regulon - Foxk1&#39;, &#39;Regulon - Foxl1&#39;, &#39;Regulon - Foxl2&#39;, &#39;Regulon - Foxn2&#39;, &#39;Regulon - Foxn3&#39;, &#39;Regulon - Foxo1&#39;, &#39;Regulon - Foxo3&#39;, &#39;Regulon - Foxo4&#39;, &#39;Regulon - Foxp1&#39;, &#39;Regulon - Foxp2&#39;, &#39;Regulon - Foxp3&#39;, &#39;Regulon - Foxp4&#39;, &#39;Regulon - Foxq1&#39;, &#39;Regulon - Gabpa&#39;, &#39;Regulon - Gabpb1&#39;, &#39;Regulon - Gata1&#39;, &#39;Regulon - Gata2&#39;, &#39;Regulon - Gata3&#39;, &#39;Regulon - Gata4&#39;, &#39;Regulon - Gata5&#39;, &#39;Regulon - Gata6&#39;, &#39;Regulon - Gbx1&#39;, &#39;Regulon - Gbx2&#39;, &#39;Regulon - Gli1&#39;, &#39;Regulon - Gli2&#39;, &#39;Regulon - Glis2&#39;, &#39;Regulon - Gm12845&#39;, &#39;Regulon - Gm14327&#39;, &#39;Regulon - Gm28308&#39;, &#39;Regulon - Gm38394&#39;, &#39;Regulon - Gmeb2&#39;, &#39;Regulon - Grhl1&#39;, &#39;Regulon - Grhl2&#39;, &#39;Regulon - Grhl3&#39;, &#39;Regulon - Gsx1&#39;, &#39;Regulon - Gsx2&#39;, &#39;Regulon - Gtf2f1&#39;, &#39;Regulon - Gtf3c2&#39;, &#39;Regulon - Hcfc1&#39;, &#39;Regulon - Hdac2&#39;, &#39;Regulon - Hes1&#39;, &#39;Regulon - Hes5&#39;, &#39;Regulon - Hif1a&#39;, &#39;Regulon - Hinfp&#39;, &#39;Regulon - Hmga2&#39;, &#39;Regulon - Hmgb3&#39;, &#39;Regulon - Hmgn3&#39;, &#39;Regulon - Hmx1&#39;, &#39;Regulon - Hmx3&#39;, &#39;Regulon - Hnf1b&#39;, &#39;Regulon - Hnf4a&#39;, &#39;Regulon - Hnf4g&#39;, &#39;Regulon - Hoxa10&#39;, &#39;Regulon - Hoxa11&#39;, &#39;Regulon - Hoxa2&#39;, &#39;Regulon - Hoxa3&#39;, &#39;Regulon - Hoxa4&#39;, &#39;Regulon - Hoxa5&#39;, &#39;Regulon - Hoxa7&#39;, &#39;Regulon - Hoxa9&#39;, &#39;Regulon - Hoxb13&#39;, &#39;Regulon - Hoxb3&#39;, &#39;Regulon - Hoxb4&#39;, &#39;Regulon - Hoxb5&#39;, &#39;Regulon - Hoxb6&#39;, &#39;Regulon - Hoxb7&#39;, &#39;Regulon - Hoxb8&#39;, &#39;Regulon - Hoxb9&#39;, &#39;Regulon - Hoxc10&#39;, &#39;Regulon - Hoxc11&#39;, &#39;Regulon - Hoxc13&#39;, &#39;Regulon - Hoxc4&#39;, &#39;Regulon - Hoxc5&#39;, &#39;Regulon - Hoxc6&#39;, &#39;Regulon - Hoxc8&#39;, &#39;Regulon - Hoxc9&#39;, &#39;Regulon - Hoxd1&#39;, &#39;Regulon - Hoxd10&#39;, &#39;Regulon - Hoxd11&#39;, &#39;Regulon - Hoxd12&#39;, &#39;Regulon - Hoxd13&#39;, &#39;Regulon - Hoxd3&#39;, &#39;Regulon - Hoxd8&#39;, &#39;Regulon - Hoxd9&#39;, &#39;Regulon - Hsf2&#39;, &#39;Regulon - Ikzf1&#39;, &#39;Regulon - Irf2&#39;, &#39;Regulon - Irf5&#39;, &#39;Regulon - Irf6&#39;, &#39;Regulon - Irf8&#39;, &#39;Regulon - Irx3&#39;, &#39;Regulon - Isl1&#39;, &#39;Regulon - Isl2&#39;, &#39;Regulon - Jdp2&#39;, &#39;Regulon - Jun&#39;, &#39;Regulon - Junb&#39;, &#39;Regulon - Jund&#39;, &#39;Regulon - Kdm4a&#39;, &#39;Regulon - Kdm5a&#39;, &#39;Regulon - Kdm5b&#39;, &#39;Regulon - Klf10&#39;, &#39;Regulon - Klf13&#39;, &#39;Regulon - Klf15&#39;, &#39;Regulon - Klf16&#39;, &#39;Regulon - Klf2&#39;, &#39;Regulon - Klf3&#39;, &#39;Regulon - Klf4&#39;, &#39;Regulon - Klf5&#39;, &#39;Regulon - Klf6&#39;, &#39;Regulon - Klf7&#39;, &#39;Regulon - Klf8&#39;, &#39;Regulon - Klf9&#39;, &#39;Regulon - Lbx1&#39;, &#39;Regulon - Lef1&#39;, &#39;Regulon - Lhx1&#39;, &#39;Regulon - Lhx2&#39;, &#39;Regulon - Lhx5&#39;, &#39;Regulon - Lhx6&#39;, &#39;Regulon - Lhx8&#39;, &#39;Regulon - Lhx9&#39;, &#39;Regulon - Lmo2&#39;, &#39;Regulon - Lmx1a&#39;, &#39;Regulon - Lmx1b&#39;, &#39;Regulon - Ltf&#39;, &#39;Regulon - Maf&#39;, &#39;Regulon - Mafa&#39;, &#39;Regulon - Mafb&#39;, &#39;Regulon - Mafk&#39;, &#39;Regulon - Max&#39;, &#39;Regulon - Maz&#39;, &#39;Regulon - Mbd1&#39;, &#39;Regulon - Mef2a&#39;, &#39;Regulon - Mef2c&#39;, &#39;Regulon - Mef2d&#39;, &#39;Regulon - Meis1&#39;, &#39;Regulon - Meis2&#39;, &#39;Regulon - Meis3&#39;, &#39;Regulon - Mnx1&#39;, &#39;Regulon - Msc&#39;, &#39;Regulon - Msx1&#39;, &#39;Regulon - Msx2&#39;, &#39;Regulon - Msx3&#39;, &#39;Regulon - Mxi1&#39;, &#39;Regulon - Myb&#39;, &#39;Regulon - Mybl1&#39;, &#39;Regulon - Mybl2&#39;, &#39;Regulon - Myc&#39;, &#39;Regulon - Myf5&#39;, &#39;Regulon - Myf6&#39;, &#39;Regulon - Mynn&#39;, &#39;Regulon - Myod1&#39;, &#39;Regulon - Myog&#39;, &#39;Regulon - Nanos1&#39;, &#39;Regulon - Nelfe&#39;, &#39;Regulon - Neurod1&#39;, &#39;Regulon - Nfatc1&#39;, &#39;Regulon - Nfatc2&#39;, &#39;Regulon - Nfatc3&#39;, &#39;Regulon - Nfatc4&#39;, &#39;Regulon - Nfe2&#39;, &#39;Regulon - Nfe2l1&#39;, &#39;Regulon - Nfe2l2&#39;, &#39;Regulon - Nfic&#39;, &#39;Regulon - Nfil3&#39;, &#39;Regulon - Nfkb1&#39;, &#39;Regulon - Nfkb2&#39;, &#39;Regulon - Nfyb&#39;, &#39;Regulon - Nfyc&#39;, &#39;Regulon - Nhlh2&#39;, &#39;Regulon - Nkx1-1&#39;, &#39;Regulon - Nkx2-1&#39;, &#39;Regulon - Nkx2-4&#39;, &#39;Regulon - Nkx2-5&#39;, &#39;Regulon - Nkx6-1&#39;, &#39;Regulon - Nkx6-2&#39;, &#39;Regulon - Nkx6-3&#39;, &#39;Regulon - Nobox&#39;, &#39;Regulon - Npdc1&#39;, &#39;Regulon - Nr1h3&#39;, &#39;Regulon - Nr1h4&#39;, &#39;Regulon - Nr1i2&#39;, &#39;Regulon - Nr2c1&#39;, &#39;Regulon - Nr2c2&#39;, &#39;Regulon - Nr2f2&#39;, &#39;Regulon - Nr3c1&#39;, &#39;Regulon - Nr4a1&#39;, &#39;Regulon - Nr5a1&#39;, &#39;Regulon - Nr5a2&#39;, &#39;Regulon - Nrf1&#39;, &#39;Regulon - Nucb1&#39;, &#39;Regulon - Olig1&#39;, &#39;Regulon - Olig3&#39;, &#39;Regulon - Onecut1&#39;, &#39;Regulon - Onecut2&#39;, &#39;Regulon - Onecut3&#39;, &#39;Regulon - Otx2&#39;, &#39;Regulon - Ovol2&#39;, &#39;Regulon - Patz1&#39;, &#39;Regulon - Pax5&#39;, &#39;Regulon - Pax6&#39;, &#39;Regulon - Pbx2&#39;, &#39;Regulon - Pbx3&#39;, &#39;Regulon - Pdx1&#39;, &#39;Regulon - Phf8&#39;, &#39;Regulon - Phox2a&#39;, &#39;Regulon - Phox2b&#39;, &#39;Regulon - Pitx1&#39;, &#39;Regulon - Pitx2&#39;, &#39;Regulon - Pknox1&#39;, &#39;Regulon - Plagl1&#39;, &#39;Regulon - Pml&#39;, &#39;Regulon - Pole3&#39;, &#39;Regulon - Pou2f1&#39;, &#39;Regulon - Pou3f1&#39;, &#39;Regulon - Pou3f2&#39;, &#39;Regulon - Pou3f3&#39;, &#39;Regulon - Pou3f4&#39;, &#39;Regulon - Pou4f1&#39;, &#39;Regulon - Pou4f2&#39;, &#39;Regulon - Pou4f3&#39;, &#39;Regulon - Pou6f1&#39;, &#39;Regulon - Ppara&#39;, &#39;Regulon - Pparg&#39;, &#39;Regulon - Ppargc1a&#39;, &#39;Regulon - Prdm16&#39;, &#39;Regulon - Prop1&#39;, &#39;Regulon - Prrx2&#39;, &#39;Regulon - Prrxl1&#39;, &#39;Regulon - Psmd12&#39;, &#39;Regulon - Rad21&#39;, &#39;Regulon - Rara&#39;, &#39;Regulon - Rarb&#39;, &#39;Regulon - Rarg&#39;, &#39;Regulon - Rax&#39;, &#39;Regulon - Rbbp5&#39;, &#39;Regulon - Rcor1&#39;, &#39;Regulon - Rela&#39;, &#39;Regulon - Relb&#39;, &#39;Regulon - Rest&#39;, &#39;Regulon - Rfx2&#39;, &#39;Regulon - Rfx3&#39;, &#39;Regulon - Rfx4&#39;, &#39;Regulon - Rfxap&#39;, &#39;Regulon - Rreb1&#39;, &#39;Regulon - Runx1&#39;, &#39;Regulon - Runx3&#39;, &#39;Regulon - Rxra&#39;, &#39;Regulon - Rxrb&#39;, &#39;Regulon - Rxrg&#39;, &#39;Regulon - Sap30&#39;, &#39;Regulon - Scx&#39;, &#39;Regulon - Setdb1&#39;, &#39;Regulon - Shox2&#39;, &#39;Regulon - Sin3a&#39;, &#39;Regulon - Six1&#39;, &#39;Regulon - Six2&#39;, &#39;Regulon - Six4&#39;, &#39;Regulon - Smad1&#39;, &#39;Regulon - Smad5&#39;, &#39;Regulon - Smarca4&#39;, &#39;Regulon - Smarcb1&#39;, &#39;Regulon - Smarcc2&#39;, &#39;Regulon - Smc3&#39;, &#39;Regulon - Snai3&#39;, &#39;Regulon - Sox10&#39;, &#39;Regulon - Sox11&#39;, &#39;Regulon - Sox12&#39;, &#39;Regulon - Sox13&#39;, &#39;Regulon - Sox15&#39;, &#39;Regulon - Sox17&#39;, &#39;Regulon - Sox18&#39;, &#39;Regulon - Sox2&#39;, &#39;Regulon - Sox21&#39;, &#39;Regulon - Sox3&#39;, &#39;Regulon - Sox4&#39;, &#39;Regulon - Sox7&#39;, &#39;Regulon - Sox8&#39;, &#39;Regulon - Sox9&#39;, &#39;Regulon - Sp1&#39;, &#39;Regulon - Sp2&#39;, &#39;Regulon - Sp3&#39;, &#39;Regulon - Sp4&#39;, &#39;Regulon - Sp6&#39;, &#39;Regulon - Sp7&#39;, &#39;Regulon - Sp8&#39;, &#39;Regulon - Sp9&#39;, &#39;Regulon - Spdef&#39;, &#39;Regulon - Spi1&#39;, &#39;Regulon - Srebf1&#39;, &#39;Regulon - Srebf2&#39;, &#39;Regulon - Srf&#39;, &#39;Regulon - Stat1&#39;, &#39;Regulon - Stat3&#39;, &#39;Regulon - Stat6&#39;, &#39;Regulon - Supt20&#39;, &#39;Regulon - Taf1&#39;, &#39;Regulon - Tagln2&#39;, &#39;Regulon - Tal1&#39;, &#39;Regulon - Tbp&#39;, &#39;Regulon - Tbx1&#39;, &#39;Regulon - Tbx15&#39;, &#39;Regulon - Tbx2&#39;, &#39;Regulon - Tbx4&#39;, &#39;Regulon - Tbx5&#39;, &#39;Regulon - Tcf7&#39;, &#39;Regulon - Tcf7l1&#39;, &#39;Regulon - Tcf7l2&#39;, &#39;Regulon - Tead1&#39;, &#39;Regulon - Tead2&#39;, &#39;Regulon - Tead3&#39;, &#39;Regulon - Tead4&#39;, &#39;Regulon - Tef&#39;, &#39;Regulon - Tfap2a&#39;, &#39;Regulon - Tfcp2l1&#39;, &#39;Regulon - Tfdp1&#39;, &#39;Regulon - Tff3&#39;, &#39;Regulon - Thap1&#39;, &#39;Regulon - Thra&#39;, &#39;Regulon - Thrb&#39;, &#39;Regulon - Tlx2&#39;, &#39;Regulon - Tlx3&#39;, &#39;Regulon - Traf4&#39;, &#39;Regulon - Trim28&#39;, &#39;Regulon - Trp53&#39;, &#39;Regulon - Trp63&#39;, &#39;Regulon - Trp73&#39;, &#39;Regulon - Twist1&#39;, &#39;Regulon - Twist2&#39;, &#39;Regulon - Ubtf&#39;, &#39;Regulon - Uncx&#39;, &#39;Regulon - Usf2&#39;, &#39;Regulon - Vax1&#39;, &#39;Regulon - Vezf1&#39;, &#39;Regulon - Vsx2&#39;, &#39;Regulon - Wt1&#39;, &#39;Regulon - Xbp1&#39;, &#39;Regulon - Xrcc4&#39;, &#39;Regulon - Yy1&#39;, &#39;Regulon - Zbtb14&#39;, &#39;Regulon - Zbtb7b&#39;, &#39;Regulon - Zeb1&#39;, &#39;Regulon - Zfhx2&#39;, &#39;Regulon - Zfhx3&#39;, &#39;Regulon - Zfp110&#39;, &#39;Regulon - Zfp112&#39;, &#39;Regulon - Zfp14&#39;, &#39;Regulon - Zfp143&#39;, &#39;Regulon - Zfp146&#39;, &#39;Regulon - Zfp148&#39;, &#39;Regulon - Zfp189&#39;, &#39;Regulon - Zfp266&#39;, &#39;Regulon - Zfp281&#39;, &#39;Regulon - Zfp369&#39;, &#39;Regulon - Zfp467&#39;, &#39;Regulon - Zfp612&#39;, &#39;Regulon - Zfp641&#39;, &#39;Regulon - Zfp647&#39;, &#39;Regulon - Zfp652&#39;, &#39;Regulon - Zfp672&#39;, &#39;Regulon - Zfp708&#39;, &#39;Regulon - Zfp710&#39;, &#39;Regulon - Zfp729b&#39;, &#39;Regulon - Zfp740&#39;, &#39;Regulon - Zfp950&#39;, &#39;Regulon - Zfp974&#39;, &#39;Regulon - Zfp975&#39;, &#39;Regulon - Zfx&#39;, &#39;Regulon - Zic1&#39;, &#39;Regulon - Zic2&#39;, &#39;Regulon - Zic3&#39;, &#39;Regulon - Zic4&#39;, &#39;Regulon - Zmat4&#39;, &#39;Regulon - Zmiz1&#39;, &#39;Module_1&#39;, &#39;Module_2&#39;, &#39;Module_3&#39;, &#39;Module_4&#39;, &#39;Module_5&#39;, &#39;Module_6&#39;, &#39;Module_7&#39;, &#39;Module_8&#39;, &#39;Module_9&#39;, &#39;Module_10&#39;, &#39;Module_11&#39;, &#39;Module_12&#39;, &#39;Module_13&#39;, &#39;Module_14&#39;, &#39;Module_15&#39;, &#39;Module_16&#39;, &#39;Module_17&#39;, &#39;Module_18&#39;, &#39;Module_19&#39;, &#39;Module_20&#39;, &#39;Module_21&#39;, &#39;Module_22&#39;, &#39;Module_23&#39;, &#39;Module_24&#39;, &#39;Module_25&#39;, &#39;Module_26&#39;, &#39;Module_27&#39;, &#39;Module_28&#39;, &#39;Module_29&#39;, &#39;Module_30&#39;, &#39;Module_31&#39;, &#39;Module_32&#39;, &#39;Module_33&#39;, &#39;Module_34&#39;, &#39;Module_35&#39;, &#39;pct_counts_in_top_50_genes&#39;, &#39;pct_counts_in_top_100_genes&#39;, &#39;pct_counts_in_top_200_genes&#39;, &#39;pct_counts_in_top_500_genes&#39;
+    var: &#39;n_cells&#39;, &#39;n_cells_by_counts&#39;, &#39;mean_counts&#39;, &#39;log1p_mean_counts&#39;, &#39;pct_dropout_by_counts&#39;, &#39;total_counts&#39;, &#39;log1p_total_counts&#39;, &#39;Regulon - Alx4&#39;, &#39;Regulon - Arnt2&#39;, &#39;Regulon - Atf1&#39;, &#39;Regulon - Atf3&#39;, &#39;Regulon - Atf4&#39;, &#39;Regulon - Bach2&#39;, &#39;Regulon - Barhl1&#39;, &#39;Regulon - Barhl2&#39;, &#39;Regulon - Barx1&#39;, &#39;Regulon - Bclaf1&#39;, &#39;Regulon - Brca1&#39;, &#39;Regulon - Cdx1&#39;, &#39;Regulon - Cdx2&#39;, &#39;Regulon - Cebpa&#39;, &#39;Regulon - Cebpb&#39;, &#39;Regulon - Cebpe&#39;, &#39;Regulon - Clock&#39;, &#39;Regulon - Creb1&#39;, &#39;Regulon - Creb3l2&#39;, &#39;Regulon - Ctcfl&#39;, &#39;Regulon - Cux1&#39;, &#39;Regulon - Dbp&#39;, &#39;Regulon - Ddit3&#39;, &#39;Regulon - Dlx1&#39;, &#39;Regulon - Dlx2&#39;, &#39;Regulon - Dlx3&#39;, &#39;Regulon - Dlx5&#39;, &#39;Regulon - Dlx6&#39;, &#39;Regulon - Dmbx1&#39;, &#39;Regulon - E2f1&#39;, &#39;Regulon - E2f3&#39;, &#39;Regulon - E2f4&#39;, &#39;Regulon - E2f5&#39;, &#39;Regulon - E2f6&#39;, &#39;Regulon - E2f7&#39;, &#39;Regulon - E2f8&#39;, &#39;Regulon - Egr1&#39;, &#39;Regulon - Egr3&#39;, &#39;Regulon - Elf2&#39;, &#39;Regulon - Elf4&#39;, &#39;Regulon - Elk3&#39;, &#39;Regulon - Elk4&#39;, &#39;Regulon - Emx1&#39;, &#39;Regulon - Emx2&#39;, &#39;Regulon - En2&#39;, &#39;Regulon - Ep300&#39;, &#39;Regulon - Esrra&#39;, &#39;Regulon - Esrrg&#39;, &#39;Regulon - Ets1&#39;, &#39;Regulon - Ets2&#39;, &#39;Regulon - Etv6&#39;, &#39;Regulon - Ezh2&#39;, &#39;Regulon - Fli1&#39;, &#39;Regulon - Fos&#39;, &#39;Regulon - Fosl2&#39;, &#39;Regulon - Foxa1&#39;, &#39;Regulon - Foxa2&#39;, &#39;Regulon - Foxa3&#39;, &#39;Regulon - Foxc1&#39;, &#39;Regulon - Foxc2&#39;, &#39;Regulon - Foxf1&#39;, &#39;Regulon - Foxf2&#39;, &#39;Regulon - Foxi1&#39;, &#39;Regulon - Foxj1&#39;, &#39;Regulon - Foxj2&#39;, &#39;Regulon - Foxl1&#39;, &#39;Regulon - Foxl2&#39;, &#39;Regulon - Foxn2&#39;, &#39;Regulon - Foxo1&#39;, &#39;Regulon - Foxo3&#39;, &#39;Regulon - Foxo4&#39;, &#39;Regulon - Foxp1&#39;, &#39;Regulon - Foxp2&#39;, &#39;Regulon - Foxp4&#39;, &#39;Regulon - Gabpa&#39;, &#39;Regulon - Gata1&#39;, &#39;Regulon - Gata2&#39;, &#39;Regulon - Gata3&#39;, &#39;Regulon - Gata4&#39;, &#39;Regulon - Gata5&#39;, &#39;Regulon - Gata6&#39;, &#39;Regulon - Gbx2&#39;, &#39;Regulon - Gli1&#39;, &#39;Regulon - Gli2&#39;, &#39;Regulon - Glis2&#39;, &#39;Regulon - Gm38394&#39;, &#39;Regulon - Gmeb2&#39;, &#39;Regulon - Grhl1&#39;, &#39;Regulon - Grhl2&#39;, &#39;Regulon - Grhl3&#39;, &#39;Regulon - Gsx1&#39;, &#39;Regulon - Hdac2&#39;, &#39;Regulon - Hes1&#39;, &#39;Regulon - Hinfp&#39;, &#39;Regulon - Hmga2&#39;, &#39;Regulon - Hmgb3&#39;, &#39;Regulon - Hnf1b&#39;, &#39;Regulon - Hnf4a&#39;, &#39;Regulon - Hnf4g&#39;, &#39;Regulon - Hoxa10&#39;, &#39;Regulon - Hoxa11&#39;, &#39;Regulon - Hoxa2&#39;, &#39;Regulon - Hoxa3&#39;, &#39;Regulon - Hoxa5&#39;, &#39;Regulon - Hoxa7&#39;, &#39;Regulon - Hoxa9&#39;, &#39;Regulon - Hoxb3&#39;, &#39;Regulon - Hoxb4&#39;, &#39;Regulon - Hoxb5&#39;, &#39;Regulon - Hoxb6&#39;, &#39;Regulon - Hoxb7&#39;, &#39;Regulon - Hoxb8&#39;, &#39;Regulon - Hoxb9&#39;, &#39;Regulon - Hoxc10&#39;, &#39;Regulon - Hoxc11&#39;, &#39;Regulon - Hoxc13&#39;, &#39;Regulon - Hoxc6&#39;, &#39;Regulon - Hoxc9&#39;, &#39;Regulon - Hoxd11&#39;, &#39;Regulon - Hoxd12&#39;, &#39;Regulon - Hoxd13&#39;, &#39;Regulon - Hoxd9&#39;, &#39;Regulon - Hsf2&#39;, &#39;Regulon - Ikzf1&#39;, &#39;Regulon - Irf2&#39;, &#39;Regulon - Irf5&#39;, &#39;Regulon - Irf6&#39;, &#39;Regulon - Irf8&#39;, &#39;Regulon - Isl1&#39;, &#39;Regulon - Isl2&#39;, &#39;Regulon - Jun&#39;, &#39;Regulon - Junb&#39;, &#39;Regulon - Jund&#39;, &#39;Regulon - Klf2&#39;, &#39;Regulon - Klf3&#39;, &#39;Regulon - Klf4&#39;, &#39;Regulon - Klf5&#39;, &#39;Regulon - Klf6&#39;, &#39;Regulon - Klf8&#39;, &#39;Regulon - Lef1&#39;, &#39;Regulon - Lhx1&#39;, &#39;Regulon - Lhx2&#39;, &#39;Regulon - Lhx5&#39;, &#39;Regulon - Lhx6&#39;, &#39;Regulon - Lhx8&#39;, &#39;Regulon - Lhx9&#39;, &#39;Regulon - Lmx1a&#39;, &#39;Regulon - Ltf&#39;, &#39;Regulon - Maf&#39;, &#39;Regulon - Mafb&#39;, &#39;Regulon - Mafk&#39;, &#39;Regulon - Mbd1&#39;, &#39;Regulon - Mef2a&#39;, &#39;Regulon - Mef2c&#39;, &#39;Regulon - Mef2d&#39;, &#39;Regulon - Mnx1&#39;, &#39;Regulon - Msc&#39;, &#39;Regulon - Mxi1&#39;, &#39;Regulon - Myb&#39;, &#39;Regulon - Mybl1&#39;, &#39;Regulon - Mybl2&#39;, &#39;Regulon - Myc&#39;, &#39;Regulon - Myf5&#39;, &#39;Regulon - Myf6&#39;, &#39;Regulon - Mynn&#39;, &#39;Regulon - Myod1&#39;, &#39;Regulon - Myog&#39;, &#39;Regulon - Nanos1&#39;, &#39;Regulon - Neurod1&#39;, &#39;Regulon - Nfatc1&#39;, &#39;Regulon - Nfatc4&#39;, &#39;Regulon - Nfe2&#39;, &#39;Regulon - Nfic&#39;, &#39;Regulon - Nfkb2&#39;, &#39;Regulon - Nfyb&#39;, &#39;Regulon - Nkx1-1&#39;, &#39;Regulon - Nkx6-2&#39;, &#39;Regulon - Nr1h3&#39;, &#39;Regulon - Nr1i2&#39;, &#39;Regulon - Nr2c1&#39;, &#39;Regulon - Nr4a1&#39;, &#39;Regulon - Nr5a1&#39;, &#39;Regulon - Nr5a2&#39;, &#39;Regulon - Nucb1&#39;, &#39;Regulon - Onecut1&#39;, &#39;Regulon - Onecut2&#39;, &#39;Regulon - Onecut3&#39;, &#39;Regulon - Otx2&#39;, &#39;Regulon - Ovol2&#39;, &#39;Regulon - Pax6&#39;, &#39;Regulon - Pdx1&#39;, &#39;Regulon - Phox2a&#39;, &#39;Regulon - Phox2b&#39;, &#39;Regulon - Pitx2&#39;, &#39;Regulon - Pou2f1&#39;, &#39;Regulon - Pou3f1&#39;, &#39;Regulon - Pou3f3&#39;, &#39;Regulon - Pou4f3&#39;, &#39;Regulon - Pparg&#39;, &#39;Regulon - Prrx2&#39;, &#39;Regulon - Rara&#39;, &#39;Regulon - Rarb&#39;, &#39;Regulon - Rax&#39;, &#39;Regulon - Rela&#39;, &#39;Regulon - Rfx2&#39;, &#39;Regulon - Rfx3&#39;, &#39;Regulon - Rfx4&#39;, &#39;Regulon - Runx1&#39;, &#39;Regulon - Rxra&#39;, &#39;Regulon - Shox2&#39;, &#39;Regulon - Six1&#39;, &#39;Regulon - Six2&#39;, &#39;Regulon - Six4&#39;, &#39;Regulon - Smad1&#39;, &#39;Regulon - Smad5&#39;, &#39;Regulon - Smarcc2&#39;, &#39;Regulon - Snai3&#39;, &#39;Regulon - Sox10&#39;, &#39;Regulon - Sox11&#39;, &#39;Regulon - Sox12&#39;, &#39;Regulon - Sox13&#39;, &#39;Regulon - Sox17&#39;, &#39;Regulon - Sox18&#39;, &#39;Regulon - Sox2&#39;, &#39;Regulon - Sox21&#39;, &#39;Regulon - Sox4&#39;, &#39;Regulon - Sox7&#39;, &#39;Regulon - Sox9&#39;, &#39;Regulon - Sp1&#39;, &#39;Regulon - Sp3&#39;, &#39;Regulon - Sp4&#39;, &#39;Regulon - Sp7&#39;, &#39;Regulon - Spdef&#39;, &#39;Regulon - Spi1&#39;, &#39;Regulon - Srebf2&#39;, &#39;Regulon - Srf&#39;, &#39;Regulon - Stat6&#39;, &#39;Regulon - Supt20&#39;, &#39;Regulon - Taf1&#39;, &#39;Regulon - Tagln2&#39;, &#39;Regulon - Tal1&#39;, &#39;Regulon - Tbp&#39;, &#39;Regulon - Tbx2&#39;, &#39;Regulon - Tbx5&#39;, &#39;Regulon - Tcf7&#39;, &#39;Regulon - Tcf7l1&#39;, &#39;Regulon - Tcf7l2&#39;, &#39;Regulon - Tead1&#39;, &#39;Regulon - Tead2&#39;, &#39;Regulon - Tead3&#39;, &#39;Regulon - Tead4&#39;, &#39;Regulon - Tfap2a&#39;, &#39;Regulon - Tfcp2l1&#39;, &#39;Regulon - Tfdp1&#39;, &#39;Regulon - Tff3&#39;, &#39;Regulon - Thap1&#39;, &#39;Regulon - Tlx2&#39;, &#39;Regulon - Tlx3&#39;, &#39;Regulon - Trp53&#39;, &#39;Regulon - Trp63&#39;, &#39;Regulon - Twist1&#39;, &#39;Regulon - Uncx&#39;, &#39;Regulon - Xbp1&#39;, &#39;Regulon - Yy1&#39;, &#39;Regulon - Zbtb14&#39;, &#39;Regulon - Zfp112&#39;, &#39;Regulon - Zfp14&#39;, &#39;Regulon - Zfp189&#39;, &#39;Regulon - Zfp641&#39;, &#39;Regulon - Zfp672&#39;, &#39;Regulon - Zfp729b&#39;, &#39;Regulon - Zfp740&#39;, &#39;Regulon - Zfp974&#39;, &#39;Regulon - Zfp975&#39;, &#39;Regulon - Zic2&#39;, &#39;Regulon - Zmat4&#39;, &#39;Module_1&#39;, &#39;Module_10&#39;, &#39;Module_11&#39;, &#39;Module_12&#39;, &#39;Module_13&#39;, &#39;Module_14&#39;, &#39;Module_15&#39;, &#39;Module_16&#39;, &#39;Module_17&#39;, &#39;Module_18&#39;, &#39;Module_19&#39;, &#39;Module_2&#39;, &#39;Module_20&#39;, &#39;Module_21&#39;, &#39;Module_22&#39;, &#39;Module_23&#39;, &#39;Module_24&#39;, &#39;Module_25&#39;, &#39;Module_26&#39;, &#39;Module_27&#39;, &#39;Module_28&#39;, &#39;Module_29&#39;, &#39;Module_3&#39;, &#39;Module_30&#39;, &#39;Module_31&#39;, &#39;Module_32&#39;, &#39;Module_33&#39;, &#39;Module_34&#39;, &#39;Module_35&#39;, &#39;Module_4&#39;, &#39;Module_5&#39;, &#39;Module_6&#39;, &#39;Module_7&#39;, &#39;Module_8&#39;, &#39;Module_9&#39;
+    uns: &#39;annotation_colors&#39;
+    obsm: &#39;spatial&#39;
+    varm: &#39;PCs&#39;
+    layers: &#39;count&#39;, &#39;Raw&#39;, &#39;Proceed&#39;
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+
+clusters = adata.obs[&quot;annotation&quot;]
+cluster_set = np.unique(clusters)
+sp_x, sp_y = adata.obsm[&quot;spatial&quot;][:,0], -adata.obsm[&quot;spatial&quot;][:,1]
+psize = 0.02
+figsize=(5,7)
+colors = cm.get_cmap(&#39;gist_ncar&#39;, 25)
+
+fig,ax = plt.subplots(figsize=figsize)
+for i  in range(len(cluster_set)):
+    idx_ = clusters == cluster_set[i]
+    ax.scatter(sp_x[idx_], sp_y[idx_],s=psize,label=cluster_set[i], color=colors(i))
+ax.axis(&#39;off&#39;)
+ax.legend(markerscale=50,bbox_to_anchor=(0.5, 0), loc=&#39;upper center&#39;, borderaxespad=0, fontsize=12,ncol=2,columnspacing=0.2,labelspacing=0.1,handletextpad=-0.2,frameon=False)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;matplotlib.legend.Legend at 0x178cf3e8880&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_SpatialTranscriptome_6_1.png" src="../_images/Tutorials_Tutorial_SpatialTranscriptome_6_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import matplotlib.cm as cm
+import math
+
+clusters = adata.obs[&quot;annotation&quot;]
+cluster_set = np.unique(clusters)
+sp_x, sp_y = adata.obsm[&quot;spatial&quot;][:,0], -adata.obsm[&quot;spatial&quot;][:,1]
+psize = 0.5
+figsize=(2.5,3.5)
+n_cols = 10
+n_rows = math.ceil(len(cluster_set)/n_cols)
+colors = cm.get_cmap(&#39;gist_ncar&#39;, 25)
+
+fig,ax = plt.subplots(n_rows,n_cols,figsize=(figsize[0]*n_cols,figsize[1]*n_rows))
+[[ax[i,j].axis(&#39;off&#39;) for i in range(n_rows)] for j in range(n_cols)]
+for i  in range(len(cluster_set)):
+    idx_ = clusters == cluster_set[i]
+    row_ = int(i / n_cols)
+    col_ = i % n_cols
+    ax_ = ax[row_,col_]
+    ax_.scatter(sp_x, sp_y,s=0.01,color=&quot;gray&quot;,alpha=0.1)
+    ax_.scatter(sp_x[idx_], sp_y[idx_],s=psize,color=colors(i))
+    ax_.axis(&#39;off&#39;)
+    ax_.set_title(cluster_set[i])
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_SpatialTranscriptome_7_0.png" src="../_images/Tutorials_Tutorial_SpatialTranscriptome_7_0.png" />
+</div>
+</div>
+<section id="Apply-RECODE">
+<h2>Apply RECODE<a class="headerlink" href="#Apply-RECODE" title="Link to this heading"></a></h2>
+<p>Apply RECODE to the count matrix (without using spatial coordinates).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import importlib
+importlib.reload(screcode)
+
+recode = screcode.RECODE(seq_target=&#39;RNA&#39;,version=2,fast_algorithm_ell_ub=3500)
+adata = recode.fit_transform(adata)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+start RECODE for scRNA-seq data
+end RECODE for scRNA-seq
+log: {&#39;seq_target&#39;: &#39;RNA&#39;, &#39;#significant genes&#39;: 23362, &#39;#non-significant genes&#39;: 3062, &#39;#silent genes&#39;: 0, &#39;ell&#39;: 3049, &#39;Elapsed time&#39;: &#39;0h 17m 48s 400ms&#39;, &#39;solver&#39;: &#39;randomized&#39;, &#39;#test_data&#39;: 24353}
+</pre></div></div>
+</div>
+<section id="Performance-check">
+<h3>Performance check<a class="headerlink" href="#Performance-check" title="Link to this heading"></a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>recode.report()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Tutorials_Tutorial_SpatialTranscriptome_11_0.png" src="../_images/Tutorials_Tutorial_SpatialTranscriptome_11_0.png" />
+</div>
+</div>
+<p>Log normalizaation</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>target_sum = 1e+4
+adata = recode.lognormalize(adata,target_sum=target_sum)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Normalized data are stored in &#34;RECODE_norm&#34; and &#34;RECODE_log&#34;
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.layers[&quot;Raw_norm&quot;] = target_sum*adata.layers[Raw_key].toarray()/np.sum(adata.layers[Raw_key].toarray(),axis=1)[:,np.newaxis]
+adata.layers[&quot;Raw_log&quot;] = np.log(adata.layers[&quot;Raw_norm&quot;]+1)
+</pre></div>
+</div>
+</div>
+<p>Plot spatial gene expression</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def spatial_gex(
+        genes,
+        sp_x = adata.obsm[&quot;spatial&quot;][:,0],
+        sp_y = -adata.obsm[&quot;spatial&quot;][:,1],
+        psize = 1,
+        figsize=(2.5,3.5),
+        dpi=100,
+        percentiles = [0,99],
+        fs_title = 20,
+        fs_label = 20,
+    ):
+    fig,ax = plt.subplots(2,len(genes),figsize=(figsize[0]*len(genes),figsize[1]*2),tight_layout=True)
+    for i in range(len(genes)):
+        idx_gene = adata.var.index == genes[i]
+        exp = adata.layers[&quot;RECODE_log&quot;][:,idx_gene]
+        vmin,vmax = np.percentile(exp,percentiles[0]),np.percentile(exp,percentiles[1])
+        ax_ = ax[1,i]
+        ax_.scatter(sp_x, sp_y,c=exp,s=psize,marker=&quot;H&quot;,vmin=vmin,vmax=vmax)
+        if i== 0:
+            ax_.set_ylabel(&quot;RECODE&quot;,fontsize=fs_label)
+            ax_.tick_params(bottom=False, left=False, right=False, top=False,
+                            labelbottom=False, labelleft=False, labelright=False, labeltop=False)
+            [ax_.spines[c_].set_visible(False) for c_ in [&#39;right&#39;,&#39;top&#39;,&#39;bottom&#39;,&#39;left&#39;]]
+        else:
+            ax_.axis(&#39;off&#39;)
+
+
+        exp = adata.layers[&quot;Raw_log&quot;][:,idx_gene]
+        ax_ = ax[0,i]
+        ax_.scatter(sp_x, sp_y,c=exp,s=psize,marker=&quot;H&quot;,vmin=vmin,vmax=vmax)
+        ax_.set_title(&quot;$\it{%s}$&quot; % genes[i],fontsize=fs_title)
+        if i== 0:
+            ax_.set_ylabel(&quot;Raw&quot;,fontsize=fs_label)
+            ax_.tick_params(bottom=False, left=False, right=False, top=False,
+                            labelbottom=False, labelleft=False, labelright=False, labeltop=False)
+            [ax_.spines[c_].set_visible(False) for c_ in [&#39;right&#39;,&#39;top&#39;,&#39;bottom&#39;,&#39;left&#39;]]
+        else:
+            ax_.axis(&#39;off&#39;)
+
+spatial_gex(genes = [&quot;Arnt2&quot;, &quot;Foxc2&quot;, &quot;Gata4&quot;, &quot;Sox9&quot;, &quot;Mef2c&quot;, &quot;Grhl2&quot;, &quot;Adh1&quot;])
+spatial_gex(genes = [&quot;Tbx20&quot;,&quot;Myl7&quot;,&quot;Ibsp&quot;, &quot;Myh11&quot;, &quot;Ahsg&quot;, &quot;Akr1b7&quot;])
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-cyan-intense-fg ansi-bold">  Cell </span><span class="ansi-green-intense-fg ansi-bold">In[9], line 15</span>
+<span class="ansi-yellow-intense-fg ansi-bold">    exp = [:,idx_gene]</span>
+<span class="ansi-white-intense-fg ansi-bold">           ^</span>
+<span class="ansi-red-intense-fg ansi-bold">SyntaxError</span><span class="ansi-red-intense-fg ansi-bold">:</span> invalid syntax
+
+</pre></div></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Tutorial_Multiome.html" class="btn btn-neutral float-left" title="Tutorial: multiome (scRNA-seq + scATAC-seq) data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Tutorial_Integration.html" class="btn btn-neutral float-right" title="Tutorial: RECODE integration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Yusuke Imoto.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
