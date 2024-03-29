@@ -1,5 +1,10 @@
 name: Deploy
-on: [push]
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
 jobs:
   # pypi:
   #   runs-on: ubuntu-latest
@@ -22,6 +27,8 @@ jobs:
   #       run: poetry publish --username __token__ --password ${PYPI_ORG_TOKEN} --no-ansi -n -v
   sphinx:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     container:
       image: python:3.9
     defaults:
