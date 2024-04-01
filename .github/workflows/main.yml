@@ -59,7 +59,7 @@ jobs:
         #   force_orphan: true
         uses: actions/upload-pages-artifact@v1
         with:
-          path: ../public
+          path: public
   deploy:
     needs: sphinx
     permissions:
