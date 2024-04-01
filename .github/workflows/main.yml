@@ -49,8 +49,8 @@ jobs:
           sphinx-apidoc -f -o ./sphinx screcode
           sphinx-build ./sphinx ./docs
           cp -r docs ../public
-          poetry build
-          mv dist/*.whl ../public/
+        #  poetry build
+        #  mv dist/*.whl ../public/
       - name: pages
         # uses: peaceiris/actions-gh-pages@v3
         # with:
