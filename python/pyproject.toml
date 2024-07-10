@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "scRECODE"
+name = "screcode"
 version = "1.0.0"
 description = "RECODE - resolution of the curse of dimensionality in single-cell data analysis"
 authors = ["Yusuke Imoto"]
