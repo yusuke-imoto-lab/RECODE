@@ -9,4 +9,5 @@ Tutorials
     Tutorial_ATAC.ipynb
     Tutorial_Multiome.ipynb
     Tutorial_SpatialTranscriptome.ipynb
+    Tutorial_SpatialTranscriptome_Xenium.ipynb
     Tutorial_Integration.ipynb
