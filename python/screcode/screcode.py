@@ -35,10 +35,10 @@ class RECODE:
         Parameters
         ----------
         fast_algorithm : boolean, default=True
-                If True, the fast algorithm is conducted. The upper bound of parameter :math:`\ell` is set by ``fast_algorithm_ell_ub``.
+                If True, the fast algorithm is conducted. The upper bound of parameter ell is set by ``fast_algorithm_ell_ub``.
 
         fast_algorithm_ell_ub : int, default=1000
-                Upper bound of parameter :math:`\ell` for the fast algorithm. Must be of range [1,:math:`\infity`).
+                Upper bound of parameter ell for the fast algorithm. Must be of range [1,infinity).
 
         seq_target : {'RNA','ATAC','Hi-C','Multiome'}, default='RNA'
                 Sequencing target. If 'ATAC', the preprocessing (odd-even stabilization) will be performed before the regular algorithm.
@@ -441,8 +441,8 @@ class RECODE:
 
         meta_data : ndarray (n_samples, 1) or DataFrame (n_samples, *)
 
-        batch_key : string, default='batch'
-                Key name in ``meta_data`` denoting batch. 
+        batch_key : string or list, default='batch'
+                Key name(s) in ``meta_data`` denoting batch. 
 
         Returns
         -------
@@ -462,21 +462,23 @@ class RECODE:
             X_ = X_mat
         X_norm = self._noise_variance_stabilizing_normalization(X_)
         _, X_ess, U_ell, Xmean = self.recode_.transform(X_norm,return_ess=True)
-        # X_norm_RECODE = self.recode_.transform(X_norm,return_ess=True)
+        if isinstance(batch_key, str):
+            batch_key = [batch_key]
+        X_norm_RECODE = self.recode_.transform(X_norm,return_ess=True)
         if type(X) == anndata._core.anndata.AnnData:
-            if batch_key not in X.obs.keys():
+            batch_key_ = batch_key.copy()
+            batch_key = [b_ for b_ in batch_key if b_ in X.obs.keys()]
+            if len(batch_key) == 0:
                 raise ValueError(
-                    "No batch key \"%s\" in adata.obs. Add batch key or specify a \"batch_key\"" % batch_key
+                    "No batch key \"%s\" in adata.obs. Add batch key or specify a \"batch_key\"" % batch_key_
                 )
             else:
-                meta_data_ = {batch_key:np.array(X.obs[batch_key],dtype="object")}
+                meta_data_ = {batch_key[i]: np.array(X.obs[batch_key[i]], dtype="object") for i in range(len(batch_key))}
         elif type(meta_data) == np.ndarray:
-            meta_data_ = {batch_key:np.array(meta_data,dtype="object")}
-        elif type(meta_data) == np.ndarray:
-            if len(meta_data.shape) == 1:
-                meta_data_ = {batch_key:np.array(meta_data,dtype="object")}
+            if len(meta_data.shape) == len(batch_key):
+                meta_data_ = {batch_key[i]: np.array(meta_data[i], dtype="object") for i in range(len(batch_key))}
             else:
-                raise ValueError("meta_data should be 1-dimension")
+                raise ValueError("meta_data (np.ndarray) should be the same dimension as the batch_key")
         elif (type(meta_data) == anndata._core.views.DataFrameView) | (type(meta_data) == pd.core.frame.DataFrame):
             if batch_key not in meta_data.keys():
                 raise ValueError(
@@ -504,7 +506,8 @@ class RECODE:
             scanpy.external.pp.scanorama_integrate(adata_, key=batch_key, basis='X',adjusted_basis='X_integrated',verbose=False,**integration_method_params)
             X_ess_merge = adata_.obsm["X_integrated"]
         elif integration_method == "mnn":
-            data_ = [adata_.X[adata_.obs[batch_key]==b_] for b_ in np.unique(adata_.obs[batch_key])]
+            batches = [' '.join([adata_.obs[b_][i] for b_ in batch_key]) for i in range(adata_.shape[0])]
+            data_ = [adata_.X[batches==b_] for b_ in np.unique(batches)]
             mnn_out = scanpy.external.pp.mnn_correct(*data_, var_index=np.arange(adata_.shape[1]),verbose=False,cos_norm_out=False,**integration_method_params)
             X_ess_merge = mnn_out[0]
         else:
@@ -1258,7 +1261,7 @@ class RECODE:
         ax.text(
             self.recode_.ell * 1.1,
             0.3,
-            "$\ell$=%d" % self.recode_.ell,
+            r"$\ell$=%d" % int(self.recode_.ell),
             color="k",
             fontsize=16,
             ha="left",
@@ -1731,7 +1734,7 @@ class RECODE:
         ax.text(
             self.recode_.ell * 1.1,
             0.2,
-            "$\ell$=%d" % self.recode_.ell,
+            r"$\ell$=%d" % self.recode_.ell,
             color="k",
             fontsize=16,
             ha="left",
@@ -2210,22 +2213,22 @@ class RECODE_core:
         ----------
         method : {'variance','manual'}
                 If 'variance', regular variance-based algorithm.
-                If 'manual', parameter :math:`\ell`, which identifies essential and noise parts in the PCA space, is manually set. The manual parameter is given by ``ell_manual``.
+                If 'manual', parameter ell, which identifies essential and noise parts in the PCA space, is manually set. The manual parameter is given by ``ell_manual``.
 
         variance_estimate : boolean, default=True
                 If True and ``method='variance'``, the parameter estimation method will be done.
 
         fast_algorithm : boolean, default=True
-                If True, the fast algorithm is done. The upper bound of essential dimension :math:`\ell` is set in ``fast_algorithm_ell_ub``.
+                If True, the fast algorithm is done. The upper bound of essential dimension ell is set in ``fast_algorithm_ell_ub``.
 
         fast_algorithm_ell_ub : int, default=1000
-                Upper bound of parameter :math:`\ell` for the fast algorithm. Must be of range [1, infinity).
+                Upper bound of parameter ell for the fast algorithm. Must be of range [1, infinity).
 
         ell_manual : int, default=10
-                Manual essential dimension :math:`\ell` computed by ``method='manual'``. Must be of range [1, infinity).
+                Manual essential dimension ell computed by ``method='manual'``. Must be of range [1, infinity).
 
         ell_min : int, default=3
-                Minimam value of essential dimension :math:`\ell`
+                Minimam value of essential dimension ell
 
         version : int default='1'
                 Version of RECODE.
