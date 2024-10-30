@@ -31,13 +31,7 @@ You can also install the development version of lingam package from GitHub:
 
 	$ pip install git+https://github.com/yusuke-imoto-lab/RECODE.git
 
-
-or update to the latest version:
-
-.. code-block:: bash
-
-	$ pip install screcode -U
-
+If the installation fails, try installing again by appending `#subdirectory=python` or `\#subdirectory=python` at the end.
 
 To use RECODE, import ``screcode``. 
 
