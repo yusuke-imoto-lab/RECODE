@@ -496,7 +496,7 @@ class RECODE:
             X_ess,
             obs = meta_data_,
             obsm = {"X":X_ess},
-            dtype=X_ess.dtype,
+            # dtype=X_ess.dtype,
         )
         if integration_method == "harmony":
             scanpy.external.pp.harmony_integrate(adata_, basis='X',adjusted_basis='X_integrated',key=batch_key,verbose=False,**integration_method_params)
@@ -522,6 +522,22 @@ class RECODE:
             model = scvi.model.SCVI(adata_,gene_likelihood="normal",n_latent=adata_.shape[1],dropout_rate=0,dispersion='gene-batch',**integration_method_params)
             model.train()
             X_ess_merge = model.get_latent_representation() + np.min(adata_.X)
+        elif integration_method == "cca":
+            from sklearn.cross_decomposition import CCA
+            X_ess_merge = adata_.X
+            for b_ in batch_key:
+                batch_set_,counts_ = np.unique(adata_.obs[b_],return_counts=True)
+                idx_batch = np.argsort(counts_)#[::-1]
+                X_merged = X_ess_merge[adata_.obs[b_] == batch_set_[idx_batch[0]]]
+                for i in range(len(idx_batch)-1):
+                    Y_ = X_ess_merge[adata_.obs[b_] == batch_set_[idx_batch[i+1]]]
+                    indices = np.random.choice(X_merged.shape[0], size=Y_.shape[0], replace=False)
+                    X_ = X_merged[indices]
+                    cca = CCA(n_components=adata_.shape[1])
+                    cca.fit(X_, Y_)
+                    X_c, Y_c = cca.transform(X_merged, Y_)
+                    X_merged = np.concatenate([X_c, Y_c])
+                X_ess_merge = X_merged
         else:
             raise ValueError("No integration method \"%s\". Choice from %s" % integration_method,["harmony","bbknn","scanorama","mnn"])
         X_norm_RECODE_merge_ = np.dot(X_ess_merge, U_ell) + Xmean
