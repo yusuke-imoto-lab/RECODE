@@ -1,5 +1,4 @@
 import anndata
-import adjustText
 import datetime
 import matplotlib
 import matplotlib.pyplot as plt
@@ -443,6 +442,9 @@ class RECODE:
 
         batch_key : string or list, default='batch'
                 Key name(s) in ``meta_data`` denoting batch. 
+        
+        integration_method : {'harmony','mnn','scanorama','scvi'}, default='harmony'
+                A batch correction method used in iRECODE. 
 
         Returns
         -------
@@ -480,12 +482,12 @@ class RECODE:
             else:
                 raise ValueError("meta_data (np.ndarray) should be the same dimension as the batch_key")
         elif (type(meta_data) == anndata._core.views.DataFrameView) | (type(meta_data) == pd.core.frame.DataFrame):
-            if batch_key not in meta_data.keys():
-                raise ValueError(
-                    "No batch key \"%s\" in meta_data. Add batch key or specify a \"batch_key\"" % batch_key
-                )
-            else:
-                meta_data_ = {batch_key:np.array(meta_data[batch_key].values,dtype="object")}
+            for b_ in batch_key:
+                if b_ not in meta_data.keys():
+                    raise ValueError(
+                        "No batch key \"%s\" in meta_data. Add batch key or specify a \"batch_key\"" % b_
+                    )
+            meta_data_ = {b_:np.array(meta_data[b_].values,dtype="object") for b_ in batch_key}
         else:
             raise TypeError(
                     "No batch data. Add batch indices in \"meta_data\""
@@ -510,6 +512,16 @@ class RECODE:
             data_ = [adata_.X[batches==b_] for b_ in np.unique(batches)]
             mnn_out = scanpy.external.pp.mnn_correct(*data_, var_index=np.arange(adata_.shape[1]),verbose=False,cos_norm_out=False,**integration_method_params)
             X_ess_merge = mnn_out[0]
+        elif integration_method == "scvi":
+            try:
+                import scvi
+            except ImportError:
+                raise ImportError("\nplease install scvi:\n\n\tpip install scvi-tools")
+            adata_.X = adata_.X-np.min(adata_.X)
+            scvi.model.SCVI.setup_anndata(adata_, batch_key="batch")
+            model = scvi.model.SCVI(adata_,gene_likelihood="normal",n_latent=adata_.shape[1],dropout_rate=0,dispersion='gene-batch',**integration_method_params)
+            model.train()
+            X_ess_merge = model.get_latent_representation() + np.min(adata_.X)
         else:
             raise ValueError("No integration method \"%s\". Choice from %s" % integration_method,["harmony","bbknn","scanorama","mnn"])
         X_norm_RECODE_merge_ = np.dot(X_ess_merge, U_ell) + Xmean
@@ -522,7 +534,7 @@ class RECODE:
         self.log_["ell"] = self.recode_.ell
         if self.recode_.ell == self.fast_algorithm_ell_ub:
             self.logger.warning(
-                "Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_ub.\n"
+                "Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_u@b.\n"
                 "Ex. X_new = screcode.RECODE(fast_algorithm=False).fit_transform(X)"
             )
         self.X_trans = np.round(X_mat, decimals=self.decimals)
@@ -584,6 +596,8 @@ class RECODE:
         ----------
         X : ndarray/anndata of shape (n_samples, n_features)
                 Tranceforming single-cell sequencing data matrix (row:cell, culumn:gene/peak).
+        integration_method : {'harmony','mnn','scanorama','scvi'}, default='harmony'
+                A batch correction method used in iRECODE. 
 
         Returns
         -------
@@ -2091,6 +2105,10 @@ class RECODE:
                 )
                 for i in range(n_show_features)
             ]
+            try:
+                import adjustText
+            except ImportError:
+                raise ImportError("\nplease install adjustText:\n\n\tpip install adjustText")
             adjustText.adjust_text(texts, arrowprops=dict(arrowstyle="->", color="k"))
         else:
             ax1.scatter(x, cv, color="b", s=ps, zorder=2)
