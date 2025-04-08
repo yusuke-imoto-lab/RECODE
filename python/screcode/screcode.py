@@ -161,6 +161,18 @@ class RECODE:
         else:
             raise TypeError("Data type error: ndarray or anndata is available.")
 
+    def _total_scaling(self, X):
+        X_total = np.sum(X, axis=1)
+        X_total[X_total==0] = 1
+        return X / X_total[:,np.newaxis]
+    
+    def _logp1(
+            self,
+            X,
+            base=None
+        ):
+        return np.log(X+1) if base==None else np.log(X+1)/np.log(base)
+
     def _noise_variance_stabilizing_normalization(self, X):
         """
         Apply the noise-variance-stabilizing normalization to X.
@@ -171,7 +183,7 @@ class RECODE:
                 Data matrix
         """
         d = X.shape[1]
-        if d == self.d_all:
+        if d == self.d_train:
             X_ = X[:, self.idx_nonsilent]
         elif d == self.d_nonsilent:
             X_ = X
@@ -179,17 +191,19 @@ class RECODE:
             raise TypeError("Dimension of data is not correct.")
 
         ## scaled X
-        self.X_nUMI = np.sum(X_, axis=1)
-        X_scaled = X_ / self.X_nUMI[:,np.newaxis]
-        ## normalization
+        X_total = np.sum(X_, axis=1)
+        X_total[X_total==0] = 1
+        X_scaled = X_ / X_total[:,np.newaxis]
         X_norm = (X_scaled - self.X_scaled_mean) / np.sqrt(self.noise_var)
+        self.X_total = X_total
 
-        if d == self.d_all:
+        if d == self.d_train:
             X_norm_ = np.zeros(X.shape, dtype=float)
             X_norm_[:, self.idx_nonsilent] = X_norm
             return X_norm_
         elif d == self.d_nonsilent:
             return X_norm
+            
 
     def _inv_noise_variance_stabilizing_normalization(self, X):
         """
@@ -201,7 +215,7 @@ class RECODE:
                 Data matrix
         """
         X_norm_inv_temp = X * np.sqrt(self.noise_var) + self.X_scaled_mean
-        X_norm_inv = X_norm_inv_temp * self.X_nUMI[:,np.newaxis]
+        X_norm_inv = X_norm_inv_temp * self.X_total[:,np.newaxis]
         return X_norm_inv
 
     def _ATAC_preprocessing(self, X):
@@ -232,6 +246,10 @@ class RECODE:
 
         """
         X_mat = self._check_datatype(X)
+
+        idx_act_cells = np.sum(X_mat,axis=1) > 0
+
+        X_mat = X_mat[idx_act_cells]
 
         if self.solver == "auto":
             self.solver = "full" if X_mat.shape[0] < 10000 else "randomized"
@@ -268,7 +286,6 @@ class RECODE:
                 self.X_temp[:, self.idx_atac]
             )
         X_nUMI = np.sum(self.X_temp, axis=1)
-        # X_scaled = (self.X_temp.T / X_nUMI).T
         X_scaled = self.X_temp / X_nUMI[:,np.newaxis]
         X_scaled_mean = np.mean(X_scaled, axis=0)
         noise_var = np.mean(
@@ -288,8 +305,10 @@ class RECODE:
         )
         recode_.fit(X_norm)
 
-        self.n_all = X_mat.shape[0]
-        self.d_all = X_mat.shape[1]
+        # self.n_all = X.shape[0]
+        # self.d_all = X.shape[1]
+        self.n_train = X_mat.shape[0]
+        self.d_train = X_mat.shape[1]
         self.d_nonsilent = sum(self.idx_nonsilent)
         self.noise_var = noise_var
         self.recode_ = recode_
@@ -322,17 +341,19 @@ class RECODE:
         X_mat = self._check_datatype(X)
         if self.fit_idx == False:
             raise TypeError("Run fit before transform.")
-        if X_mat.shape[1] != self.d_all:
+        if X_mat.shape[1] != self.d_train:
             raise TypeError(
                 "RECODE requires the same dimension as that of fitted data."
             )
-        X_ = X_mat[:, self.idx_nonsilent]
+        idx_act_cells = np.sum(X_mat,axis=1) > 0
+
+        X_ = X_mat[np.ix_(idx_act_cells, self.idx_nonsilent)]
         X_norm = self._noise_variance_stabilizing_normalization(X_)
         X_norm_RECODE_, X_ess, _, _ = self.recode_.transform(X_norm,return_ess=True)
         X_norm_RECODE = np.zeros(X_mat.shape, dtype=float)
-        X_norm_RECODE[:, self.idx_nonsilent] = X_norm_RECODE_
+        X_norm_RECODE[np.ix_(idx_act_cells, self.idx_nonsilent)] = X_norm_RECODE_
         X_RECODE = np.zeros(X_mat.shape, dtype=float)
-        X_RECODE[:, self.idx_nonsilent] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE_)
+        X_RECODE[np.ix_(idx_act_cells, self.idx_nonsilent)] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE_)
         X_RECODE = np.where(X_RECODE > 0, X_RECODE, 0)
         X_RECODE = np.round(X_RECODE, decimals=self.decimals)
         X_norm_RECODE = np.round(X_norm_RECODE, decimals=self.decimals)
@@ -350,20 +371,17 @@ class RECODE:
         self.normalized_variance_ = np.zeros(X_mat.shape[1], dtype=float)
         self.normalized_variance_[self.idx_nonsilent] = self.X_norm_var
 
-        X_RECODE_ss = (
-            np.median(np.sum(X_RECODE[:, self.idx_nonsilent], axis=1))
-            * X_RECODE[:, self.idx_nonsilent]
-            / np.sum(X_RECODE[:, self.idx_nonsilent], axis=1)[:,np.newaxis]
-        )
+        X_RECODE_ss = np.median(np.sum(X_RECODE[np.ix_(idx_act_cells, self.idx_nonsilent)], axis=1))*self._total_scaling(X_RECODE[np.ix_(idx_act_cells, self.idx_nonsilent)])
         self.cv_ = np.zeros(X.shape[1], dtype=float)
-        self.cv_[self.idx_nonsilent] = np.std(X_RECODE_ss, axis=0) / np.mean(
-            X_RECODE_ss, axis=0
-        )
+        self.cv_[self.idx_nonsilent] = np.std(X_RECODE_ss, axis=0) / np.mean(X_RECODE_ss, axis=0)
 
         self.significance_ = np.empty(X.shape[1], dtype=object)
         self.significance_[self.normalized_variance_ == 0] = "silent"
         self.significance_[self.normalized_variance_ > 0] = "non-significant"
         self.significance_[self.normalized_variance_ > 1] = "significant"
+        self.num_invalid_cells = sum(idx_act_cells==False)
+        self.n_trans = X.shape[0]
+        self.d_trans = X.shape[1]
 
         if type(X) == anndata._core.anndata.AnnData:
             X_out = anndata.AnnData.copy(X)
@@ -416,7 +434,7 @@ class RECODE:
         ] = f"{hours}h {minutes}m {seconds}s {milliseconds:03}ms"
         self.log_["solver"] = self.solver
         if self.log_["solver"] == "randomized":
-            self.log_["#test_data"] = int(self.downsampling_rate * X.shape[0])
+            self.log_["#train_data"] = self.n_train
         if self.verbose:
             print("end RECODE for sc%s-seq" % self.seq_target)
             print("log:", self.log_)
@@ -454,9 +472,9 @@ class RECODE:
         X_mat = self._check_datatype(X)
         if self.fit_idx == False:
             raise TypeError("Run fit before transform.")
-        if X_mat.shape[1] != self.d_all:
+        if X_mat.shape[1] != self.d_train:
             raise TypeError(
-                "RECODE requires the same dimension as that of fitted data."
+                "RECODE requires the same dimension as that of training (fit) data."
             )
         if X_mat.shape[1] == len(self.idx_nonsilent):
             X_ = X_mat[:, self.idx_nonsilent]
@@ -682,9 +700,9 @@ class RECODE:
                 X_mat_ = X.layers[key]
         else:
             X_mat_ = self._check_datatype(X)
-        # X_ss = (target_sum*X_mat_.T/np.sum(X_mat_,axis=1)).T
-        X_ss = target_sum*X_mat_/np.sum(X_mat_,axis=1)[:,np.newaxis]
-        X_log = np.log(X_ss+1) if base==None else np.log(X_ss+1)/np.log(base)
+        
+        X_ss = target_sum*self._total_scaling(X_mat_)
+        X_log = self._logp1(X_ss,base)
         
         if type(X) == anndata._core.anndata.AnnData:
             if self.anndata_key == "obsm":
@@ -990,6 +1008,7 @@ class RECODE:
         save_format="png",
         dpi=None,
         show=True,
+        base = None,
     ):
         """
         Check the applicability of RECODE.
@@ -1016,23 +1035,14 @@ class RECODE:
                 Dots per inch.
         """
         fs_label = 14
-        # X_scaled = (self.X_temp.T / np.sum(self.X_temp, axis=1)).T
-        X_scaled = self.X_temp / np.sum(self.X_temp, axis=1)[:,np.newaxis]
+        X_scaled = self._total_scaling(self.X_temp)
         X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
         norm_var = np.var(X_norm, axis=0, ddof=1)
-        size_factor = np.median(np.sum(self.X_trans, axis=1))
-        # X_ss_log = np.log(
-        #     size_factor
-        #     * (self.X_trans[:, self.idx_nonsilent].T / np.sum(self.X_trans, axis=1)).T
-        #     + 1
-        # )
-        # X_RECODE_ss_log = np.log(
-        #     size_factor
-        #     * (self.X_RECODE[:, self.idx_nonsilent].T / np.sum(self.X_RECODE, axis=1)).T
-        #     + 1
-        # )
-        X_ss_log = np.log(size_factor * self.X_trans[:, self.idx_nonsilent] / np.sum(self.X_trans, axis=1)[:,np.newaxis] + 1)
-        X_RECODE_ss_log = np.log(size_factor * self.X_RECODE[:, self.idx_nonsilent] / np.sum(self.X_RECODE, axis=1)[:,np.newaxis] + 1)
+        target_sum = np.median(np.sum(self.X_trans, axis=1))
+        X_ss_log = self._logp1(target_sum * self._total_scaling(self.X_trans[:, self.idx_nonsilent]),base)
+        X_RECODE_ss_log = self._logp1(target_sum * self._total_scaling(self.X_RECODE[:, self.idx_nonsilent]),base)
+        # X_ss_log = np.log(target_sum * self.X_trans[:, self.idx_nonsilent] / np.sum(self.X_trans, axis=1)[:,np.newaxis] + 1)
+        # X_RECODE_ss_log = np.log(target_sum * self.X_RECODE[:, self.idx_nonsilent] / np.sum(self.X_RECODE, axis=1)[:,np.newaxis] + 1)
         plot_EV = self.recode_.PCA_Ev[self.recode_.PCA_Ev > 0]
         n_EV = len(plot_EV)
         plot_EV_mod = np.zeros(n_EV)
@@ -1075,13 +1085,11 @@ class RECODE:
         )
         ax = fig.add_subplot(gs[0, 0])
         ax.text(0, 1, "Method: %s" % self.log_["seq_target"], fontsize=12)
-        ax.text(0, 0.5, "nCells: %s" % self.n_all, fontsize=12)
-        ax.text(0, 0.0, "n%ss: %s" % (self.Unit, self.d_all), fontsize=12)
+        ax.text(0, 0.5, "nCells: %s" % self.n_trans, fontsize=12)
+        ax.text(0, 0.0, "n%ss: %s" % (self.Unit, self.d_train), fontsize=12)
         # ax.text(0,0.0,'Method: %s' % self.log_['seq_target'],fontsize=12)
         ax.axis("off")
-        gs = GridSpecFromSubplotSpec(
-            nrows=1, ncols=1, subplot_spec=gs_master[16:26, 25:64]
-        )
+        gs = GridSpecFromSubplotSpec(nrows=1, ncols=1, subplot_spec=gs_master[16:26, 25:64])
         ax = fig.add_subplot(gs[0, 0])
         ax.text(
             0,
@@ -1097,21 +1105,17 @@ class RECODE:
             % (self.unit, self.log_["#non-significant %ss" % self.unit]),
             fontsize=12,
         )
-        ax.text(
-            0,
+        ax.text(0,
             0.0,
             "#silent %ss: %s" % (self.unit, self.log_["#silent %ss" % self.unit]),
             fontsize=12,
         )
         ax.axis("off")
-        gs = GridSpecFromSubplotSpec(
-            nrows=1, ncols=1, subplot_spec=gs_master[16:26, 64:100]
-        )
+        gs = GridSpecFromSubplotSpec(nrows=1, ncols=1, subplot_spec=gs_master[16:26, 64:100])
         ax = fig.add_subplot(gs[0, 0])
-        ax.text(
-            0, 1.0, r"Essential dimension $\ell$: %s" % self.log_["ell"], fontsize=12
-        )
-        ax.text(0, 0.5, r"Elapsed time: %s" % self.elapsed_time, fontsize=12)
+        ax.text(0, 1.0, r"#Invalid cells: %s" % self.num_invalid_cells, fontsize=12)
+        ax.text(0, 0.5, r"Essential dimension $\ell$: %s" % self.log_["ell"], fontsize=12)
+        ax.text(0, 0, r"Elapsed time: %s" % self.elapsed_time, fontsize=12)
         ax.axis("off")
         #
         gs = GridSpecFromSubplotSpec(nrows=1, ncols=1, subplot_spec=gs_master[34, 0])
@@ -1224,7 +1228,7 @@ class RECODE:
             applicability = "Class A (strongly applicable)"
             backcolor = "lightgreen"
         elif rate_low_var < 0.01:
-            applicability = "Class A (weakly applicable)"
+            applicability = "Class B (weakly applicable)"
             backcolor = "yellow"
         else:
             applicability = "Class C (inapplicabile)"
@@ -1877,7 +1881,7 @@ class RECODE:
         titles=("Original", "RECODE"),
         figsize=(7, 5),
         ps=2,
-        size_factor="median",
+        target_sum="median",
         save=False,
         save_filename="plot_mean_variance",
         save_format="png",
@@ -1898,7 +1902,7 @@ class RECODE:
         ps : float, default=10,
                 Point size.
 
-        size_factor : float or {'median','mean'}, default='median',
+        target_sum : float or {'median','mean'}, default='median',
                 Size factor (total count constant of each cell before the log-normalization).
 
         save : bool, default=False
@@ -1915,29 +1919,29 @@ class RECODE:
         """
         fs_label = 14
         fs_title = 14
-        if size_factor == "median":
-            size_factor = np.median(np.sum(self.X_trans, axis=1))
-            size_factor_RECODE = np.median(np.sum(self.X_RECODE, axis=1))
-        elif size_factor == "mean":
-            size_factor = np.mean(np.sum(self.X_trans, axis=1))
-            size_factor_RECODE = np.mean(np.sum(self.X_REECODE, axis=1))
-        elif (type(size_factor) == int) | (type(size_factor) == float):
-            size_factor_RECODE = size_factor
+        if target_sum == "median":
+            target_sum = np.median(np.sum(self.X_trans, axis=1))
+            target_sum_RECODE = np.median(np.sum(self.X_RECODE, axis=1))
+        elif target_sum == "mean":
+            target_sum = np.mean(np.sum(self.X_trans, axis=1))
+            target_sum_RECODE = np.mean(np.sum(self.X_REECODE, axis=1))
+        elif (type(target_sum) == int) | (type(target_sum) == float):
+            target_sum_RECODE = target_sum
         else:
-            size_factor = np.median(np.sum(self.X_trans, axis=1))
-            size_factor_RECODE = np.median(np.sum(self.X_RECODE, axis=1))
+            target_sum = np.median(np.sum(self.X_trans, axis=1))
+            target_sum_RECODE = np.median(np.sum(self.X_RECODE, axis=1))
         # X_ss_log = np.log(
-        #     size_factor
+        #     target_sum
         #     * (self.X_trans[:, self.idx_nonsilent].T / np.sum(self.X_trans, axis=1)).T
         #     + 1
         # )
         # X_RECODE_ss_log = np.log(
-        #     size_factor_RECODE
+        #     target_sum_RECODE
         #     * (self.X_RECODE[:, self.idx_nonsilent].T / np.sum(self.X_RECODE, axis=1)).T
         #     + 1
         # )
-        X_ss_log = np.log(size_factor * self.X_trans[:, self.idx_nonsilent] / np.sum(self.X_trans, axis=1)[:,np.newaxis]+ 1)
-        X_RECODE_ss_log = np.log(size_factor_RECODE * self.X_RECODE[:, self.idx_nonsilent] / np.sum(self.X_RECODE, axis=1)[:,np.newaxis] + 1)
+        X_ss_log = np.log(target_sum * self.X_trans[:, self.idx_nonsilent] / np.sum(self.X_trans, axis=1)[:,np.newaxis]+ 1)
+        X_RECODE_ss_log = np.log(target_sum_RECODE * self.X_RECODE[:, self.idx_nonsilent] / np.sum(self.X_RECODE, axis=1)[:,np.newaxis] + 1)
         fig, ax0 = plt.subplots(figsize=figsize)
         plt.rcParams["xtick.direction"] = "in"
         plt.rcParams["ytick.direction"] = "in"
@@ -2416,7 +2420,7 @@ class RECODE_core:
         dim = np.sum(X_var > 0)
         noise_var = 1
         if self.variance_estimate:
-            self.noise_var = self._noise_var_est(X)
+            noise_var = self._noise_var_est(X)
         thrshold = (dim - np.arange(n_pca)) * noise_var
         if np.sum(PCA_Ev_sum - thrshold < 0) == 0:
             self.logger.warning(
