@@ -6,6 +6,25 @@ on:
   workflow_dispatch:
 
 jobs:
+  # pypi:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #       image: python:3.9
+  #   defaults:
+  #     run:
+  #       working-directory: ./python
+  #   steps:
+  #     - uses: actions/checkout@v1
+  #     - name: install
+  #       run: pip install poetry
+  #     - name: build
+  #       run: |
+  #         poetry version $(grep "^version" pyproject.toml | grep -o "[0-9]\.[0-9]\.[0-9]").dev$(date +"%Y%m%d%H%M")
+  #         poetry build -f wheel
+  #     - name: publish
+  #       env:
+  #         PYPI_ORG_TOKEN: ${{ secrets.PYPI_ORG_TOKEN }}
+  #       run: poetry publish --username __token__ --password ${PYPI_ORG_TOKEN} --no-ansi -n -v
   sphinx:
     runs-on: ubuntu-latest
     permissions:
@@ -16,7 +35,7 @@ jobs:
       run:
         working-directory: ./python
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v1
       - name: install
         run: |
           apt-get update
@@ -25,19 +44,22 @@ jobs:
           pip install poetry sphinx sphinx_rtd_theme nbsphinx
       - name: make
         run: |
-          poetry export -f requirements.txt > requirements.txt
-          pip install -r requirements.txt
+          poetry export -f requirements.txt --output requirements.txt 
+          pip install -r requirements.txt 
           sphinx-apidoc -f -o ./sphinx screcode
           sphinx-build ./sphinx ./docs
           cp -r docs ../public
           poetry build
           mv dist/*.whl ../public/
-      - name: upload artifact
-        uses: actions/upload-artifact@v3
+      - name: pages
+        # uses: peaceiris/actions-gh-pages@v3
+        # with:
+        #   github_token: ${{ secrets.GITHUB_TOKEN }}
+        #   publish_dir: public
+        #   force_orphan: true
+        uses: actions/upload-pages-artifact@v1
         with:
-          name: public
           path: public
-
   deploy:
     needs: sphinx
     permissions:
