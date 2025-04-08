@@ -6,45 +6,20 @@ on:
       - main
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '16'
-
-    - name: Install dependencies
-      run: npm install
-
-    - name: Build project
-      run: npm run build
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v3 # Ensure this action is correctly referenced
-      with:
-        name: build-artifact
-        path: build/
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3  # Updated to latest version
+    - name: Checkout source code
+      uses: actions/checkout@v2
 
-    - name: Build
-      run: |
-        # Your build commands here
+    # Add your build steps here
 
-    - name: Upload Build Artifacts
+    - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
-        name: build-artifacts
-        path: path/to/artifacts  # Ensure this path is correct and exists
+        name: my-artifact
+        path: path/to/artifact
   sphinx:
     runs-on: ubuntu-latest
     permissions:
@@ -72,6 +47,24 @@ jobs:
           poetry build
           mv dist/*.whl ../public/
       - name: pages
+        # uses: peaceiris/actions-gh-pages@v3
+        # with:
+        #   github_token: ${{ secrets.GITHUB_TOKEN }}
+        #   publish_dir: public
+        #   force_orphan: true
         uses: actions/upload-pages-artifact@v1
         with:
           path: public
+  deploy:
+    needs: sphinx
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
