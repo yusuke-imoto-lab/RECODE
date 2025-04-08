@@ -1,11 +1,34 @@
 name: Deploy
+
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build project
+      run: npm run build
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3 # Ensure this action is correctly referenced
+      with:
+        name: build-artifact
+        path: build/
   build:
     runs-on: ubuntu-latest
 
@@ -22,7 +45,6 @@ jobs:
       with:
         name: build-artifacts
         path: path/to/artifacts  # Ensure this path is correct and exists
-
   sphinx:
     runs-on: ubuntu-latest
     permissions:
@@ -53,17 +75,3 @@ jobs:
         uses: actions/upload-pages-artifact@v1
         with:
           path: public
-
-  deploy:
-    needs: sphinx
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v1
