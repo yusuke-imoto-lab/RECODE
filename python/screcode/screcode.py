@@ -1087,7 +1087,6 @@ class RECODE:
         ax.text(0, 1, "Method: %s" % self.log_["seq_target"], fontsize=12)
         ax.text(0, 0.5, "nCells: %s" % self.n_trans, fontsize=12)
         ax.text(0, 0.0, "n%ss: %s" % (self.Unit, self.d_train), fontsize=12)
-        # ax.text(0,0.0,'Method: %s' % self.log_['seq_target'],fontsize=12)
         ax.axis("off")
         gs = GridSpecFromSubplotSpec(nrows=1, ncols=1, subplot_spec=gs_master[16:26, 25:64])
         ax = fig.add_subplot(gs[0, 0])
