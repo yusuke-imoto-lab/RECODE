@@ -1,59 +1,74 @@
-name: Deploy Documentation
-
+name: Deploy
 on:
   push:
     branches:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 jobs:
-  build-docs:
+  # pypi:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #       image: python:3.9
+  #   defaults:
+  #     run:
+  #       working-directory: ./python
+  #   steps:
+  #     - uses: actions/checkout@v1
+  #     - name: install
+  #       run: pip install poetry
+  #     - name: build
+  #       run: |
+  #         poetry version $(grep "^version" pyproject.toml | grep -o "[0-9]\.[0-9]\.[0-9]").dev$(date +"%Y%m%d%H%M")
+  #         poetry build -f wheel
+  #     - name: publish
+  #       env:
+  #         PYPI_ORG_TOKEN: ${{ secrets.PYPI_ORG_TOKEN }}
+  #       run: poetry publish --username __token__ --password ${PYPI_ORG_TOKEN} --no-ansi -n -v
+  sphinx:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     container:
       image: python:3.9
+    defaults:
+      run:
+        working-directory: ./python
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Install system dependencies
+      - uses: actions/checkout@v1
+      - name: install
         run: |
           apt-get update
           apt-get install -y pandoc
-
-      - name: Install Python packages
-        run: |
           pip install --upgrade pip
           pip install poetry sphinx sphinx_rtd_theme nbsphinx
-
-      - name: Build documentation and package
+      - name: make
         run: |
-          cd python
-          poetry export -f requirements.txt --output requirements.txt
+          poetry export -f requirements.txt > requirements.txt
           pip install -r requirements.txt
           sphinx-apidoc -f -o ./sphinx screcode
-          sphinx-build ./sphinx ../public
+          sphinx-build ./sphinx ./docs
+          cp -r docs ../public
           poetry build
-          cp dist/*.whl ../public/
-
-      - name: Check public contents
-        run: ls -lhR public
-
-      - name: Upload GitHub Pages artifact
+          mv dist/*.whl ../public/
+      - name: pages
+        # uses: peaceiris/actions-gh-pages@v3
+        # with:
+        #   github_token: ${{ secrets.GITHUB_TOKEN }}
+        #   publish_dir: public
+        #   force_orphan: true
         uses: actions/upload-pages-artifact@v1
         with:
           path: public
-
   deploy:
-    needs: build-docs
-    runs-on: ubuntu-latest
+    needs: sphinx
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
