@@ -1,4 +1,4 @@
-name: Deploy
+name: Github Pages
 on:
   push:
     branches:
@@ -6,34 +6,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  # pypi:
-  #   runs-on: ubuntu-latest
-  #   container:
-  #       image: python:3.9
-  #   defaults:
-  #     run:
-  #       working-directory: ./python
-  #   steps:
-  #     - uses: actions/checkout@v1
-  #     - name: install
-  #       run: pip install poetry
-  #     - name: build
-  #       run: |
-  #         poetry version $(grep "^version" pyproject.toml | grep -o "[0-9]\.[0-9]\.[0-9]").dev$(date +"%Y%m%d%H%M")
-  #         poetry build -f wheel
-  #     - name: publish
-  #       env:
-  #         PYPI_ORG_TOKEN: ${{ secrets.PYPI_ORG_TOKEN }}
-  #       run: poetry publish --username __token__ --password ${PYPI_ORG_TOKEN} --no-ansi -n -v
   sphinx:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     container:
-      image: python:3.9
-    defaults:
-      run:
-        working-directory: ./python
+      image: python:3.11
     steps:
       - uses: actions/checkout@v1
       - name: install
@@ -41,23 +19,19 @@ jobs:
           apt-get update
           apt-get install -y pandoc
           pip install --upgrade pip
-          pip install poetry sphinx sphinx_rtd_theme nbsphinx
-      - name: make
+          pip install poetry ipython
+          poetry self add poetry-plugin-export
+          poetry export -f requirements.txt --output requirements.txt --without-hashes --with=ghpages
+          pip install -r requirements.txt
+      - name: build
         run: |
-          poetry export -f requirements.txt --output requirements.txt 
-          pip install -r requirements.txt 
-          sphinx-apidoc -f -o ./sphinx screcode
-          sphinx-build ./sphinx ./docs
-          cp -r docs ../public
-          poetry build
-          mv dist/*.whl ../public/
+          cp ./README.md ./sphinx/source
+          cp ./scegot/tutorial.ipynb ./sphinx/source
+          sphinx-apidoc -f -o ./sphinx/source ./scegot
+          sphinx-build ./sphinx/source ./docs
+          cp -r docs ./public
       - name: pages
-        # uses: peaceiris/actions-gh-pages@v3
-        # with:
-        #   github_token: ${{ secrets.GITHUB_TOKEN }}
-        #   publish_dir: public
-        #   force_orphan: true
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: public
   deploy:
@@ -72,4 +46,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4
