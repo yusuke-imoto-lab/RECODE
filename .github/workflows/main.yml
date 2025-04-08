@@ -6,6 +6,12 @@ on:
   workflow_dispatch:
 
 jobs:
+  - name: install
+    run: |
+      apt-get update
+      apt-get install -y pandoc
+      pip install --upgrade pip
+      pip install poetry==1.2.0 sphinx sphinx_rtd_theme nbsphinx
   # pypi:
   #   runs-on: ubuntu-latest
   #   container:
@@ -72,4 +78,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4
