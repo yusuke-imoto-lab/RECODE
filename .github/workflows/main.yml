@@ -6,12 +6,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  - name: install
-    run: |
-      apt-get update
-      apt-get install -y pandoc
-      pip install --upgrade pip
-      pip install poetry==1.2.0 sphinx sphinx_rtd_theme nbsphinx
   # pypi:
   #   runs-on: ubuntu-latest
   #   container:
@@ -47,8 +41,14 @@ jobs:
           apt-get update
           apt-get install -y pandoc
           pip install --upgrade pip
-          pip install poetry sphinx sphinx_rtd_theme nbsphinx
-      - name: make
+          pip install poetry==1.2.0 sphinx sphinx_rtd_theme nbsphinx
+      # - name: install
+      #   run: |
+      #     apt-get update
+      #     apt-get install -y pandoc
+      #     pip install --upgrade pip
+      #     pip install poetry sphinx sphinx_rtd_theme nbsphinx
+      # - name: make
         run: |
           poetry export -f requirements.txt --output requirements.txt 
           pip install -r requirements.txt 
