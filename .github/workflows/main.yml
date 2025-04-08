@@ -1,25 +1,30 @@
 name: Deploy
-
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout source code
-      uses: actions/checkout@v2
-
-    # Add your build steps here
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: my-artifact
-        path: path/to/artifact
+  # pypi:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #       image: python:3.9
+  #   defaults:
+  #     run:
+  #       working-directory: ./python
+  #   steps:
+  #     - uses: actions/checkout@v1
+  #     - name: install
+  #       run: pip install poetry
+  #     - name: build
+  #       run: |
+  #         poetry version $(grep "^version" pyproject.toml | grep -o "[0-9]\.[0-9]\.[0-9]").dev$(date +"%Y%m%d%H%M")
+  #         poetry build -f wheel
+  #     - name: publish
+  #       env:
+  #         PYPI_ORG_TOKEN: ${{ secrets.PYPI_ORG_TOKEN }}
+  #       run: poetry publish --username __token__ --password ${PYPI_ORG_TOKEN} --no-ansi -n -v
   sphinx:
     runs-on: ubuntu-latest
     permissions:
@@ -52,7 +57,7 @@ jobs:
         #   github_token: ${{ secrets.GITHUB_TOKEN }}
         #   publish_dir: public
         #   force_orphan: true
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: public
   deploy:
