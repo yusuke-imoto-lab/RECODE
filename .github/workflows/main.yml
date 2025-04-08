@@ -52,11 +52,11 @@ jobs:
           poetry build
           mv dist/*.whl ../public/
       - name: pages
-        # uses: peaceiris/actions-gh-pages@v3
-        # with:
-        #   github_token: ${{ secrets.GITHUB_TOKEN }}
-        #   publish_dir: public
-        #   force_orphan: true
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: public
+          force_orphan: true
         uses: actions/upload-pages-artifact@v1
         with:
           path: public
