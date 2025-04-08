@@ -16,7 +16,7 @@ jobs:
       run:
         working-directory: ./python
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: install
         run: |
           apt-get update
@@ -32,10 +32,12 @@ jobs:
           cp -r docs ../public
           poetry build
           mv dist/*.whl ../public/
-      - name: pages
+      - name: upload artifact
         uses: actions/upload-artifact@v3
         with:
+          name: public
           path: public
+
   deploy:
     needs: sphinx
     permissions:
