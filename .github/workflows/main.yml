@@ -51,7 +51,7 @@ jobs:
           cp -r docs ../public
           poetry build
           mv dist/*.whl ../public/
-      - name: pages
+      # - name: pages
         # uses: peaceiris/actions-gh-pages@v3
         # with:
         #   github_token: ${{ secrets.GITHUB_TOKEN }}
