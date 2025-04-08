@@ -9,8 +9,8 @@ RECODE documentation
 
 .. image:: ../../images/RECODE_procedure.jpg
 
-`Y. Imoto, T. Nakamura, et al. Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis, 2022, Life Science Alliance <https://dx.doi.org/10.26508/lsa.202201591>`_. (Python ~v1.0.0)
-`Y. Imoto. Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform, 2024, bioRxiv <https://doi.org/10.1101/2024.04.18.590054>`_. (Python v1.0.0~)
+`Y. Imoto, T. Nakamura, et al. Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis, 2022, Life Science Alliance <https://dx.doi.org/10.26508/lsa.202201591>`_.
+`Y. Imoto. Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform, 2024, bioRxiv <https://doi.org/10.1101/2024.04.18.590054>`_.
 
 The license gives permission for personal, academic, or educational use. 
 Any commercial use is strictly prohibited. 
