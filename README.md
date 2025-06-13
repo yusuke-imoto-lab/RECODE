@@ -5,11 +5,34 @@
 
 Resolution of the curse of dimensionality (RECODE) is a noise reduction method for single-cell sequencing data based on high-dimensional statistics.
 
-[Y. Imoto, T. Nakamura, et al. Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis, 2022, Life Science Alliance](https://dx.doi.org/10.26508/lsa.202201591). 
+[Y. Imoto, T. Nakamura, et al. Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis, 2022, *Life Science Alliance*](https://dx.doi.org/10.26508/lsa.202201591). 
 
-[Y. Imoto. Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform, 2024, bioRxiv](https://doi.org/10.1101/2024.04.18.590054). 
+[Y. Imoto. Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform, 2024, *bioRxiv*](https://doi.org/10.1101/2024.04.18.590054). 
 
-The license gives permission for personal, academic, or educational use. Any commercial use is strictly prohibited. Please contact imoto.yusuke.4e\<at\>kyoto-u.ac.jp for licensing terms for any commercial use.
+The license gives permission for personal, academic, or educational use. Any commercial use is strictly prohibited. Please contact [imoto.yusuke.4e@kyoto-u.ac.jp](mailto:imoto.yusuke.4e@kyoto-u.ac.jp) for licensing terms for any commercial use.
+
+---
+
+## Table of Contents
+
+* [Overview](#overview)
+* [Python code](#python-code)
+* [R code](#r-code)
+* [R code (Python calling)](#r-code-python-calling)
+* [Desktop Application](#desktop-application)
+* [License](#license)
+* [Contact](#contact)
+
+---
+
+## Overview
+
+- Input is single-cell sequencing data (count matrix) $X \in \mathbb{Z}_{\geq 0}^{n\times d}$, where $n$ is the number of sample, $d$ is the number of features. For exmple, for scRNA-seq data, $n$ and $d$ correspond to the number of cells and genes, respectively. 
+- Compute the denoised data $X \in \mathbb{R}_{\geq 0}^{n\times d}$ with the same scale with $X$.
+- Compute the applicability of RECODE, classified *strongly applicable*, *weekly applicable*, and *inapplicable*, denoting the level of accuracy of noise reduction.
+
+
+---
 
 ## Python code
 
@@ -28,7 +51,7 @@ PyPi downloads (by PePy)
 [![Month](https://static.pepy.tech/personalized-badge/screcode?period=month&units=international_system&left_color=black&right_color=yellow&left_text=Month)](https://pepy.tech/project/screcode)
 [![Total](https://static.pepy.tech/personalized-badge/screcode?period=total&units=international_system&left_color=black&right_color=orange&left_text=Total)](https://pepy.tech/project/screcode)
 
-### Documentation
+### Documentation and Tutorial
 
 [Tutorials and API reference](https://yusuke-imoto-lab.github.io/RECODE/index.html)
 
@@ -38,6 +61,8 @@ PyPi downloads (by PePy)
 * numpy
 * scipy
 * scikit-learn
+
+---
 
 ## R code
 
@@ -79,6 +104,7 @@ For a detailed analysis, please see below:
 
 [Tutorial (Run, QC, Clustering, Annotating etc.)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_example.html)
 
+---
 
 ## R code (Python calling)
 
@@ -118,6 +144,8 @@ Below is a more detailed analysis:
 
 [Tutorial (Python calling)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_tutorial3_reticulate-recodeinstaller.html)
 
+---
+
 ## Desktop Application
 
 [Installation and Tutorials](https://github.com/yusuke-imoto-lab/GUI-RECODE#desktop-application-of-recode)
@@ -125,3 +153,19 @@ Below is a more detailed analysis:
 Windows (exe) and MAC OS (dmg) applications are avairable.
 
 <div style="text-align:left"><img style="width:100%; height: auto" src="https://github.com/yusuke-imoto-lab/RECODE/blob/main/images/RECODE_GUI.jpg"/></div>
+
+---
+
+## License
+
+MIT © 2022 Yusuke Imoto
+
+The license gives permission for personal, academic, or educational use. Any commercial use is strictly prohibited. Please contact [imoto.yusuke.4e@kyoto-u.ac.jp](mailto:imoto.yusuke.4e@kyoto-u.ac.jp) for licensing terms for any commercial use.
+
+---
+
+## Contact
+
+* **Yusuke Imoto**
+* Email: [imoto.yusuke.4e@kyoto-u.ac.jp](mailto:imoto.yusuke.4e@kyoto-u.ac.jp)
+* GitHub: [yusuke-imoto-lab/RECODE](https://github.com/yusuke-imoto-lab/RECODE)
