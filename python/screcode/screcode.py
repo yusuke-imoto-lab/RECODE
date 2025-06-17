@@ -19,13 +19,15 @@ class RECODE:
         fast_algorithm=True,
         fast_algorithm_ell_ub=1000,
         seq_target="RNA",
-        version=1,
+        version=2,
         solver="auto",
         downsampling_rate=0.2,
         decimals=5,
         RECODE_key="RECODE",
         anndata_key="layers",
         random_state=0,
+        log_normalize=True,
+        target_sum=1e4,
         verbose=True,
     ):
         """
@@ -42,8 +44,8 @@ class RECODE:
         seq_target : {'RNA','ATAC','Hi-C','Multiome'}, default='RNA'
                 Sequencing target. If 'ATAC', the preprocessing (odd-even stabilization) will be performed before the regular algorithm.
 
-        version : int default='1'
-                Version of RECODE.
+        version : int default='2'
+                Version of RECODE. Version 1 is the original algorithm `Imoto-Nakamura et al. 2022 <https://doi.org/10.26508/lsa.202201591>`_. Version 2 includes the eigenvector modification (Imoto 2024)
         
         solver : {'auto', 'full', 'randomized'}, default="auto"
                 If auto:
@@ -71,7 +73,6 @@ class RECODE:
         verbose : boolean, default=True
                 If False, all running messages are not displayed.
 
-
         Attributes
         ----------
         cv_ : ndarray of shape (n_features,)
@@ -95,27 +96,33 @@ class RECODE:
         self.version = version
         self.solver = solver
         self.downsampling_rate = downsampling_rate
-        self.random_state = random_state
         self.decimals = decimals
         self.RECODE_key = RECODE_key
         self.anndata_key = anndata_key
+        self.random_state = random_state
+        self.log_normalize = log_normalize
+        self.target_sum = target_sum
         self.verbose = verbose
-        self.unit, self.Unit = "gene", "Gene"
+
+        # Set unit and Unit based on seq_target
         if seq_target == "ATAC":
             self.unit, self.Unit = "peak", "Peak"
-        if seq_target == "Hi-C":
+        elif seq_target == "Hi-C":
             self.unit, self.Unit = "contact", "Contact"
-        if seq_target == "Multiome":
+        elif seq_target == "Multiome":
             self.unit, self.Unit = "feature", "Feature"
-        self.log_ = {}
-        self.log_["seq_target"] = self.seq_target
+        else:
+            self.unit, self.Unit = "gene", "Gene"
+
+        self.log_ = {"seq_target": self.seq_target}
         self.fit_idx = False
+
         self.logger = logging.getLogger("argument checking")
-        if verbose:
+        if self.verbose:
             self.logger.setLevel(logging.WARNING)
         else:
             self.logger.setLevel(logging.ERROR)
-
+            
     def _check_datatype(self, X):
         # if type(X) == anndata._core.anndata.AnnData:
         if isinstance(X, anndata.AnnData):
@@ -317,11 +324,9 @@ class RECODE:
         self.X_scaled_mean = X_scaled_mean
         self.idx_sig = self.X_norm_var > 1
         self.idx_nonsig = self.idx_sig == False
-        self.log_["#significant %ss" % self.unit] = sum(self.idx_sig)
-        self.log_["#non-significant %ss" % self.unit] = sum(self.idx_nonsig)
-        self.log_["#silent %ss" % self.unit] = (
-            X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig)
-        )
+        self.log_["#significant %ss" % self.unit] = int(sum(self.idx_sig))
+        self.log_["#non-significant %ss" % self.unit] = int(sum(self.idx_nonsig))
+        self.log_["#silent %ss" % self.unit] = int(X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig))
         self.fit_idx = True
 
     def transform(self, X):
@@ -357,8 +362,8 @@ class RECODE:
         X_RECODE = np.where(X_RECODE > 0, X_RECODE, 0)
         X_RECODE = np.round(X_RECODE, decimals=self.decimals)
         X_norm_RECODE = np.round(X_norm_RECODE, decimals=self.decimals)
-        self.log_["#silent %ss" % self.unit] = sum(np.sum(X_mat, axis=0) == 0)
-        self.log_["ell"] = self.recode_.ell
+        self.log_["#silent %ss" % self.unit] = int(sum(np.sum(X_mat, axis=0) == 0))
+        self.log_["ell"] = int(self.recode_.ell)
         if self.recode_.ell == self.fast_algorithm_ell_ub:
             self.logger.warning(
                 "Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_ub.\n"
@@ -388,13 +393,20 @@ class RECODE:
             if self.anndata_key == "obsm":
                 X_out.obsm[self.RECODE_key] = X_RECODE
                 X_out.obsm[self.RECODE_key+"_NVSN"] = X_norm_RECODE
+                if self.verbose:
+                    print(f"Normalized data are stored as \"{self.RECODE_key}\" in adata.obsm")
             else:
                 X_out.layers[self.RECODE_key] = X_RECODE
                 X_out.layers[self.RECODE_key+"_NVSN"] = X_norm_RECODE
+                if self.verbose:
+                    print(f"Normalized data are stored as \"{self.RECODE_key}\" in adata.layers")
             X_out.uns[self.RECODE_key+"_essential"] = X_ess
-            X_out.var["noise_variance"] = self.noise_variance_
-            X_out.var["normalized_variance"] = self.normalized_variance_
-            X_out.var["significance_RECODE"] = self.significance_
+            X_out.var["RECODE_noise_variance"] = self.noise_variance_
+            X_out.var["RECODE_normalized_variance"] = self.normalized_variance_
+            X_out.var["RECODE_significance"] = self.significance_
+            if self.log_normalize==True:
+                self.lognormalize(X_out, target_sum=self.target_sum)
+                X_out.var["RECODE_means"] = X_out.layers[f"{self.RECODE_key}_log"].mean(axis=0)
         else:
             X_out = X_RECODE
 
@@ -564,7 +576,7 @@ class RECODE:
         X_RECODE = np.zeros(X_mat.shape, dtype=float)
         X_RECODE[:, self.idx_nonsilent] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE_merge_)
         X_RECODE = np.where(X_RECODE > 0, X_RECODE, 0)
-        self.log_["#silent %ss" % self.unit] = sum(np.sum(X_mat, axis=0) == 0)
+        self.log_["#silent %ss" % self.unit] = int(sum(np.sum(X_mat, axis=0) == 0))
         self.log_["ell"] = self.recode_.ell
         if self.recode_.ell == self.fast_algorithm_ell_ub:
             self.logger.warning(
@@ -712,7 +724,7 @@ class RECODE:
                 X.layers[key+ "_norm"] = X_ss
                 X.layers[key+ "_log"] = X_log
             if self.verbose:
-                print("Normalized data are stored in \"%s\" and \"%s\"" % (key+ "_norm",key+ "_log"))
+                print("Normalized data are stored as \"%s\" and \"%s\" in adata.layers" % (key+ "_norm",key+ "_log"))
             return X
         else:
             return X_log
@@ -1038,7 +1050,7 @@ class RECODE:
         X_scaled = self._total_scaling(self.X_temp)
         X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
         norm_var = np.var(X_norm, axis=0, ddof=1)
-        target_sum = np.median(np.sum(self.X_trans, axis=1))
+        target_sum = self.target_sum
         X_ss_log = self._logp1(target_sum * self._total_scaling(self.X_trans[:, self.idx_nonsilent]),base)
         X_RECODE_ss_log = self._logp1(target_sum * self._total_scaling(self.X_RECODE[:, self.idx_nonsilent]),base)
         # X_ss_log = np.log(target_sum * self.X_trans[:, self.idx_nonsilent] / np.sum(self.X_trans, axis=1)[:,np.newaxis] + 1)
@@ -1564,7 +1576,7 @@ class RECODE:
         title="Normalized data",
         figsize=(7, 5),
         save=False,
-        save_filename="noise_variance",
+        save_filename="RECODE_noise_variance",
         save_format="png",
         dpi=None,
         show=True,
@@ -1633,7 +1645,7 @@ class RECODE:
         title="Projected data",
         figsize=(7, 5),
         save=False,
-        save_filename="noise_variance",
+        save_filename="RECODE_noise_variance",
         save_format="png",
         dpi=None,
         show=True,
@@ -1700,7 +1712,7 @@ class RECODE:
         title="Variance-modified data",
         figsize=(7, 5),
         save=False,
-        save_filename="noise_variance",
+        save_filename="RECODE_noise_variance",
         save_format="png",
         dpi=None,
         show=True,
@@ -1800,7 +1812,7 @@ class RECODE:
         title="",
         figsize=(7, 5),
         save=False,
-        save_filename="noise_variance",
+        save_filename="RECODE_denoised_data",
         save_format="png",
         dpi=None,
         show=True,
