@@ -45,15 +45,12 @@ class RECODE:
                 Sequencing target. If 'ATAC', the preprocessing (odd-even stabilization) will be performed before the regular algorithm.
 
         version : int default='2'
-                Version of RECODE. Version 1 is the original algorithm `Imoto-Nakamura et al. 2022 <https://doi.org/10.26508/lsa.202201591>`_. Version 2 includes the eigenvector modification (Imoto 2024)
+                Version of RECODE. Version 1 is the original algorithm (`Imoto-Nakamura et al. 2022 <https://doi.org/10.26508/lsa.202201591>`_.) Version 2 includes the eigenvector modification (`Imoto 2024 <https://doi.org/10.1101/2024.04.18.590054>`_.)
         
         solver : {'auto', 'full', 'randomized'}, default="auto"
-                If auto:
-                    set ``solver='randomized'`` if the number of samples (cells) are larger than 20,000. Otherwise set ``solver='full'``. 
-                If full:
-                    run learning process using the full input matrix. 
-                If randomized:
-                    run learning process involving computing SVD and estimating the essential dimension using downsampled data with the rate ``downsampling_rate``. 
+                auto: set ``solver='randomized'`` if the number of samples (cells) are larger than 20,000. Otherwise set ``solver='full'``. 
+                full: run learning process using the full input matrix. 
+                randomized: run learning process involving computing SVD and estimating the essential dimension using downsampled data with the rate ``downsampling_rate``. 
         
         downsampling_rate : float, default=1000
                 Downsampling rate, which is only relevant when ``solver='randomized'``. 
@@ -85,7 +82,7 @@ class RECODE:
                 Noise variances of features (genes/peaks).
 
         normalized_variance_ : ndarray of shape (n_features,)
-                Variances of features (genes/peaks).
+                Normalized variances of features (genes/peaks).
 
         significance_ : ndarray of shape (n_features,)
                 Significance (significant/non-significant/silent) of features (genes/peaks).
