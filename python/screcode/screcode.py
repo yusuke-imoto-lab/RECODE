@@ -27,7 +27,7 @@ class RECODE:
         anndata_key="layers",
         random_state=0,
         log_normalize=True,
-        target_sum=1e4,
+        target_sum=1e5,
         verbose=True,
     ):
         """
@@ -398,12 +398,12 @@ class RECODE:
                 if self.verbose:
                     print(f"Normalized data are stored as \"{self.RECODE_key}\" in adata.layers")
             X_out.uns[self.RECODE_key+"_essential"] = X_ess
-            X_out.var["RECODE_noise_variance"] = self.noise_variance_
-            X_out.var["RECODE_normalized_variance"] = self.normalized_variance_
-            X_out.var["RECODE_significance"] = self.significance_
+            X_out.var[f"{self.RECODE_key}_noise_variance"] = self.noise_variance_
+            X_out.var[f"{self.RECODE_key}_denoised_variance"] = self.normalized_variance_
+            X_out.var[f"{self.RECODE_key}_significance"] = self.significance_
             if self.log_normalize==True:
                 self.lognormalize(X_out, target_sum=self.target_sum)
-                X_out.var["RECODE_means"] = X_out.layers[f"{self.RECODE_key}_log"].mean(axis=0)
+                X_out.var[f"{self.RECODE_key}_means"] = X_out.layers[f"{self.RECODE_key}_log"].mean(axis=0)
         else:
             X_out = X_RECODE
 
@@ -725,6 +725,100 @@ class RECODE:
             return X
         else:
             return X_log
+    
+    def highly_variable_genes(
+        self,
+        adata,
+        n_top_genes=2000,
+        min_variance=None,
+        max_variance=None,
+        min_mean=None,
+        max_mean=None,
+        inplace=True,
+        RECODE_key="RECODE",
+        mean_key="means",
+        variance_key="denoised_variance",
+        output_key="highly_variable",
+        verbose=True,
+    ):
+        """
+        Select highly variable genes using normalized variance.
+
+        Parameters
+        ----------
+        adata : AnnData
+            Annotated data matrix.
+        n_top_genes : int or None
+            Number of top genes to select by normalized variance. If None, use thresholds.
+        min_variance : float or None
+            Minimum normalized variance for a gene to be considered. If None, do not filter by variance.
+        max_variance : float or None
+            Maximum normalized variance for a gene to be considered. If None, do not filter by variance.
+        min_mean : float or None
+            Minimum mean expression for a gene to be considered. If None, do not filter by mean.
+        max_mean : float or None
+            Maximum mean expression for a gene to be considered. If None, do not filter by mean.
+        inplace : bool
+            If True, adds a boolean mask to adata.var[output_key].
+        mean_key : str
+            Key in adata.var for mean values.
+        variance_key : str
+            Key in adata.var for normalized variance.
+        output_key : str
+            Key in adata.var to store the boolean mask.
+
+        Returns
+        -------
+        None or pandas.DataFrame
+            If inplace=False, returns a copy of adata.var with the mask added.
+        """
+        if RECODE_key not in adata.layers:
+            raise ValueError(f"{RECODE_key} not found in adata.layers.")
+        if f"{RECODE_key}_{variance_key}" not in adata.var:
+            raise ValueError(f"\"{RECODE_key}_{variance_key}\" not found in adata.var.")
+
+        mean = adata.var[f"{RECODE_key}_{mean_key}"].values
+        norm_var = adata.var[f"{RECODE_key}_{variance_key}"].values
+
+        # mean filter (optional)
+        if min_mean is not None or max_mean is not None:
+            gene_filter = np.ones_like(mean, dtype=bool)
+            if min_mean is not None:
+                gene_filter &= (mean > min_mean)
+            if max_mean is not None:
+                gene_filter &= (mean < max_mean)
+        else:
+            gene_filter = np.ones_like(mean, dtype=bool)
+
+        filtered_norm_var = norm_var[gene_filter]
+
+        # variance filter (optional)
+        if min_variance is not None or max_variance is not None:
+            disp_filter = np.ones_like(filtered_norm_var, dtype=bool)
+            if min_variance is not None:
+                disp_filter &= (filtered_norm_var > min_variance)
+            if max_variance is not None:
+                disp_filter &= (filtered_norm_var < max_variance)
+            selected = np.zeros(len(norm_var), dtype=bool)
+            idx = np.where(gene_filter)[0][disp_filter]
+            selected[idx] = True
+        else:
+            selected = gene_filter.copy()
+
+        # n_top_genes
+        if n_top_genes is not None:
+            top_idx = np.argsort(norm_var)[::-1][:n_top_genes]
+            selected = np.zeros(len(norm_var), dtype=bool)
+            selected[top_idx] = True
+
+        if inplace:
+            adata.var[f"{RECODE_key}_{output_key}"] = selected
+            if verbose or self.verbose:
+                print(f"Highly variable genes are stored in adata.var['{RECODE_key}_{output_key}']")
+        else:
+            result = adata.var.copy()
+            result[f"{RECODE_key}_{output_key}"] = selected
+            return result
 
     def check_applicability(
         self,
