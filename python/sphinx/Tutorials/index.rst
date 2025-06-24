@@ -6,6 +6,7 @@ Tutorials
     :maxdepth: 2
     
     Tutorial_RNA.ipynb
+    Tutorial_RNA_HVG.ipynb
     Tutorial_ATAC.ipynb
     Tutorial_Multiome.ipynb
     Tutorial_SpatialTranscriptome_StereoSeq.ipynb

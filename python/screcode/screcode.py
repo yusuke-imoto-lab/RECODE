@@ -389,17 +389,17 @@ class RECODE:
             X_out = anndata.AnnData.copy(X)
             if self.anndata_key == "obsm":
                 X_out.obsm[self.RECODE_key] = X_RECODE
-                X_out.obsm[self.RECODE_key+"_NVSN"] = X_norm_RECODE
+                X_out.obsm[f"{self.RECODE_key}_NVSN"] = X_norm_RECODE
                 if self.verbose:
                     print(f"Normalized data are stored as \"{self.RECODE_key}\" in adata.obsm")
             else:
                 X_out.layers[self.RECODE_key] = X_RECODE
-                X_out.layers[self.RECODE_key+"_NVSN"] = X_norm_RECODE
+                X_out.layers[f"{self.RECODE_key}_NVSN"] = X_norm_RECODE
                 if self.verbose:
                     print(f"Normalized data are stored as \"{self.RECODE_key}\" in adata.layers")
-            X_out.uns[self.RECODE_key+"_essential"] = X_ess
+            X_out.uns[f"{self.RECODE_key}_essential"] = X_ess
             X_out.var[f"{self.RECODE_key}_noise_variance"] = self.noise_variance_
-            X_out.var[f"{self.RECODE_key}_denoised_variance"] = self.normalized_variance_
+            X_out.var[f"{self.RECODE_key}_NVSN_variance"] = self.normalized_variance_
             X_out.var[f"{self.RECODE_key}_significance"] = self.significance_
             if self.log_normalize==True:
                 self.lognormalize(X_out, target_sum=self.target_sum)
@@ -611,14 +611,14 @@ class RECODE:
             X_out = anndata.AnnData.copy(X)
             if self.anndata_key == "obsm":
                 X_out.obsm[self.RECODE_key] = X_RECODE
-                X_out.obsm[self.RECODE_key+"_NVSN"] = X_norm_RECODE_merge
+                X_out.obsm[f"{self.RECODE_key}_NVSN"] = X_norm_RECODE_merge
             else:
                 X_out.layers[self.RECODE_key] = X_RECODE
-                X_out.layers[self.RECODE_key+"_NVSN"] = X_norm_RECODE_merge
-            X_out.uns[self.RECODE_key+"_essential"] = X_ess
-            X_out.var["noise_variance_RECODE"] = self.noise_variance_
-            X_out.var["normalized_variance_RECODE"] = self.normalized_variance_
-            X_out.var["significance_RECODE"] = self.significance_
+                X_out.layers[f"{self.RECODE_key}_NVSN"] = X_norm_RECODE_merge
+            X_out.uns[f"{self.RECODE_key}_essential"] = X_ess
+            X_out.var[f"{self.RECODE_key}_noise_variance"] = self.noise_variance_
+            X_out.var[f"{self.RECODE_key}_NVSN_variance"] = self.normalized_variance_
+            X_out.var[f"{self.RECODE_key}_significance"] = self.significance_
         else:
             X_out = X_RECODE
 
@@ -715,13 +715,14 @@ class RECODE:
         
         if type(X) == anndata._core.anndata.AnnData:
             if self.anndata_key == "obsm":
-                X.obsm[key+ "_norm"] = X_ss
-                X.obsm[key+ "_log"] = X_log
+                X.obsm[f"{key}_norm"] = X_ss
+                X.obsm[f"{key}_log"] = X_log
             else:
-                X.layers[key+ "_norm"] = X_ss
-                X.layers[key+ "_log"] = X_log
+                X.layers[f"{key}_norm"] = X_ss
+                X.layers[f"{key}_log"] = X_log
+            X.var[f"{key}_denoised_variance"] = np.var(X_log, axis=0)
             if self.verbose:
-                print("Normalized data are stored as \"%s\" and \"%s\" in adata.layers" % (key+ "_norm",key+ "_log"))
+                print("Normalized data are stored as \"%s\" and \"%s\" in adata.layers" % (f"{key}_norm",f"{key}_log"))
             return X
         else:
             return X_log
@@ -773,9 +774,9 @@ class RECODE:
             If inplace=False, returns a copy of adata.var with the mask added.
         """
         if RECODE_key not in adata.layers:
-            raise ValueError(f"{RECODE_key} not found in adata.layers.")
-        if f"{RECODE_key}_{variance_key}" not in adata.var:
-            raise ValueError(f"\"{RECODE_key}_{variance_key}\" not found in adata.var.")
+            raise ValueError(f"{RECODE_key} not found in adata.layers. Please conduct recode = screcode.RECODE and recode.fit_transform(adata) first.")
+        elif f"{RECODE_key}_{variance_key}" not in adata.var:
+            raise ValueError(f"\"{RECODE_key}_{variance_key}\" not found in adata.var. Please change key RECODE_key or variance_key. ")
 
         mean = adata.var[f"{RECODE_key}_{mean_key}"].values
         norm_var = adata.var[f"{RECODE_key}_{variance_key}"].values
