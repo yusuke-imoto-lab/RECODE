@@ -13,6 +13,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.1.0] - 2025-06-24
+### Added
+- Added highly variable gene selection function `highly_variable_genes`.
+- Added tutorial [Transcriptome (scRNA-seq data) + HVG selection](https://yusuke-imoto-lab.github.io/RECODE/Tutorials/Tutorial_RNA_HVG.html) on Sphinx.
+
+---
+
+## [2.0.0] - 2025-06-23
+### Changed
+- Changed the default version of noise reduction is 2.
+
+### Fixed
+- Fixed some errors in Readme.  
+
+---
+
 ## [1.0.1] - 2025-04-08
 ### Added
 - Added preprint information to the README.
