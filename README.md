@@ -178,8 +178,7 @@ The license gives permission for personal, academic, or educational use. Any com
 
 #### BibTex
 
-<button onclick="copyBib()">Copy Imoto2022RECODE</button>
-<pre><code id="Imoto2022RECODE">
+```bibtex
 @article{Imoto2022RECODE,
    author = {Imoto, Yusuke and Nakamura, Tomonori and Escolar, Emerson G and Yoshiwaki, Michio and Kojima, Yoji and Yabuta, Yukihiro and Katou, Yoshitaka and Yamamoto, Takuya and Hiraoka, Yasuaki and Saitou, Mitinori},
    title = {Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis},
@@ -190,18 +189,9 @@ The license gives permission for personal, academic, or educational use. Any com
    year = {2022},
    type = {Journal Article}
 }
-</code></pre>
-<script>
-function copyBib() {
-  const code = document.getElementById("Imoto2022RECODE").innerText;
-  navigator.clipboard.writeText(code)
-    .then(() => alert("BibTeX `Imoto2022RECODE` copied!"))
-    .catch(err => alert("Copy failed: " + err));
-}
-</script>
+```
 
-<button onclick="copyBib()">Copy Imoto2024iRECODE</button>
-<pre><code id="Imoto2024iRECODE">
+```bibtex
 @article{Imoto2024iRECODE,
     author = {Imoto, Yusuke},
    title = {Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform},
@@ -210,16 +200,7 @@ function copyBib() {
    year = {2024},
    type = {Journal Article}
 }
-</code></pre>
-<script>
-function copyBib() {
-  const code = document.getElementById("Imoto2024iRECODE").innerText;
-  navigator.clipboard.writeText(code)
-    .then(() => alert("BibTeX `Imoto2024iRECODE` copied!"))
-    .catch(err => alert("Copy failed: " + err));
-}
-</script>
-
+```
 
 
 
