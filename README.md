@@ -6,11 +6,11 @@
 
 Resolution of the curse of dimensionality (RECODE) is a noise reduction method for single-cell sequencing data based on high-dimensional statistics.
 
-[Y. Imoto, T. Nakamura, et al. Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis, 2022, *Life Science Alliance*](https://dx.doi.org/10.26508/lsa.202201591). 
+- [Y. Imoto, T. Nakamura, et al. Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis, *Life Science Alliance*, 2022](https://dx.doi.org/10.26508/lsa.202201591). 
 
-[Y. Imoto. Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform, 2024, *bioRxiv*](https://doi.org/10.1101/2024.04.18.590054). 
+- [Y. Imoto. Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform, *bioRxiv*, 2024](https://doi.org/10.1101/2024.04.18.590054). 
 
-[Y. Imoto. Accurate highly variable gene selection using RECODE in scRNA-seq data analysis, 2025, *bioRxiv*](https://doi.org/10.1101/2025.06.23.661026). 
+- [Y. Imoto. Accurate highly variable gene selection using RECODE in scRNA-seq data analysis, *bioRxiv*, 2025](https://doi.org/10.1101/2025.06.23.661026). 
 
 The license gives permission for personal, academic, or educational use. Any commercial use is strictly prohibited. Please contact [imoto.yusuke.4e@kyoto-u.ac.jp](mailto:imoto.yusuke.4e@kyoto-u.ac.jp) for licensing terms for any commercial use.
 
@@ -24,6 +24,7 @@ The license gives permission for personal, academic, or educational use. Any com
 * [R code (Python calling)](#r-code-python-calling)
 * [Desktop Application](#desktop-application)
 * [License](#license)
+* [Citation](#citation)
 * [Contact](#contact)
 
 ---
@@ -164,6 +165,63 @@ Windows (exe) and MAC OS (dmg) applications are avairable.
 MIT © 2022 Yusuke Imoto
 
 The license gives permission for personal, academic, or educational use. Any commercial use is strictly prohibited. Please contact [imoto.yusuke.4e@kyoto-u.ac.jp](mailto:imoto.yusuke.4e@kyoto-u.ac.jp) for licensing terms for any commercial use.
+
+---
+
+## Citation
+
+- Y. Imoto, T. Nakamura, et al. Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis, *Life Science Alliance*, 2022. 
+
+- Y. Imoto. Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform, *bioRxiv*, 2024. 
+
+- Y. Imoto. Accurate highly variable gene selection using RECODE in scRNA-seq data analysis, *bioRxiv*, 2025. 
+
+#### BibTex
+
+<button onclick="copyBib()">Copy Imoto2022RECODE</button>
+<pre><code id="Imoto2022RECODE">
+@article{Imoto2022RECODE,
+   author = {Imoto, Yusuke and Nakamura, Tomonori and Escolar, Emerson G and Yoshiwaki, Michio and Kojima, Yoji and Yabuta, Yukihiro and Katou, Yoshitaka and Yamamoto, Takuya and Hiraoka, Yasuaki and Saitou, Mitinori},
+   title = {Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis},
+   journal = {Life Sci Alliance},
+   volume = {5},
+   number = {12},
+   DOI = {10.26508/lsa.202201591},
+   year = {2022},
+   type = {Journal Article}
+}
+</code></pre>
+<script>
+function copyBib() {
+  const code = document.getElementById("Imoto2022RECODE").innerText;
+  navigator.clipboard.writeText(code)
+    .then(() => alert("BibTeX `Imoto2022RECODE` copied!"))
+    .catch(err => alert("Copy failed: " + err));
+}
+</script>
+
+<button onclick="copyBib()">Copy Imoto2024iRECODE</button>
+<pre><code id="Imoto2024iRECODE">
+@article{Imoto2024iRECODE,
+    author = {Imoto, Yusuke},
+   title = {Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform},
+   journal = {bioRxiv},
+   DOI = {10.1101/2024.04.18.590054},
+   year = {2024},
+   type = {Journal Article}
+}
+</code></pre>
+<script>
+function copyBib() {
+  const code = document.getElementById("Imoto2024iRECODE").innerText;
+  navigator.clipboard.writeText(code)
+    .then(() => alert("BibTeX `Imoto2024iRECODE` copied!"))
+    .catch(err => alert("Copy failed: " + err));
+}
+</script>
+
+
+
 
 ---
 
