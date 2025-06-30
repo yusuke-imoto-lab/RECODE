@@ -198,10 +198,18 @@ The license gives permission for personal, academic, or educational use. Any com
    journal = {bioRxiv},
    DOI = {10.1101/2024.04.18.590054},
    year = {2024},
-   type = {Journal Article}
 }
 ```
 
+```bibtex
+@article{Imoto2025RECODEHVG,
+    author = {Imoto, Yusuke},
+   title = {Accurate highly variable gene selection using RECODE in scRNA-seq data analysis},
+   journal = {bioRxiv},
+   DOI = {10.1101/2025.06.23.661026},
+   year = {2025},
+}
+```
 
 
 ---
