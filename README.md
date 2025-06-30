@@ -168,13 +168,16 @@ The license gives permission for personal, academic, or educational use. Any com
 
 ---
 
-## Citation
+## Citations
 
-- Y. Imoto, T. Nakamura, et al. Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis, *Life Science Alliance*, 2022. 
+If you use RECODE, please cite the following:
 
-- Y. Imoto. Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform, *bioRxiv*, 2024. 
+- Imoto, Y., Nakamura, T., *et al.* (2022). Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis. _Life Science Alliance_, **version 0.1.2** onward.
 
-- Y. Imoto. Accurate highly variable gene selection using RECODE in scRNA-seq data analysis, *bioRxiv*, 2025. 
+- Imoto, Y. (2024). Comprehensive noise reduction in single-cell data with the RECODE platform. _bioRxiv_, **version 1.0.0** onward.
+
+- Imoto, Y. (2025). Accurate highly variable gene selection using RECODE in scRNA-seq data analysis. _bioRxiv_, **version 2.0.0** onward.
+
 
 #### BibTex
 
@@ -193,7 +196,7 @@ The license gives permission for personal, academic, or educational use. Any com
 
 ```bibtex
 @article{Imoto2024iRECODE,
-    author = {Imoto, Yusuke},
+   author = {Imoto, Yusuke},
    title = {Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform},
    journal = {bioRxiv},
    DOI = {10.1101/2024.04.18.590054},
@@ -203,7 +206,7 @@ The license gives permission for personal, academic, or educational use. Any com
 
 ```bibtex
 @article{Imoto2025RECODEHVG,
-    author = {Imoto, Yusuke},
+   author = {Imoto, Yusuke},
    title = {Accurate highly variable gene selection using RECODE in scRNA-seq data analysis},
    journal = {bioRxiv},
    DOI = {10.1101/2025.06.23.661026},
