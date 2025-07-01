@@ -162,9 +162,12 @@ Windows (exe) and MAC OS (dmg) applications are avairable.
 
 ## License
 
-MIT © 2022 Yusuke Imoto
+© 2022 Yusuke Imoto
 
-The license gives permission for personal, academic, or educational use. Any commercial use is strictly prohibited. Please contact [imoto.yusuke.4e@kyoto-u.ac.jp](mailto:imoto.yusuke.4e@kyoto-u.ac.jp) for licensing terms for any commercial use.
+This project is licensed under the MIT License.  
+**Patent rights are NOT granted under this license**; any commercial use of the patented RECODE algorithm requires a separate patent‐licensing agreement.  
+Please contact <imoto.yusuke.4e@kyoto-u.ac.jp> for commercial licensing terms.
+
 
 ---
 
