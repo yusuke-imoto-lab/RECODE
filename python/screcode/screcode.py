@@ -123,14 +123,7 @@ class RECODE:
     def _check_datatype(self, X):
         # if type(X) == anndata._core.anndata.AnnData:
         if isinstance(X, anndata.AnnData):
-            if scipy.sparse.issparse(X.X):
-                return X.X.toarray()
-            elif type(X.X) == np.ndarray:
-                return X.X
-            elif type(X.X) == anndata._core.views.ArrayView:
-                return np.array(X.X)
-            else:
-                raise TypeError("Data type error: ndarray or anndata is available.")
+            adata = X
             if "feature_types" in adata.var.keys():
                 if (set(adata.var["feature_types"]) == {"Gene Expression"}) & (
                     self.seq_target != "RNA"
@@ -150,6 +143,15 @@ class RECODE:
                     self.logger.warning(
                         "Warning: Input data may be multiome (scRNA-seq + scATAC-seq) data. Please add option seq_target='Multiome' like screcode.RECODE(seq_target='Multiome'). "
                     )
+
+            if scipy.sparse.issparse(adata.X):
+                return adata.X.toarray()
+            elif isinstance(adata.X, np.ndarray):
+                return adata.X
+            elif isinstance(adata.X, anndata._core.views.ArrayView):
+                return np.array(adata.X)
+            else:
+                raise TypeError("Data type error: ndarray or anndata is available.")
         elif self.seq_target == "Multiome":
             raise TypeError(
                 "Data type error: only anndata type is acceptable for multiome (scRNA-seq + scATAC-seq) data."
@@ -175,7 +177,7 @@ class RECODE:
             X,
             base=None
         ):
-        return np.log(X+1) if base==None else np.log(X+1)/np.log(base)
+        return np.log(X+1) if base is None else np.log(X+1)/np.log(base)
 
     def _noise_variance_stabilizing_normalization(self, X):
         """
