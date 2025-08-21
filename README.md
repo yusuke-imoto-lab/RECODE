@@ -31,9 +31,12 @@ The license gives permission for personal, academic, or educational use. Any com
 
 ## Overview
 
-- Input is single-cell sequencing data (count matrix) $X \in \mathbb{Z}_{\geq 0}^{n\times d}$, where $n$ is the number of sample, $d$ is the number of features. For exmple, for scRNA-seq data, $n$ and $d$ correspond to the number of cells and genes, respectively. 
-- Compute the denoised data $X \in \mathbb{R}_{\geq 0}^{n\times d}$ with the same scale with $X$.
-- Compute the applicability of RECODE, classified *strongly applicable*, *weekly applicable*, and *inapplicable*, denoting the level of accuracy of noise reduction.
+- Input is
+  - single-cell sequencing data (count matrix) $X \in \mathbb{Z}_{\geq 0}^{n\times d}$, where $n$ is the number of sample, $d$ is the number of features. For exmple, for scRNA-seq data, $n$ and $d$ correspond to the number of cells and genes, respectively. 
+- Compute 
+  - denoised data $X \in \mathbb{R}_{\geq 0}^{n\times d}$ with the same scale with $X$.
+  - (optional) applicability of RECODE, classified *strongly applicable*, *weekly applicable*, and *inapplicable*, denoting the level of accuracy of noise reduction.
+  - (optional) highly variable genes. 
 
 
 ---
