@@ -597,6 +597,10 @@ class RECODE:
         self.significance_[self.normalized_variance_ == 0] = "silent"
         self.significance_[self.normalized_variance_ > 0] = "non-significant"
         self.significance_[self.normalized_variance_ > 1] = "significant"
+        idx_act_cells = np.sum(X_mat,axis=1) > 0
+        self.num_invalid_cells = sum(idx_act_cells==False)
+        self.n_trans = X.shape[0]
+        self.d_trans = X.shape[1]
 
         if type(X) == anndata._core.anndata.AnnData:
             X_out = anndata.AnnData.copy(X)
