@@ -8,7 +8,7 @@ Resolution of the curse of dimensionality (RECODE) is a noise reduction method f
 
 - [Y. Imoto, T. Nakamura, et al. Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis, *Life Science Alliance*, 2022](https://dx.doi.org/10.26508/lsa.202201591). 
 
-- [Y. Imoto. Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform, *bioRxiv*, 2024](https://doi.org/10.1101/2024.04.18.590054). 
+- [Y. Imoto. Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform, *Cell Reports Methods*, 2025](https://doi.org/10.1016/j.crmeth.2025.101178). 
 
 - [Y. Imoto. Accurate highly variable gene selection using RECODE in scRNA-seq data analysis, *bioRxiv*, 2025](https://doi.org/10.1101/2025.06.23.661026). 
 

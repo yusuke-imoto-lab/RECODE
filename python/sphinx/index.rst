@@ -9,9 +9,11 @@ RECODE documentation
 
 .. image:: ../../images/RECODE_procedure.jpg
 
-`Y. Imoto, T. Nakamura, et al. Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis, 2022, Life Science Alliance <https://dx.doi.org/10.26508/lsa.202201591>`_.
+`Y. Imoto, T. Nakamura, et al. Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis, Life Science Alliance, 2022 <https://dx.doi.org/10.26508/lsa.202201591>`_.
 
-`Y. Imoto. Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform, 2024, bioRxiv <https://doi.org/10.1101/2024.04.18.590054>`_.
+`Y. Imoto. Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform, Cell Reports Methods, 2025 <https://doi.org/10.1016/j.crmeth.2025.101178>`_.
+
+`Y. Imoto. Accurate highly variable gene selection using RECODE in scRNA-seq data analysis, bioRxiv, 2025 <https://doi.org/10.1101/2025.06.23.661026>`_.
 
 The license gives permission for personal, academic, or educational use. 
 Any commercial use is strictly prohibited. 
