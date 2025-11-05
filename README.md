@@ -1,15 +1,45 @@
 # RECODE - Resolution of the curse of dimensionality
 
-<div style="text-align:left"><img style="width:50%; height: auto" src="https://github.com/yusuke-imoto-lab/RECODE/blob/main/images/Logo_RECODE.png"/></div>
+<div style="text-align:left"><img style="width:50%; height: auto" src="https://github.com/yusuke-imoto-lab/RECODE/blob/main/images/Logo_RECODE.jpg"/></div>
 <div style="text-align:left"><img style="width:100%; height: auto" src="https://github.com/yusuke-imoto-lab/RECODE/blob/main/images/RECODE_procedure.jpg"/></div>
+
 
 Resolution of the curse of dimensionality (RECODE) is a noise reduction method for single-cell sequencing data based on high-dimensional statistics.
 
-[Y. Imoto, T. Nakamura, et al. Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis, 2022, Life Science Alliance](https://dx.doi.org/10.26508/lsa.202201591). 
+- [Y. Imoto, T. Nakamura, et al. Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis, *Life Science Alliance*, 2022](https://dx.doi.org/10.26508/lsa.202201591). 
 
-[Y. Imoto. Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform, 2024, bioRxiv](https://doi.org/10.1101/2024.04.18.590054). 
+- [Y. Imoto. Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform, *bioRxiv*, 2024](https://doi.org/10.1101/2024.04.18.590054). 
 
-The license gives permission for personal, academic, or educational use. Any commercial use is strictly prohibited. Please contact imoto.yusuke.4e\<at\>kyoto-u.ac.jp for licensing terms for any commercial use.
+- [Y. Imoto. Accurate highly variable gene selection using RECODE in scRNA-seq data analysis, *bioRxiv*, 2025](https://doi.org/10.1101/2025.06.23.661026). 
+
+The license gives permission for personal, academic, or educational use. Any commercial use is strictly prohibited. Please contact [imoto.yusuke.4e@kyoto-u.ac.jp](mailto:imoto.yusuke.4e@kyoto-u.ac.jp) for licensing terms for any commercial use.
+
+---
+
+## Table of Contents
+
+* [Overview](#overview)
+* [Python code](#python-code)
+* [R code](#r-code)
+* [R code (Python calling)](#r-code-python-calling)
+* [Desktop Application](#desktop-application)
+* [License](#license)
+* [Citation](#citation)
+* [Contact](#contact)
+
+---
+
+## Overview
+
+- Input is
+  - single-cell sequencing data (count matrix) $X \in \mathbb{Z}_{\geq 0}^{n\times d}$, where $n$ is the number of sample, $d$ is the number of features. For exmple, for scRNA-seq data, $n$ and $d$ correspond to the number of cells and genes, respectively. 
+- Compute 
+  - denoised data $X \in \mathbb{R}_{\geq 0}^{n\times d}$ with the same scale with $X$.
+  - (optional) applicability of RECODE, classified *strongly applicable*, *weekly applicable*, and *inapplicable*, denoting the level of accuracy of noise reduction.
+  - (optional) highly variable genes. 
+
+
+---
 
 ## Python code
 
@@ -28,7 +58,7 @@ PyPi downloads (by PePy)
 [![Month](https://static.pepy.tech/personalized-badge/screcode?period=month&units=international_system&left_color=black&right_color=yellow&left_text=Month)](https://pepy.tech/project/screcode)
 [![Total](https://static.pepy.tech/personalized-badge/screcode?period=total&units=international_system&left_color=black&right_color=orange&left_text=Total)](https://pepy.tech/project/screcode)
 
-### Documentation
+### Documentation and Tutorial
 
 [Tutorials and API reference](https://yusuke-imoto-lab.github.io/RECODE/index.html)
 
@@ -38,6 +68,8 @@ PyPi downloads (by PePy)
 * numpy
 * scipy
 * scikit-learn
+
+---
 
 ## R code
 
@@ -79,6 +111,7 @@ For a detailed analysis, please see below:
 
 [Tutorial (Run, QC, Clustering, Annotating etc.)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_example.html)
 
+---
 
 ## R code (Python calling)
 
@@ -118,6 +151,8 @@ Below is a more detailed analysis:
 
 [Tutorial (Python calling)](https://yusukeimoto.github.io/images/RECODE_R_Tutorials/Run_RECODE_on_R_tutorial3_reticulate-recodeinstaller.html)
 
+---
+
 ## Desktop Application
 
 [Installation and Tutorials](https://github.com/yusuke-imoto-lab/GUI-RECODE#desktop-application-of-recode)
@@ -125,3 +160,73 @@ Below is a more detailed analysis:
 Windows (exe) and MAC OS (dmg) applications are avairable.
 
 <div style="text-align:left"><img style="width:100%; height: auto" src="https://github.com/yusuke-imoto-lab/RECODE/blob/main/images/RECODE_GUI.jpg"/></div>
+
+---
+
+## License
+
+© 2022 Yusuke Imoto
+
+This project is licensed under the MIT License.  
+**Patent rights are NOT granted under this license**; any commercial use of the patented RECODE algorithm requires a separate patent‐licensing agreement.  
+Please contact <imoto.yusuke.4e@kyoto-u.ac.jp> for commercial licensing terms.
+
+
+---
+
+## Citations
+
+If you use RECODE, please cite the following:
+
+- Imoto, Y., Nakamura, T., *et al.* (2022). Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis. _Life Science Alliance_.
+###
+
+```bibtex
+@article{Imoto2022RECODE,
+   author = {Imoto, Yusuke and Nakamura, Tomonori and Escolar, Emerson G and Yoshiwaki, Michio and Kojima, Yoji and Yabuta, Yukihiro and Katou, Yoshitaka and Yamamoto, Takuya and Hiraoka, Yasuaki and Saitou, Mitinori},
+   title = {Resolution of the curse of dimensionality in single-cell RNA sequencing data analysis},
+   journal = {Life Sci Alliance},
+   volume = {5},
+   number = {12},
+   DOI = {10.26508/lsa.202201591},
+   year = {2022},
+   type = {Journal Article}
+}
+```
+
+If you use iRECODE (integrative RECODE), please cite the following:
+
+- Imoto, Y. (2024). Comprehensive noise reduction in single-cell data with the RECODE platform. _bioRxiv_. 
+
+```bibtex
+@article{Imoto2024iRECODE,
+   author = {Imoto, Yusuke},
+   title = {Comprehensive Noise Reduction in Single-Cell Data with the RECODE Platform},
+   journal = {bioRxiv},
+   DOI = {10.1101/2024.04.18.590054},
+   year = {2024},
+}
+```
+If you use RECODE-based highly variable gene selection function, please cite the following:
+
+- Imoto, Y. (2025). Accurate highly variable gene selection using RECODE in scRNA-seq data analysis. _bioRxiv_.
+
+
+```bibtex
+@article{Imoto2025RECODEHVG,
+   author = {Imoto, Yusuke},
+   title = {Accurate highly variable gene selection using RECODE in scRNA-seq data analysis},
+   journal = {bioRxiv},
+   DOI = {10.1101/2025.06.23.661026},
+   year = {2025},
+}
+```
+
+
+---
+
+## Contact
+
+* **Yusuke Imoto**
+* Email: [imoto.yusuke.4e@kyoto-u.ac.jp](mailto:imoto.yusuke.4e@kyoto-u.ac.jp)
+* GitHub: [yusuke-imoto-lab/RECODE](https://github.com/yusuke-imoto-lab/RECODE)

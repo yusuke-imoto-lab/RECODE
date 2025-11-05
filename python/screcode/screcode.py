@@ -19,13 +19,15 @@ class RECODE:
         fast_algorithm=True,
         fast_algorithm_ell_ub=1000,
         seq_target="RNA",
-        version=1,
+        version=2,
         solver="auto",
         downsampling_rate=0.2,
         decimals=5,
         RECODE_key="RECODE",
         anndata_key="layers",
         random_state=0,
+        log_normalize=True,
+        target_sum=1e5,
         verbose=True,
     ):
         """
@@ -42,16 +44,13 @@ class RECODE:
         seq_target : {'RNA','ATAC','Hi-C','Multiome'}, default='RNA'
                 Sequencing target. If 'ATAC', the preprocessing (odd-even stabilization) will be performed before the regular algorithm.
 
-        version : int default='1'
-                Version of RECODE.
+        version : int default='2'
+                Version of RECODE. Version 1 is the original algorithm (`Imoto-Nakamura et al. 2022 <https://doi.org/10.26508/lsa.202201591>`_.) Version 2 includes the eigenvector modification (`Imoto 2024 <https://doi.org/10.1101/2024.04.18.590054>`_.)
         
         solver : {'auto', 'full', 'randomized'}, default="auto"
-                If auto:
-                    set ``solver='randomized'`` if the number of samples (cells) are larger than 20,000. Otherwise set ``solver='full'``. 
-                If full:
-                    run learning process using the full input matrix. 
-                If randomized:
-                    run learning process involving computing SVD and estimating the essential dimension using downsampled data with the rate ``downsampling_rate``. 
+                auto: set ``solver='randomized'`` if the number of samples (cells) are larger than 20,000. Otherwise set ``solver='full'``. 
+                full: run learning process using the full input matrix. 
+                randomized: run learning process involving computing SVD and estimating the essential dimension using downsampled data with the rate ``downsampling_rate``. 
         
         downsampling_rate : float, default=1000
                 Downsampling rate, which is only relevant when ``solver='randomized'``. 
@@ -71,7 +70,6 @@ class RECODE:
         verbose : boolean, default=True
                 If False, all running messages are not displayed.
 
-
         Attributes
         ----------
         cv_ : ndarray of shape (n_features,)
@@ -84,7 +82,7 @@ class RECODE:
                 Noise variances of features (genes/peaks).
 
         normalized_variance_ : ndarray of shape (n_features,)
-                Variances of features (genes/peaks).
+                Normalized variances of features (genes/peaks).
 
         significance_ : ndarray of shape (n_features,)
                 Significance (significant/non-significant/silent) of features (genes/peaks).
@@ -95,27 +93,33 @@ class RECODE:
         self.version = version
         self.solver = solver
         self.downsampling_rate = downsampling_rate
-        self.random_state = random_state
         self.decimals = decimals
         self.RECODE_key = RECODE_key
         self.anndata_key = anndata_key
+        self.random_state = random_state
+        self.log_normalize = log_normalize
+        self.target_sum = target_sum
         self.verbose = verbose
-        self.unit, self.Unit = "gene", "Gene"
+
+        # Set unit and Unit based on seq_target
         if seq_target == "ATAC":
             self.unit, self.Unit = "peak", "Peak"
-        if seq_target == "Hi-C":
+        elif seq_target == "Hi-C":
             self.unit, self.Unit = "contact", "Contact"
-        if seq_target == "Multiome":
+        elif seq_target == "Multiome":
             self.unit, self.Unit = "feature", "Feature"
-        self.log_ = {}
-        self.log_["seq_target"] = self.seq_target
+        else:
+            self.unit, self.Unit = "gene", "Gene"
+
+        self.log_ = {"seq_target": self.seq_target}
         self.fit_idx = False
+
         self.logger = logging.getLogger("argument checking")
-        if verbose:
+        if self.verbose:
             self.logger.setLevel(logging.WARNING)
         else:
             self.logger.setLevel(logging.ERROR)
-
+            
     def _check_datatype(self, X):
         # if type(X) == anndata._core.anndata.AnnData:
         if isinstance(X, anndata.AnnData):
@@ -317,11 +321,9 @@ class RECODE:
         self.X_scaled_mean = X_scaled_mean
         self.idx_sig = self.X_norm_var > 1
         self.idx_nonsig = self.idx_sig == False
-        self.log_["#significant %ss" % self.unit] = sum(self.idx_sig)
-        self.log_["#non-significant %ss" % self.unit] = sum(self.idx_nonsig)
-        self.log_["#silent %ss" % self.unit] = (
-            X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig)
-        )
+        self.log_["#significant %ss" % self.unit] = int(sum(self.idx_sig))
+        self.log_["#non-significant %ss" % self.unit] = int(sum(self.idx_nonsig))
+        self.log_["#silent %ss" % self.unit] = int(X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig))
         self.fit_idx = True
 
     def transform(self, X):
@@ -357,8 +359,8 @@ class RECODE:
         X_RECODE = np.where(X_RECODE > 0, X_RECODE, 0)
         X_RECODE = np.round(X_RECODE, decimals=self.decimals)
         X_norm_RECODE = np.round(X_norm_RECODE, decimals=self.decimals)
-        self.log_["#silent %ss" % self.unit] = sum(np.sum(X_mat, axis=0) == 0)
-        self.log_["ell"] = self.recode_.ell
+        self.log_["#silent %ss" % self.unit] = int(sum(np.sum(X_mat, axis=0) == 0))
+        self.log_["ell"] = int(self.recode_.ell)
         if self.recode_.ell == self.fast_algorithm_ell_ub:
             self.logger.warning(
                 "Acceleration error: the value of ell may not be optimal. Set 'fast_algorithm=False' or larger fast_algorithm_ell_ub.\n"
@@ -387,14 +389,21 @@ class RECODE:
             X_out = anndata.AnnData.copy(X)
             if self.anndata_key == "obsm":
                 X_out.obsm[self.RECODE_key] = X_RECODE
-                X_out.obsm[self.RECODE_key+"_NVSN"] = X_norm_RECODE
+                X_out.obsm[f"{self.RECODE_key}_NVSN"] = X_norm_RECODE
+                if self.verbose:
+                    print(f"Normalized data are stored as \"{self.RECODE_key}\" in adata.obsm")
             else:
                 X_out.layers[self.RECODE_key] = X_RECODE
-                X_out.layers[self.RECODE_key+"_NVSN"] = X_norm_RECODE
-            X_out.uns[self.RECODE_key+"_essential"] = X_ess
-            X_out.var["noise_variance"] = self.noise_variance_
-            X_out.var["normalized_variance"] = self.normalized_variance_
-            X_out.var["significance_RECODE"] = self.significance_
+                X_out.layers[f"{self.RECODE_key}_NVSN"] = X_norm_RECODE
+                if self.verbose:
+                    print(f"Normalized data are stored as \"{self.RECODE_key}\" in adata.layers")
+            X_out.uns[f"{self.RECODE_key}_essential"] = X_ess
+            X_out.var[f"{self.RECODE_key}_noise_variance"] = self.noise_variance_
+            X_out.var[f"{self.RECODE_key}_NVSN_variance"] = self.normalized_variance_
+            X_out.var[f"{self.RECODE_key}_significance"] = self.significance_
+            if self.log_normalize==True:
+                self.lognormalize(X_out, target_sum=self.target_sum)
+                X_out.var[f"{self.RECODE_key}_means"] = X_out.layers[f"{self.RECODE_key}_log"].mean(axis=0)
         else:
             X_out = X_RECODE
 
@@ -564,7 +573,7 @@ class RECODE:
         X_RECODE = np.zeros(X_mat.shape, dtype=float)
         X_RECODE[:, self.idx_nonsilent] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE_merge_)
         X_RECODE = np.where(X_RECODE > 0, X_RECODE, 0)
-        self.log_["#silent %ss" % self.unit] = sum(np.sum(X_mat, axis=0) == 0)
+        self.log_["#silent %ss" % self.unit] = int(sum(np.sum(X_mat, axis=0) == 0))
         self.log_["ell"] = self.recode_.ell
         if self.recode_.ell == self.fast_algorithm_ell_ub:
             self.logger.warning(
@@ -606,14 +615,14 @@ class RECODE:
             X_out = anndata.AnnData.copy(X)
             if self.anndata_key == "obsm":
                 X_out.obsm[self.RECODE_key] = X_RECODE
-                X_out.obsm[self.RECODE_key+"_NVSN"] = X_norm_RECODE_merge
+                X_out.obsm[f"{self.RECODE_key}_NVSN"] = X_norm_RECODE_merge
             else:
                 X_out.layers[self.RECODE_key] = X_RECODE
-                X_out.layers[self.RECODE_key+"_NVSN"] = X_norm_RECODE_merge
-            X_out.uns[self.RECODE_key+"_essential"] = X_ess
-            X_out.var["noise_variance_RECODE"] = self.noise_variance_
-            X_out.var["normalized_variance_RECODE"] = self.normalized_variance_
-            X_out.var["significance_RECODE"] = self.significance_
+                X_out.layers[f"{self.RECODE_key}_NVSN"] = X_norm_RECODE_merge
+            X_out.uns[f"{self.RECODE_key}_essential"] = X_ess
+            X_out.var[f"{self.RECODE_key}_noise_variance"] = self.noise_variance_
+            X_out.var[f"{self.RECODE_key}_NVSN_variance"] = self.normalized_variance_
+            X_out.var[f"{self.RECODE_key}_significance"] = self.significance_
         else:
             X_out = X_RECODE
 
@@ -710,16 +719,111 @@ class RECODE:
         
         if type(X) == anndata._core.anndata.AnnData:
             if self.anndata_key == "obsm":
-                X.obsm[key+ "_norm"] = X_ss
-                X.obsm[key+ "_log"] = X_log
+                X.obsm[f"{key}_norm"] = X_ss
+                X.obsm[f"{key}_log"] = X_log
             else:
-                X.layers[key+ "_norm"] = X_ss
-                X.layers[key+ "_log"] = X_log
+                X.layers[f"{key}_norm"] = X_ss
+                X.layers[f"{key}_log"] = X_log
+            X.var[f"{key}_denoised_variance"] = np.var(X_log, axis=0)
             if self.verbose:
-                print("Normalized data are stored in \"%s\" and \"%s\"" % (key+ "_norm",key+ "_log"))
+                print("Normalized data are stored as \"%s\" and \"%s\" in adata.layers" % (f"{key}_norm",f"{key}_log"))
             return X
         else:
             return X_log
+    
+    def highly_variable_genes(
+        self,
+        adata,
+        n_top_genes=2000,
+        min_variance=None,
+        max_variance=None,
+        min_mean=None,
+        max_mean=None,
+        inplace=True,
+        RECODE_key="RECODE",
+        mean_key="means",
+        variance_key="denoised_variance",
+        output_key="highly_variable",
+        verbose=True,
+    ):
+        """
+        Select highly variable genes using normalized variance.
+
+        Parameters
+        ----------
+        adata : AnnData
+            Annotated data matrix.
+        n_top_genes : int or None
+            Number of top genes to select by normalized variance. If None, use thresholds.
+        min_variance : float or None
+            Minimum normalized variance for a gene to be considered. If None, do not filter by variance.
+        max_variance : float or None
+            Maximum normalized variance for a gene to be considered. If None, do not filter by variance.
+        min_mean : float or None
+            Minimum mean expression for a gene to be considered. If None, do not filter by mean.
+        max_mean : float or None
+            Maximum mean expression for a gene to be considered. If None, do not filter by mean.
+        inplace : bool
+            If True, adds a boolean mask to adata.var[output_key].
+        mean_key : str
+            Key in adata.var for mean values.
+        variance_key : str
+            Key in adata.var for normalized variance.
+        output_key : str
+            Key in adata.var to store the boolean mask.
+
+        Returns
+        -------
+        None or pandas.DataFrame
+            If inplace=False, returns a copy of adata.var with the mask added.
+        """
+        if RECODE_key not in adata.layers:
+            raise ValueError(f"{RECODE_key} not found in adata.layers. Please conduct recode = screcode.RECODE and recode.fit_transform(adata) first.")
+        elif f"{RECODE_key}_{variance_key}" not in adata.var:
+            raise ValueError(f"\"{RECODE_key}_{variance_key}\" not found in adata.var. Please change key RECODE_key or variance_key. ")
+
+        mean = adata.var[f"{RECODE_key}_{mean_key}"].values
+        norm_var = adata.var[f"{RECODE_key}_{variance_key}"].values
+
+        # mean filter (optional)
+        if min_mean is not None or max_mean is not None:
+            gene_filter = np.ones_like(mean, dtype=bool)
+            if min_mean is not None:
+                gene_filter &= (mean > min_mean)
+            if max_mean is not None:
+                gene_filter &= (mean < max_mean)
+        else:
+            gene_filter = np.ones_like(mean, dtype=bool)
+
+        filtered_norm_var = norm_var[gene_filter]
+
+        # variance filter (optional)
+        if min_variance is not None or max_variance is not None:
+            disp_filter = np.ones_like(filtered_norm_var, dtype=bool)
+            if min_variance is not None:
+                disp_filter &= (filtered_norm_var > min_variance)
+            if max_variance is not None:
+                disp_filter &= (filtered_norm_var < max_variance)
+            selected = np.zeros(len(norm_var), dtype=bool)
+            idx = np.where(gene_filter)[0][disp_filter]
+            selected[idx] = True
+        else:
+            selected = gene_filter.copy()
+
+        # n_top_genes
+        if n_top_genes is not None:
+            top_idx = np.argsort(norm_var)[::-1][:n_top_genes]
+            selected = np.zeros(len(norm_var), dtype=bool)
+            selected[top_idx] = True
+
+        if inplace:
+            adata.var[f"{RECODE_key}_{output_key}"] = selected
+            if verbose or self.verbose:
+                print(f"Highly variable genes are stored in adata.var['{RECODE_key}_{output_key}']")
+        else:
+            result = adata.var.copy()
+            result[f"{RECODE_key}_{output_key}"] = selected
+            return result
 
     def check_applicability(
         self,
@@ -1042,7 +1146,7 @@ class RECODE:
         X_scaled = self._total_scaling(self.X_temp)
         X_norm = self._noise_variance_stabilizing_normalization(self.X_temp)
         norm_var = np.var(X_norm, axis=0, ddof=1)
-        target_sum = np.median(np.sum(self.X_trans, axis=1))
+        target_sum = self.target_sum
         X_ss_log = self._logp1(target_sum * self._total_scaling(self.X_trans[:, self.idx_nonsilent]),base)
         X_RECODE_ss_log = self._logp1(target_sum * self._total_scaling(self.X_RECODE[:, self.idx_nonsilent]),base)
         # X_ss_log = np.log(target_sum * self.X_trans[:, self.idx_nonsilent] / np.sum(self.X_trans, axis=1)[:,np.newaxis] + 1)
@@ -1568,7 +1672,7 @@ class RECODE:
         title="Normalized data",
         figsize=(7, 5),
         save=False,
-        save_filename="noise_variance",
+        save_filename="RECODE_noise_variance",
         save_format="png",
         dpi=None,
         show=True,
@@ -1637,7 +1741,7 @@ class RECODE:
         title="Projected data",
         figsize=(7, 5),
         save=False,
-        save_filename="noise_variance",
+        save_filename="RECODE_noise_variance",
         save_format="png",
         dpi=None,
         show=True,
@@ -1704,7 +1808,7 @@ class RECODE:
         title="Variance-modified data",
         figsize=(7, 5),
         save=False,
-        save_filename="noise_variance",
+        save_filename="RECODE_noise_variance",
         save_format="png",
         dpi=None,
         show=True,
@@ -1804,7 +1908,7 @@ class RECODE:
         title="",
         figsize=(7, 5),
         save=False,
-        save_filename="noise_variance",
+        save_filename="RECODE_denoised_data",
         save_format="png",
         dpi=None,
         show=True,

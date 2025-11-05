@@ -39,6 +39,7 @@ python/poetry.toml
 
 # Test
 python/screcode/data
+python/screcode/output
 python/screcode/figure
 python/screcode/test.py
 python/screcode/*.ipynb

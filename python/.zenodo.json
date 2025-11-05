@@ -1,0 +1,23 @@
+{
+  "upload_type": "software",
+  "title": "RECODE",
+  "version": "v2.1.0",
+  "language": "eng",
+  "access_right": "open",
+  "license": "MIT",
+  "creators": [
+    {
+      "name": "Imoto, Yusuke",
+      "affiliation": "ASHBi, Kyoto University",
+      "orcid": "0000-0003-2574-4471"
+    }
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/yusuke-imoto-lab/RECODE",
+      "relation": "isSupplementTo",
+      "resource_type": "software"
+    }
+  ],
+  "keywords": ["single-cell", "RECODE", "noise reduction"]
+}
