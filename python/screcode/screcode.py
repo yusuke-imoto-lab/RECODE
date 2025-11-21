@@ -818,7 +818,7 @@ class RECODE:
 
         if inplace:
             adata.var[f"{RECODE_key}_{output_key}"] = selected
-            if verbose or self.verbose:
+            if verbose and self.verbose:
                 print(f"Highly variable genes are stored in adata.var['{RECODE_key}_{output_key}']")
         else:
             result = adata.var.copy()
