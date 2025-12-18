@@ -326,7 +326,14 @@ class RECODE:
         self.log_["#silent %ss" % self.unit] = int(X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig))
         self.fit_idx = True
 
-    def transform(self, X):
+    def transform(
+        self,
+        X,
+        meta_data=None,
+        batch_key="batch",
+        integration_method = "harmony",
+        integration_method_params = {},
+    ):
         """
         Transform X into RECODE-denoised data.
 
@@ -340,6 +347,7 @@ class RECODE:
         X_new : ndarray of shape (n_samples, n_features)
                 RECODE-denoised data matrix.
         """
+
         X_mat = self._check_datatype(X)
         if self.fit_idx == False:
             raise TypeError("Run fit before transform.")
@@ -347,13 +355,119 @@ class RECODE:
             raise TypeError(
                 "RECODE requires the same dimension as that of fitted data."
             )
-        idx_act_cells = np.sum(X_mat,axis=1) > 0
+        if isinstance(batch_key, str):
+            batch_key = [batch_key]
 
+        integration_flag = False
+        
+        if batch_key is not None:
+            if type(X) == anndata._core.anndata.AnnData:
+                batch_key_ = []
+                for b in batch_key:
+                    if b in X.obs.keys():
+                        batch_key_.append(b)
+                    else:
+                        Warning.warn("Batch key \"%s\" was not found in adata.obs." % b)
+                batch_key = batch_key_
+                if len(batch_key) != 0:
+                    integration_flag = True
+                    meta_data_array = np.array([X.obs[b] for b in batch_key])
+                else:
+                    Warning.warn("There are no batch keys in adata.obs. iRECODE will not be applied.")
+            elif type(meta_data) == np.ndarray:
+                if meta_data.shape[1] != X_mat.shape[0]:
+                    raise ValueError(
+                        "The second dimention of meta_data (np.ndarray) should be the same number as the number of samples of X."
+                    )
+                if meta_data.shape[0] == len(batch_key):
+                    integration_flag = True
+                    meta_data_array = meta_data
+                else:
+                    raise ValueError(
+                        "The first dimention of meta_data (np.ndarray) should be the same number as the number of batch keys."
+                    )
+            elif (type(meta_data) == anndata._core.views.DataFrameView) | (type(meta_data) == pd.core.frame.DataFrame):
+                if len(meta_data) != X_mat.shape[0]:
+                    raise ValueError(
+                        "The number of rows of meta_data (DataFrame) should be the same as the number of samples of X"
+                    )
+                batch_key_ = []
+                for b in batch_key:
+                    if b in meta_data.keys():
+                        batch_key_.append(b)
+                    else:
+                        Warning.warn("Batch key \"%s\" was not found in meta_data." % b)
+                batch_key = batch_key_
+                if len(batch_key) != 0:
+                    integration_flag = True
+                    meta_data_array = np.array([meta_data[b] for b in batch_key])
+                else:
+                    Warning.warn("There are no batch keys in meta_data. iRECODE will not be applied.")
+            else:
+                raise TypeError("meta_data should be ndarray or DataFrame.")
+        
+        idx_act_cells = np.sum(X_mat, axis=1) > 0
         X_ = X_mat[np.ix_(idx_act_cells, self.idx_nonsilent)]
         X_norm = self._noise_variance_stabilizing_normalization(X_)
-        X_norm_RECODE_, X_ess, _, _ = self.recode_.transform(X_norm,return_ess=True)
+        X_norm_RECODE_, X_ess, U_ell, Xmean = self.recode_.transform(X_norm, return_ess=True)
+
+        if integration_flag == True:
+            if self.verbose:
+                print("applying RECODE integration (iRECODE)")
+            meta_data_obs = {batch_key[i]: np.array(meta_data_array[i][idx_act_cells], dtype="object") for i in range(len(batch_key))}
+            adata_ = anndata.AnnData(
+                X_ess,
+                obs = meta_data_obs,
+                obsm = {"X": X_ess},
+            )
+            if integration_method == "harmony":
+                scanpy.external.pp.harmony_integrate(adata_, basis='X',adjusted_basis='X_integrated',key=batch_key,verbose=False,**integration_method_params)
+                X_ess_merge = adata_.obsm["X_integrated"]
+            elif integration_method == "bbknn":
+                scanpy.external.pp.bbknn(adata_, batch_key=batch_key, use_rep='X',**integration_method_params)
+                X_ess_merge = adata_.X
+            elif integration_method == "scanorama":
+                scanpy.external.pp.scanorama_integrate(adata_, key=batch_key, basis='X',adjusted_basis='X_integrated',verbose=False,**integration_method_params)
+                X_ess_merge = adata_.obsm["X_integrated"]
+            elif integration_method == "mnn":
+                batches = [' '.join([adata_.obs[b_][i] for b_ in batch_key]) for i in range(adata_.shape[0])]
+                data_ = [adata_.X[batches==b_] for b_ in np.unique(batches)]
+                mnn_out = scanpy.external.pp.mnn_correct(*data_, var_index=np.arange(adata_.shape[1]),verbose=False,cos_norm_out=False,**integration_method_params)
+                X_ess_merge = mnn_out[0]
+            elif integration_method == "scvi":
+                try:
+                    import scvi
+                except ImportError:
+                    raise ImportError("\nplease install scvi:\n\n\tpip install scvi-tools")
+                adata_.X = adata_.X-np.min(adata_.X)
+                scvi.model.SCVI.setup_anndata(adata_, batch_key="batch")
+                model = scvi.model.SCVI(adata_,gene_likelihood="normal",n_latent=adata_.shape[1],dropout_rate=0,dispersion='gene-batch',**integration_method_params)
+                model.train()
+                X_ess_merge = model.get_latent_representation() + np.min(adata_.X)
+            elif integration_method == "cca":
+                from sklearn.cross_decomposition import CCA
+                X_ess_merge = adata_.X
+                for b_ in batch_key:
+                    batch_set_,counts_ = np.unique(adata_.obs[b_],return_counts=True)
+                    idx_batch = np.argsort(counts_)#[::-1]
+                    X_merged = X_ess_merge[adata_.obs[b_] == batch_set_[idx_batch[0]]]
+                    for i in range(len(idx_batch)-1):
+                        Y_ = X_ess_merge[adata_.obs[b_] == batch_set_[idx_batch[i+1]]]
+                        indices = np.random.choice(X_merged.shape[0], size=Y_.shape[0], replace=False)
+                        X_ = X_merged[indices]
+                        cca = CCA(n_components=adata_.shape[1])
+                        cca.fit(X_, Y_)
+                        X_c, Y_c = cca.transform(X_merged, Y_)
+                        X_merged = np.concatenate([X_c, Y_c])
+                    X_ess_merge = X_merged
+            else:
+                raise ValueError("No integration method \"%s\". Choice from %s" % integration_method,["harmony","bbknn","scanorama","mnn"])
+            
+            X_norm_RECODE_ = np.dot(X_ess_merge, U_ell) + Xmean
+        
         X_norm_RECODE = np.zeros(X_mat.shape, dtype=float)
         X_norm_RECODE[np.ix_(idx_act_cells, self.idx_nonsilent)] = X_norm_RECODE_
+
         X_RECODE = np.zeros(X_mat.shape, dtype=float)
         X_RECODE[np.ix_(idx_act_cells, self.idx_nonsilent)] = self._inv_noise_variance_stabilizing_normalization(X_norm_RECODE_)
         X_RECODE = np.where(X_RECODE > 0, X_RECODE, 0)
@@ -373,7 +487,10 @@ class RECODE:
         self.normalized_variance_ = np.zeros(X_mat.shape[1], dtype=float)
         self.normalized_variance_[self.idx_nonsilent] = self.X_norm_var
 
-        X_RECODE_ss = np.median(np.sum(X_RECODE[np.ix_(idx_act_cells, self.idx_nonsilent)], axis=1))*self._total_scaling(X_RECODE[np.ix_(idx_act_cells, self.idx_nonsilent)])
+        X_RECODE_ss = (
+            np.median(np.sum(X_RECODE[np.ix_(idx_act_cells, self.idx_nonsilent)], axis=1))
+            *self._total_scaling(X_RECODE[np.ix_(idx_act_cells, self.idx_nonsilent)])
+        )
         self.cv_ = np.zeros(X.shape[1], dtype=float)
         self.cv_[self.idx_nonsilent] = np.std(X_RECODE_ss, axis=0) / np.mean(X_RECODE_ss, axis=0)
 
@@ -409,7 +526,14 @@ class RECODE:
 
         return X_out
 
-    def fit_transform(self, X):
+    def fit_transform(
+        self,
+        X,
+        meta_data=None,
+        batch_key="batch",
+        integration_method = "harmony",
+        integration_method_params = {},
+    ):
         """
         Fit the model with X and transform X into RECODE-denoised data.
 
@@ -431,16 +555,14 @@ class RECODE:
                 print("start RECODE for %s data" % self.seq_target)
 
         self.fit(X)
-        X_RECODE = self.transform(X)
+        X_RECODE = self.transform(X, meta_data, batch_key, integration_method, integration_method_params)
         end_time = datetime.datetime.now()
         elapsed_time = end_time - start_time
         hours, remainder = divmod(elapsed_time.seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
         milliseconds = int(elapsed_time.microseconds / 1000)
         self.elapsed_time = f"{hours}h {minutes}m {seconds}s"
-        self.log_[
-            "Elapsed time"
-        ] = f"{hours}h {minutes}m {seconds}s {milliseconds:03}ms"
+        self.log_["Elapsed time"] = f"{hours}h {minutes}m {seconds}s {milliseconds:03}ms"
         self.log_["solver"] = self.solver
         if self.log_["solver"] == "randomized":
             self.log_["#train_data"] = self.n_train
@@ -516,9 +638,10 @@ class RECODE:
                     )
             meta_data_ = {b_:np.array(meta_data[b_].values,dtype="object") for b_ in batch_key}
         else:
-            raise TypeError(
-                    "No batch data. Add batch indices in \"meta_data\""
-                    )
+            raise TypeError("No batch data. Add batch indices in \"meta_data\"")
+        
+
+        #  batch correction of essential data
         adata_ = anndata.AnnData(
             X_ess,
             obs = meta_data_,
@@ -658,22 +781,8 @@ class RECODE:
             if self.seq_target in ["Multiome"]:
                 print("start RECODE integration for %s data" % self.seq_target)
         
-        self.fit(X)
         X_RECODE = self.transform_integration(X, meta_data, batch_key, integration_method, integration_method_params)
-        end_time = datetime.datetime.now()
-        elapsed_time = end_time - start_time
-        hours, remainder = divmod(elapsed_time.seconds, 3600)
-        minutes, seconds = divmod(remainder, 60)
-        milliseconds = int(elapsed_time.microseconds / 1000)
-        self.elapsed_time = f"{hours}h {minutes}m {seconds}s"
-        self.log_["Elapsed time"] = f"{hours}h {minutes}m {seconds}s {milliseconds:03}ms"
-        self.log_["solver"] = self.solver
-        if self.log_["solver"] == "randomized":
-            self.log_["#test_data"] = int(self.downsampling_rate * X.shape[0])
-        if self.verbose:
-            print("end RECODE for sc%s-seq" % self.seq_target)
-            print("log:", self.log_)
-        return X_RECODE
+        
         
     
     def lognormalize(
