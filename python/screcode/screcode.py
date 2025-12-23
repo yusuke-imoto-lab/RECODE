@@ -1,3 +1,5 @@
+import warnings
+
 import anndata
 import datetime
 import matplotlib
@@ -330,7 +332,7 @@ class RECODE:
         self,
         X,
         meta_data=None,
-        batch_key="batch",
+        batch_key=None,
         integration_method = "harmony",
         integration_method_params = {},
     ):
@@ -362,18 +364,17 @@ class RECODE:
         
         if batch_key is not None:
             if type(X) == anndata._core.anndata.AnnData:
-                batch_key_ = []
+                existing_batch_key = []
                 for b in batch_key:
                     if b in X.obs.keys():
-                        batch_key_.append(b)
+                        existing_batch_key.append(b)
                     else:
-                        Warning.warn("Batch key \"%s\" was not found in adata.obs." % b)
-                batch_key = batch_key_
-                if len(batch_key) != 0:
+                        warnings.warn("Batch key \"%s\" was not found in adata.obs." % b)
+                if len(existing_batch_key) != 0:
                     integration_flag = True
-                    meta_data_array = np.array([X.obs[b] for b in batch_key])
+                    meta_data_array = np.array([X.obs[b] for b in existing_batch_key])
                 else:
-                    Warning.warn("There are no batch keys in adata.obs. iRECODE will not be applied.")
+                    warnings.warn("There are no batch keys in adata.obs. iRECODE will not be applied.")
             elif type(meta_data) == np.ndarray:
                 if meta_data.shape[1] != X_mat.shape[0]:
                     raise ValueError(
@@ -391,18 +392,17 @@ class RECODE:
                     raise ValueError(
                         "The number of rows of meta_data (DataFrame) should be the same as the number of samples of X"
                     )
-                batch_key_ = []
+                existing_batch_key = []
                 for b in batch_key:
                     if b in meta_data.keys():
-                        batch_key_.append(b)
+                        existing_batch_key.append(b)
                     else:
-                        Warning.warn("Batch key \"%s\" was not found in meta_data." % b)
-                batch_key = batch_key_
-                if len(batch_key) != 0:
+                        warnings.warn("Batch key \"%s\" was not found in meta_data." % b)
+                if len(existing_batch_key) != 0:
                     integration_flag = True
-                    meta_data_array = np.array([meta_data[b] for b in batch_key])
+                    meta_data_array = np.array([meta_data[b] for b in existing_batch_key])
                 else:
-                    Warning.warn("There are no batch keys in meta_data. iRECODE will not be applied.")
+                    warnings.warn("There are no batch keys in meta_data. iRECODE will not be applied.")
             else:
                 raise TypeError("meta_data should be ndarray or DataFrame.")
         
@@ -530,7 +530,7 @@ class RECODE:
         self,
         X,
         meta_data=None,
-        batch_key="batch",
+        batch_key=None,
         integration_method = "harmony",
         integration_method_params = {},
     ):
@@ -783,8 +783,6 @@ class RECODE:
         
         X_RECODE = self.transform_integration(X, meta_data, batch_key, integration_method, integration_method_params)
         
-        
-    
     def lognormalize(
             self,
             X,
