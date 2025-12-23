@@ -350,6 +350,14 @@ class RECODE:
                 RECODE-denoised data matrix.
         """
 
+        if batch_key is None:
+            is_batch_key_specified = False
+            batch_key = ["batch"]
+        else:
+            is_batch_key_specified = True
+            if isinstance(batch_key, str):
+                batch_key = [batch_key]
+
         X_mat = self._check_datatype(X)
         if self.fit_idx == False:
             raise TypeError("Run fit before transform.")
@@ -357,40 +365,43 @@ class RECODE:
             raise TypeError(
                 "RECODE requires the same dimension as that of fitted data."
             )
-        if isinstance(batch_key, str):
-            batch_key = [batch_key]
 
         integration_flag = False
         
-        if batch_key is not None:
-            if type(X) == anndata._core.anndata.AnnData:
-                existing_batch_key = []
-                for b in batch_key:
-                    if b in X.obs.keys():
-                        existing_batch_key.append(b)
-                    else:
-                        warnings.warn("Batch key \"%s\" was not found in adata.obs." % b)
-                if len(existing_batch_key) != 0:
-                    integration_flag = True
-                    meta_data_array = np.array([X.obs[b] for b in existing_batch_key])
+        if type(X) == anndata._core.anndata.AnnData:
+            existing_batch_key = []
+            for b in batch_key:
+                if b in X.obs.keys():
+                    existing_batch_key.append(b)
                 else:
-                    warnings.warn("There are no batch keys in adata.obs. iRECODE will not be applied.")
+                    warnings.warn("Batch key \"%s\" was not found in adata.obs." % b)
+            if len(existing_batch_key) != 0:
+                integration_flag = True
+                meta_data_array = np.array([X.obs[b] for b in existing_batch_key])
+            elif is_batch_key_specified:
+                warnings.warn("There are no batch keys in adata.obs. iRECODE will not be applied.")
+        else:
+            if meta_data is None:
+                pass
             elif type(meta_data) == np.ndarray:
                 if meta_data.shape[1] != X_mat.shape[0]:
                     raise ValueError(
-                        "The second dimention of meta_data (np.ndarray) should be the same number as the number of samples of X."
+                        "The second dimention of meta_data (np.ndarray) should be the same number "
+                        "as the number of samples of X."
                     )
                 if meta_data.shape[0] == len(batch_key):
                     integration_flag = True
                     meta_data_array = meta_data
-                else:
+                elif is_batch_key_specified:
                     raise ValueError(
-                        "The first dimention of meta_data (np.ndarray) should be the same number as the number of batch keys."
+                        "The first dimention of meta_data (np.ndarray) should be the same number as "
+                        "the number of batch keys."
                     )
             elif (type(meta_data) == anndata._core.views.DataFrameView) | (type(meta_data) == pd.core.frame.DataFrame):
                 if len(meta_data) != X_mat.shape[0]:
                     raise ValueError(
-                        "The number of rows of meta_data (DataFrame) should be the same as the number of samples of X"
+                        "The number of rows of meta_data (DataFrame) should be the same as the number "
+                        "of samples of X"
                     )
                 existing_batch_key = []
                 for b in batch_key:
@@ -401,11 +412,11 @@ class RECODE:
                 if len(existing_batch_key) != 0:
                     integration_flag = True
                     meta_data_array = np.array([meta_data[b] for b in existing_batch_key])
-                else:
+                elif is_batch_key_specified:
                     warnings.warn("There are no batch keys in meta_data. iRECODE will not be applied.")
             else:
                 raise TypeError("meta_data should be ndarray or DataFrame.")
-        
+    
         idx_act_cells = np.sum(X_mat, axis=1) > 0
         X_ = X_mat[np.ix_(idx_act_cells, self.idx_nonsilent)]
         X_norm = self._noise_variance_stabilizing_normalization(X_)
