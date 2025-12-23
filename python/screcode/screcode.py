@@ -780,8 +780,23 @@ class RECODE:
                 print("start RECODE integration for sc%s-seq data" % self.seq_target)
             if self.seq_target in ["Multiome"]:
                 print("start RECODE integration for %s data" % self.seq_target)
-        
+
+        self.fit(X)
         X_RECODE = self.transform_integration(X, meta_data, batch_key, integration_method, integration_method_params)
+        end_time = datetime.datetime.now()
+        elapsed_time = end_time - start_time
+        hours, remainder = divmod(elapsed_time.seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        milliseconds = int(elapsed_time.microseconds / 1000)
+        self.elapsed_time = f"{hours}h {minutes}m {seconds}s"
+        self.log_["Elapsed time"] = f"{hours}h {minutes}m {seconds}s {milliseconds:03}ms"
+        self.log_["solver"] = self.solver
+        if self.log_["solver"] == "randomized":
+            self.log_["#test_data"] = int(self.downsampling_rate * X.shape[0])
+        if self.verbose:
+            print("end RECODE for sc%s-seq" % self.seq_target)
+            print("log:", self.log_)
+        return X_RECODE
         
     def lognormalize(
             self,
