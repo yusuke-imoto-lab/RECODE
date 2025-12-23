@@ -344,12 +344,19 @@ class RECODE:
         X : ndarray or anndata of shape (n_samples, n_features)
                 Single-cell sequencing data matrix (row:cell, culumn:gene/peak).
 
+        meta_data : ndarray (n_samples, 1) or DataFrame (n_samples, *)
+
+        batch_key : string or list, default='batch'
+                Key name(s) in ``meta_data`` denoting batch. 
+        
+        integration_method : {'harmony','mnn','scanorama','scvi'}, default='harmony'
+                A batch correction method used in iRECODE. 
+
         Returns
         -------
-        X_new : ndarray of shape (n_samples, n_features)
-                RECODE-denoised data matrix.
+        X_new : ndarray/anndata (the same format as input)
+                Denoised data matrix.
         """
-
         if batch_key is None:
             is_batch_key_specified = False
             batch_key = ["batch"]
@@ -552,6 +559,14 @@ class RECODE:
         ----------
         X : ndarray/anndata of shape (n_samples, n_features)
                 Tranceforming single-cell sequencing data matrix (row:cell, culumn:gene/peak).
+        
+        meta_data : ndarray (n_samples, 1) or DataFrame (n_samples, *)
+
+        batch_key : string or list, default='batch'
+                Key name(s) in ``meta_data`` denoting batch. 
+        
+        integration_method : {'harmony','mnn','scanorama','scvi'}, default='harmony'
+                A batch correction method used in iRECODE. 
 
         Returns
         -------
@@ -591,6 +606,10 @@ class RECODE:
         integration_method_params = {},
     ):
         """
+        .. warning::
+            ``transform_integration()`` was deprecated and will be removed in future versions.
+            Use ``transform()`` instead.
+
         Transform X into RECODE-denoised data.
 
         Parameters
@@ -608,8 +627,8 @@ class RECODE:
 
         Returns
         -------
-        X_new : ndarray of shape (n_samples, n_features)
-                RECODE-denoised data matrix.
+        X_new : ndarray/anndata (the same format as input)
+                Denoised data matrix.
         """
         X_mat = self._check_datatype(X)
         if self.fit_idx == False:
@@ -771,6 +790,10 @@ class RECODE:
         integration_method_params = {},
     ):
         """
+        .. warning::
+            ``fit_transform_integration()`` was deprecated and will be removed in future versions.
+            Use ``fit_transform()`` instead.
+
         Fit the model with X and transform X into RECODE-denoised data.
 
         Parameters
