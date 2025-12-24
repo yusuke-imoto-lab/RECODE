@@ -1,18 +1,17 @@
+import datetime
+import logging
 import warnings
 
 import anndata
-import datetime
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
 import numpy as np
 import pandas as pd
-import sklearn.decomposition
-import scipy.sparse
 import scanpy
+import scipy.sparse
 import seaborn as sns
-import logging
-import pandas as pd
+import sklearn.decomposition
+from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
 
 
 class RECODE:
