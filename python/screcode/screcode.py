@@ -386,41 +386,45 @@ class RECODE:
                 integration_flag = True
                 meta_data_array = np.array([X.obs[b] for b in existing_batch_key])
             elif is_batch_key_specified:
-                warnings.warn("There are no batch keys in adata.obs. iRECODE will not be applied.")
+                warnings.warn("No batch keys were found in adata.obs. iRECODE will not be applied.")
         else:
             if meta_data is None:
                 pass
             elif type(meta_data) == np.ndarray:
-                if meta_data.shape[1] != X_mat.shape[0]:
+                if len(meta_data.shape) != 2:
                     raise ValueError(
-                        "The second dimention of meta_data (np.ndarray) should be the same number "
-                        "as the number of samples of X."
+                        "meta_data (np.ndarray) should be a 2-dimensional array."
                     )
-                if meta_data.shape[0] == len(batch_key):
+                elif len(meta_data) != len(X_mat):
+                    raise ValueError(
+                        "The number of rows of meta_data (np.ndarray) should be the same as the number "
+                        "of samples of X."
+                    )
+                elif meta_data.shape[1] != 1: 
+                    raise ValueError(
+                        "The number of columns of meta_data (np.ndarray) should be 1."
+                    )
+                else:
                     integration_flag = True
-                    meta_data_array = meta_data
-                elif is_batch_key_specified:
-                    raise ValueError(
-                        "The first dimention of meta_data (np.ndarray) should be the same number as "
-                        "the number of batch keys."
-                    )
+                    meta_data_array = meta_data.T
             elif (type(meta_data) == anndata._core.views.DataFrameView) | (type(meta_data) == pd.core.frame.DataFrame):
                 if len(meta_data) != X_mat.shape[0]:
                     raise ValueError(
                         "The number of rows of meta_data (DataFrame) should be the same as the number "
-                        "of samples of X"
+                        "of samples of X."
                     )
-                existing_batch_key = []
-                for b in batch_key:
-                    if b in meta_data.keys():
-                        existing_batch_key.append(b)
-                    else:
-                        warnings.warn("Batch key \"%s\" was not found in meta_data." % b)
-                if len(existing_batch_key) != 0:
-                    integration_flag = True
-                    meta_data_array = np.array([meta_data[b] for b in existing_batch_key])
-                elif is_batch_key_specified:
-                    warnings.warn("There are no batch keys in meta_data. iRECODE will not be applied.")
+                else:
+                    existing_batch_key = []
+                    for b in batch_key:
+                        if b in meta_data.keys():
+                            existing_batch_key.append(b)
+                        else:
+                            warnings.warn("Batch key \"%s\" was not found in meta_data." % b)
+                    if len(existing_batch_key) != 0:
+                        integration_flag = True
+                        meta_data_array = np.array([meta_data[b] for b in existing_batch_key])
+                    elif is_batch_key_specified:
+                        warnings.warn("No batch keys were found in meta_data. iRECODE will not be applied.")
             else:
                 raise TypeError("meta_data should be ndarray or DataFrame.")
     
