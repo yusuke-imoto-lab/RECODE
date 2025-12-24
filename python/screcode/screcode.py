@@ -352,6 +352,9 @@ class RECODE:
         integration_method : {'harmony','mnn','scanorama','scvi'}, default='harmony'
                 A batch correction method used in iRECODE. 
 
+        integration_method_params : dict, default={}
+                Parameters for the batch correction method.
+
         Returns
         -------
         X_new : ndarray/anndata (the same format as input)
@@ -571,6 +574,9 @@ class RECODE:
         
         integration_method : {'harmony','mnn','scanorama','scvi'}, default='harmony'
                 A batch correction method used in iRECODE. 
+
+        integration_method_params : dict, default={}
+                Parameters for the batch correction method.
 
         Returns
         -------
