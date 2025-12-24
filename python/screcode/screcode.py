@@ -367,9 +367,9 @@ class RECODE:
 
         X_mat = self._check_datatype(X)
         if self.fit_idx == False:
-            raise TypeError("Run fit before transform.")
+            raise RuntimeError("Run fit before transform.")
         if X_mat.shape[1] != self.d_train:
-            raise TypeError(
+            raise ValueError(
                 "RECODE requires the same dimension as that of fitted data."
             )
 
