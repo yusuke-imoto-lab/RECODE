@@ -19,7 +19,7 @@ class RECODE:
         self,
         fast_algorithm=True,
         fast_algorithm_ell_ub=1000,
-        seq_target="RNA",
+        assay="RNA",
         version=2,
         solver="auto",
         downsampling_rate=0.2,
@@ -42,7 +42,7 @@ class RECODE:
         fast_algorithm_ell_ub : int, default=1000
                 Upper bound of parameter ell for the fast algorithm. Must be of range [1,infinity).
 
-        seq_target : {'RNA','ATAC','Hi-C','Multiome'}, default='RNA'
+        assay : {'RNA','ATAC','Hi-C','Multiome'}, default='RNA'
                 Sequencing target. If 'ATAC', the preprocessing (odd-even stabilization) will be performed before the regular algorithm.
 
         version : int default='2'
@@ -90,7 +90,7 @@ class RECODE:
         """
         self.fast_algorithm = fast_algorithm
         self.fast_algorithm_ell_ub = fast_algorithm_ell_ub
-        self.seq_target = seq_target
+        self.assay = assay
         self.version = version
         self.solver = solver
         self.downsampling_rate = downsampling_rate
@@ -102,17 +102,17 @@ class RECODE:
         self.target_sum = target_sum
         self.verbose = verbose
 
-        # Set unit and Unit based on seq_target
-        if seq_target == "ATAC":
+        # Set unit and Unit based on assay
+        if assay == "ATAC":
             self.unit, self.Unit = "peak", "Peak"
-        elif seq_target == "Hi-C":
+        elif assay == "Hi-C":
             self.unit, self.Unit = "contact", "Contact"
-        elif seq_target == "Multiome":
+        elif assay == "Multiome":
             self.unit, self.Unit = "feature", "Feature"
         else:
             self.unit, self.Unit = "gene", "Gene"
 
-        self.log_ = {"seq_target": self.seq_target}
+        self.log_ = {"assay": self.assay}
         self.fit_idx = False
 
         self.logger = logging.getLogger("argument checking")
@@ -134,24 +134,24 @@ class RECODE:
                 raise TypeError("Data type error: ndarray or anndata is available.")
             if "feature_types" in adata.var.keys():
                 if (set(adata.var["feature_types"]) == {"Gene Expression"}) & (
-                    self.seq_target != "RNA"
+                    self.assay != "RNA"
                 ):
                     self.logger.warning(
-                        "Warning: Input data may be scRNA-seq data. Please add option seq_target='RNA' like screcode.RECODE(seq_target='RNA'). "
+                        "Warning: Input data may be scRNA-seq data. Please add option assay='RNA' like screcode.RECODE(assay='RNA'). "
                     )
                 elif (set(adata.var["feature_types"]) == {"Peaks"}) & (
-                    self.seq_target != "ATAC"
+                    self.assay != "ATAC"
                 ):
                     self.logger.warning(
-                        "Warning: Input data may be scATAC-seq data. Please add option seq_target='ATAC' like screcode.RECODE(seq_target='ATAC'). "
+                        "Warning: Input data may be scATAC-seq data. Please add option assay='ATAC' like screcode.RECODE(assay='ATAC'). "
                     )
                 elif (
                     set(adata.var["feature_types"]) == {"Gene Expression", "Peaks"}
-                ) & (self.seq_target != "Multiome"):
+                ) & (self.assay != "Multiome"):
                     self.logger.warning(
-                        "Warning: Input data may be multiome (scRNA-seq + scATAC-seq) data. Please add option seq_target='Multiome' like screcode.RECODE(seq_target='Multiome'). "
+                        "Warning: Input data may be multiome (scRNA-seq + scATAC-seq) data. Please add option assay='Multiome' like screcode.RECODE(assay='Multiome'). "
                     )
-        elif self.seq_target == "Multiome":
+        elif self.assay == "Multiome":
             raise TypeError(
                 "Data type error: only anndata type is acceptable for multiome (scRNA-seq + scATAC-seq) data."
             )
@@ -283,9 +283,9 @@ class RECODE:
             )
         self.idx_nonsilent = np.sum(X_mat, axis=0) > 0
         self.X_temp = X_mat[:, self.idx_nonsilent]
-        if self.seq_target == "ATAC":
+        if self.assay == "ATAC":
             self.X_temp = self._ATAC_preprocessing(self.X_temp)
-        if self.seq_target == "Multiome":
+        if self.assay == "Multiome":
             self.idx_atac = X.var["feature_types"][self.idx_nonsilent] == "Peaks"
             self.X_temp[:, self.idx_atac] = self._ATAC_preprocessing(
                 self.X_temp[:, self.idx_atac]
@@ -293,10 +293,7 @@ class RECODE:
         X_nUMI = np.sum(self.X_temp, axis=1)
         X_scaled = self.X_temp / X_nUMI[:,np.newaxis]
         X_scaled_mean = np.mean(X_scaled, axis=0)
-        noise_var = np.mean(
-            self.X_temp / np.sum(self.X_temp, axis=1)[:,np.newaxis] / np.sum(self.X_temp, axis=1)[:,np.newaxis],
-            axis=0,
-        )
+        noise_var = np.mean(X_scaled * (1-X_scaled) / X_nUMI[:,np.newaxis],axis=0)
         noise_var[noise_var == 0] = 1
         X_norm = (X_scaled - X_scaled_mean) / np.sqrt(noise_var)
         X_norm_var = np.var(X_norm, axis=0)
@@ -451,7 +448,7 @@ class RECODE:
                 scanpy.external.pp.bbknn(adata_, batch_key=batch_key, use_rep='X',**integration_method_params)
                 X_ess_merge = adata_.X
             elif integration_method == "scanorama":
-                scanpy.external.pp.scanorama_integrate(adata_, key=batch_key, basis='X',adjusted_basis='X_integrated',verbose=False,**integration_method_params)
+                scanpy.external.pp.scanorama_integrate(adata_, key=batch_key[0], basis='X',adjusted_basis='X_integrated',verbose=False,**integration_method_params)
                 X_ess_merge = adata_.obsm["X_integrated"]
             elif integration_method == "mnn":
                 batches = [' '.join([adata_.obs[b_][i] for b_ in batch_key]) for i in range(adata_.shape[0])]
@@ -485,7 +482,7 @@ class RECODE:
                         X_merged = np.concatenate([X_c, Y_c])
                     X_ess_merge = X_merged
             else:
-                raise ValueError("No integration method \"%s\". Choice from %s" % integration_method,["harmony","bbknn","scanorama","mnn"])
+                raise ValueError("No integration method \"%s\". Choice from %s" % integration_method,["harmony","bbknn","scanorama","mnn","scvi","cca"])
             
             X_norm_RECODE_ = np.dot(X_ess_merge, U_ell) + Xmean
         
@@ -584,10 +581,10 @@ class RECODE:
         """
         start_time = datetime.datetime.now()
         if self.verbose:
-            if self.seq_target in ["RNA", "ATAC", "Hi-C"]:
-                print("start RECODE for sc%s-seq data" % self.seq_target)
-            if self.seq_target in ["Multiome"]:
-                print("start RECODE for %s data" % self.seq_target)
+            if self.assay in ["RNA", "ATAC", "Hi-C"]:
+                print("start RECODE for sc%s-seq data" % self.assay)
+            if self.assay in ["Multiome"]:
+                print("start RECODE for %s data" % self.assay)
 
         self.fit(X)
         X_RECODE = self.transform(X, meta_data, batch_key, integration_method, integration_method_params)
@@ -602,7 +599,7 @@ class RECODE:
         if self.log_["solver"] == "randomized":
             self.log_["#train_data"] = self.n_train
         if self.verbose:
-            print("end RECODE for sc%s-seq" % self.seq_target)
+            print("end RECODE for sc%s-seq" % self.assay)
             print("log:", self.log_)
         return X_RECODE
 
@@ -694,7 +691,7 @@ class RECODE:
             scanpy.external.pp.bbknn(adata_, batch_key=batch_key, use_rep='X',**integration_method_params)
             X_ess_merge = adata_.X
         elif integration_method == "scanorama":
-            scanpy.external.pp.scanorama_integrate(adata_, key=batch_key, basis='X',adjusted_basis='X_integrated',verbose=False,**integration_method_params)
+            scanpy.external.pp.scanorama_integrate(adata_, key=batch_key[0], basis='X',adjusted_basis='X_integrated',verbose=False,**integration_method_params)
             X_ess_merge = adata_.obsm["X_integrated"]
         elif integration_method == "mnn":
             batches = [' '.join([adata_.obs[b_][i] for b_ in batch_key]) for i in range(adata_.shape[0])]
@@ -819,10 +816,10 @@ class RECODE:
         """
         start_time = datetime.datetime.now()
         if self.verbose:
-            if self.seq_target in ["RNA", "ATAC", "Hi-C"]:
-                print("start RECODE integration for sc%s-seq data" % self.seq_target)
-            if self.seq_target in ["Multiome"]:
-                print("start RECODE integration for %s data" % self.seq_target)
+            if self.assay in ["RNA", "ATAC", "Hi-C"]:
+                print("start RECODE integration for sc%s-seq data" % self.assay)
+            if self.assay in ["Multiome"]:
+                print("start RECODE integration for %s data" % self.assay)
 
         self.fit(X)
         X_RECODE = self.transform_integration(X, meta_data, batch_key, integration_method, integration_method_params)
@@ -837,7 +834,7 @@ class RECODE:
         if self.log_["solver"] == "randomized":
             self.log_["#test_data"] = int(self.downsampling_rate * X.shape[0])
         if self.verbose:
-            print("end RECODE for sc%s-seq" % self.seq_target)
+            print("end RECODE for sc%s-seq" % self.assay)
             print("log:", self.log_)
         return X_RECODE
         
@@ -1041,7 +1038,7 @@ class RECODE:
             ncols=2, nrows=1, width_ratios=[4, 1], wspace=0.0
         )
         ax0 = fig.add_subplot(spec[0])
-        if self.seq_target == "Multiome":
+        if self.assay == "Multiome":
             ax0.scatter(
                 x[idx_sig & (self.idx_atac == False)],
                 y[idx_sig & (self.idx_atac == False)],
@@ -1210,7 +1207,7 @@ class RECODE:
                 Dots per inch.
         """
 
-        if self.seq_target == "ATAC":
+        if self.assay == "ATAC":
             title = "ATAC preprocessing"
             foot = "0_ATAC_preprocessing"
             self.plot_ATAC_preprocessing(
@@ -1357,10 +1354,10 @@ class RECODE:
             nrows=1, ncols=1, subplot_spec=gs_master[16:26, 2:30]
         )
         ax = fig.add_subplot(gs[0, 0])
-        ax.text(0, 1, "Method: %s" % self.log_["seq_target"], fontsize=12)
+        ax.text(0, 1, "Method: %s" % self.log_["assay"], fontsize=12)
         ax.text(0, 0.5, "nCells: %s" % self.n_trans, fontsize=12)
         ax.text(0, 0.0, "n%ss: %s" % (self.Unit, self.d_train), fontsize=12)
-        # ax.text(0,0.0,'Method: %s' % self.log_['seq_target'],fontsize=12)
+        # ax.text(0,0.0,'Method: %s' % self.log_['assay'],fontsize=12)
         ax.axis("off")
         gs = GridSpecFromSubplotSpec(nrows=1, ncols=1, subplot_spec=gs_master[16:26, 25:64])
         ax = fig.add_subplot(gs[0, 0])
@@ -1407,7 +1404,7 @@ class RECODE:
         ax0 = fig.add_subplot(gs[0, 0])
         x, y = np.mean(X_scaled, axis=0), norm_var
         idx_nonsig, idx_sig = y <= 1, y > 1
-        if self.seq_target == "Multiome":
+        if self.assay == "Multiome":
             ax0.scatter(
                 x[idx_sig & (self.idx_atac == False)],
                 y[idx_sig & (self.idx_atac == False)],
@@ -1610,7 +1607,7 @@ class RECODE:
         plt.rcParams["xtick.direction"] = "in"
         plt.rcParams["ytick.direction"] = "in"
         x, y = np.mean(X_ss_log, axis=0), np.var(X_ss_log, axis=0, ddof=1)
-        if self.seq_target == "Multiome":
+        if self.assay == "Multiome":
             ax0.scatter(
                 x[idx_sig & (self.idx_atac == False)],
                 y[idx_sig & (self.idx_atac == False)],
@@ -1676,7 +1673,7 @@ class RECODE:
         plt.gca().spines["top"].set_visible(False)
         ax1 = fig.add_subplot(gs[0, 1])
         x, y = np.mean(X_RECODE_ss_log, axis=0), np.var(X_RECODE_ss_log, axis=0, ddof=1)
-        if self.seq_target == "Multiome":
+        if self.assay == "Multiome":
             ax1.scatter(
                 x[idx_sig & (self.idx_atac == False)],
                 y[idx_sig & (self.idx_atac == False)],
@@ -1796,7 +1793,8 @@ class RECODE:
         # X_scaled = (self.X_temp.T / X_nUMI).T
         X_scaled = self.X_temp / X_nUMI[:,np.newaxis]
         # X_scaled_mean = np.mean(X_scaled, axis=0)
-        noise_var = np.mean(self.X_temp / X_nUMI[:,np.newaxis] / X_nUMI[:,np.newaxis], axis=0)
+        # noise_var = np.mean(self.X_temp / X_nUMI[:,np.newaxis] / X_nUMI[:,np.newaxis], axis=0)
+        noise_var = np.mean(X_scaled * (1-X_scaled) / X_nUMI[:,np.newaxis],axis=0)
         noise_var[noise_var == 0] = 1
         # X_norm = (X_scaled - np.mean(X_scaled, axis=0)) / np.sqrt(noise_var)
         fig, ax = plt.subplots(figsize=figsize)
@@ -2452,7 +2450,7 @@ class RECODE:
         dpi: float or None, default=None
                 Dots per inch.
         """
-        if self.seq_target != "ATAC":
+        if self.assay != "ATAC":
             self.logger.warning(
                 "Error: plot_ATAC_preprocessing is an option of scATAC-seq data"
             )
