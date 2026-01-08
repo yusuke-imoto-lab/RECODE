@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 title: "RECODE"
-version: "v2.1.0"
+version: "v2.2.0"
 message: "If you use this software, please cite it as below."
 type: software
 abstract: "High-dimensional statistics-based noise reduction platform for single-cell data."

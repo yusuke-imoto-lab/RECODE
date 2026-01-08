@@ -7,10 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
-### Added
-- Placeholder for upcoming features.
-
+## [2.2.0] - 2026-01-08
 ### Changed
 - Changed the parameter name "seq_target" to "assay"
 - Integrated (fit_)transform and (fit_)transform_integration functions.
