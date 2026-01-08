@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "screcode"
-version = "2.1.0"
+version = "2.2.0"
 description = "RECODE - resolution of the curse of dimensionality in single-cell data analysis"
 authors = ["Yusuke Imoto"]
 readme = "README.md"
@@ -20,7 +20,7 @@ numpy = ">=1.20"
 scanpy = ">=1.9.3"
 pandas = ">=2.0.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^5.2"
 
 [build-system]
