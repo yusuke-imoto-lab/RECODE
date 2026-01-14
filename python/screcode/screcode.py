@@ -347,27 +347,30 @@ class RECODE:
                     "Warning: randomized algorithm is for data with a large number of cells (>20000). \n"
                     "solver=\"full\" is recommended to keep the accuracy."
                 )
-            # np.random.seed(self.random_state)
-            # cell_stat = np.random.choice(
-            #     X_mat.shape[0], int(self.downsampling_rate * X.shape[0]), replace=False
-            # )
+            if self.version >= 3:
+                if self.verbose:
+                    print("Applying Milk sampling ..")
+                cell_stat = self.milk_sampling(
+                    X_mat,
+                    n_components=50,
+                    n_thresh_samples=2000,
+                    thresh_percentile=1,
+                    n_samples=int(self.downsampling_rate * X_mat.shape[0])
+                )
+            else:
+                np.random.seed(self.random_state)
+                cell_stat = np.random.choice(
+                    X_mat.shape[0], int(self.downsampling_rate * X_mat.shape[0]), replace=False
+                )
+
             if self.verbose:
-                print("applying Milk sampling")
-            cell_stat = self.milk_sampling(
-                X_mat,
-                pca_n_components=50,
-                n_thresh_samples=2000,
-                percentile=1,
-                n_samples=int(self.downsampling_rate * X_mat.shape[0])
-            )
-            if self.verbose:
-                print("selected %d samples from %d cells." % (len(cell_stat), X_mat.shape[0]))
+                print("Selected %d samples from %d cells." % (len(cell_stat), X_mat.shape[0]))
 
             if isinstance(X, anndata.AnnData):
                 X.obs["sampled"] = False
                 X.obs["sampled"].iloc[cell_stat] = True
                 if self.verbose:
-                    print("sampled cells are stored in adata.obs['sampled'].")
+                    print("Sampled cells are stored in adata.obs['sampled'].")
 
             X_mat = X_mat[cell_stat]
         else:
@@ -2661,7 +2664,7 @@ class RECODE_core:
             self.logger.setLevel(logging.ERROR)
 
     def _noise_reductor(self, X, L, U, Xmean, ell, version=1, return_ess=False):
-        if version == 2 and self.RECODE_done == False:
+        if version >= 2 and self.RECODE_done == False:
             U_ell = U[:ell, :]
             L_ell = L[:ell, :ell]
             for i in range(ell):
