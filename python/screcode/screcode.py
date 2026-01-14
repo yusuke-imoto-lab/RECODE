@@ -12,6 +12,7 @@ import scipy.sparse
 import seaborn as sns
 import sklearn.decomposition
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
+from scipy.spatial.distance import cdist, pdist
 
 
 class RECODE:
@@ -239,6 +240,87 @@ class RECODE:
         """
         X_new = (X + 1) // 2
         return X_new
+    
+    def milk_sampling(self, X, n_components=50, n_thresh_samples=None, thresh_percentile=1, n_samples=None):
+        X_mat = self._check_datatype(X)
+
+        n_rows, n_cols = X_mat.shape
+        n_components = min(n_components, n_cols - 1)
+        if n_thresh_samples is None:
+            n_thresh_samples = min(2000, n_rows)
+
+        n_samples = min(n_samples, n_rows)
+
+        X_norm = X_mat / np.sum(X_mat, axis=1)[:, np.newaxis]
+        X_lognorm = self._logp1(X_norm)
+
+        svd = sklearn.decomposition.TruncatedSVD(
+            n_components=n_components,
+            random_state=self.random_state
+        )
+        X_svd = svd.fit_transform(X_lognorm)
+
+        np.random.seed(self.random_state)
+        indices = np.random.choice(n_rows, n_thresh_samples, replace=False)
+        random_subsample = X_svd[indices]
+        distances = pdist(random_subsample, metric='euclidean')
+        threshold = np.percentile(distances, thresh_percentile)
+        if self.verbose:
+            print(f"Distance threshold of Milk sampling: {threshold:.4f}")
+    
+        shuffled_indices = np.random.permutation(n_rows)
+        shuffled_X_svd = X_svd[shuffled_indices]
+
+        accepted_data_pool = np.empty((n_rows, n_components))
+        accepted_data_pool[0] = shuffled_X_svd[0]
+        accepted_data_indices = [0]
+        n_accepted_data = 1
+        rejected_data_indices = [[]]
+
+        for i, row in enumerate(shuffled_X_svd[1:], start=1):
+            row_2d = row.reshape(1, -1)
+            accepted_data = accepted_data_pool[:n_accepted_data]
+            distances = cdist(row_2d, accepted_data, metric='euclidean')[0]
+
+            nearest_accepted_data_idx = np.argmin(distances)
+            nearest_distance = distances[nearest_accepted_data_idx]
+            
+            if nearest_distance <= threshold:
+                rejected_data_indices[nearest_accepted_data_idx].append(i)
+            else:
+                accepted_data_pool[n_accepted_data] = row
+                n_accepted_data += 1
+                accepted_data_indices.append(i)
+                rejected_data_indices.append([])
+                
+        if self.verbose:
+            print(f"Number of accepted data in Milk sampling: {n_accepted_data}")
+
+        if n_accepted_data >= n_samples:
+            sampled_data_indices = accepted_data_indices[:n_samples]
+        else:
+            n_rejected_samples = n_samples - n_accepted_data
+            weights = np.zeros(n_rows)
+            for group in rejected_data_indices:
+                group_size = len(group)
+                if group_size != 0:
+                    weight_per_cell = 1 / group_size
+                    for idx in group:
+                        weights[idx] = weight_per_cell
+            
+            weights /= weights.sum()
+
+            sampled_rejected_data_indices = np.random.choice(
+                np.arange(n_rows), 
+                size=n_rejected_samples,
+                replace=False, 
+                p=weights
+            )
+            sampled_data_indices = accepted_data_indices + list(sampled_rejected_data_indices)
+
+        original_sampled_indices = np.sort(shuffled_indices[sampled_data_indices])
+
+        return original_sampled_indices
 
     def fit(self, X):
         """
@@ -265,10 +347,28 @@ class RECODE:
                     "Warning: randomized algorithm is for data with a large number of cells (>20000). \n"
                     "solver=\"full\" is recommended to keep the accuracy."
                 )
-            np.random.seed(self.random_state)
-            cell_stat = np.random.choice(
-                X_mat.shape[0], int(self.downsampling_rate * X.shape[0]), replace=False
+            # np.random.seed(self.random_state)
+            # cell_stat = np.random.choice(
+            #     X_mat.shape[0], int(self.downsampling_rate * X.shape[0]), replace=False
+            # )
+            if self.verbose:
+                print("applying Milk sampling")
+            cell_stat = self.milk_sampling(
+                X_mat,
+                pca_n_components=50,
+                n_thresh_samples=2000,
+                percentile=1,
+                n_samples=int(self.downsampling_rate * X_mat.shape[0])
             )
+            if self.verbose:
+                print("selected %d samples from %d cells." % (len(cell_stat), X_mat.shape[0]))
+
+            if isinstance(X, anndata.AnnData):
+                X.obs["sampled"] = False
+                X.obs["sampled"].iloc[cell_stat] = True
+                if self.verbose:
+                    print("sampled cells are stored in adata.obs['sampled'].")
+
             X_mat = X_mat[cell_stat]
         else:
             if X.shape[0] > 20000:
