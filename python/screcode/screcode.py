@@ -1047,8 +1047,19 @@ class RECODE:
         elif f"{RECODE_key}_{variance_key}" not in adata.var:
             raise ValueError(f"\"{RECODE_key}_{variance_key}\" not found in adata.var. Please change key RECODE_key or variance_key. ")
 
-        mean = adata.var[f"{RECODE_key}_{mean_key}"].values
-        norm_var = adata.var[f"{RECODE_key}_{variance_key}"].values
+        if f"{RECODE_key}_{mean_key}" not in adata.var:
+            if f"{RECODE_key}_log" not in adata.layers:
+                adata = self.lognormalize(adata,key=RECODE_key,target_sum=self.target_sum)
+            mean = adata.layers[f"{RECODE_key}_log"].mean(axis=0)
+        else:
+            mean = adata.var[f"{RECODE_key}_{mean_key}"].values
+        
+        if f"{RECODE_key}_{variance_key}" not in adata.var:
+            if f"{RECODE_key}_log" not in adata.layers:
+                adata = self.lognormalize(adata,key=RECODE_key,target_sum=self.target_sum)
+            norm_var = adata.layers[f"{RECODE_key}_log"].var(axis=0)
+        else:
+            norm_var = adata.var[f"{RECODE_key}_{variance_key}"].values
 
         # mean filter (optional)
         if min_mean is not None or max_mean is not None:
