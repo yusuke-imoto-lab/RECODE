@@ -482,7 +482,7 @@ class RECODE:
             for b in batch_key:
                 if b in X.obs.keys():
                     existing_batch_key.append(b)
-                else:
+                elif is_batch_key_specified:
                     warnings.warn("Batch key \"%s\" was not found in adata.obs." % b)
             if len(existing_batch_key) != 0:
                 integration_flag = True
@@ -520,7 +520,7 @@ class RECODE:
                     for b in batch_key:
                         if b in meta_data.keys():
                             existing_batch_key.append(b)
-                        else:
+                        elif is_batch_key_specified:
                             warnings.warn("Batch key \"%s\" was not found in meta_data." % b)
                     if len(existing_batch_key) != 0:
                         integration_flag = True
