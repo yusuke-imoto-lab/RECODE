@@ -632,12 +632,12 @@ class RECODE:
                 X_out.obsm[self.RECODE_key] = X_RECODE
                 X_out.obsm[f"{self.RECODE_key}_NVSN"] = X_norm_RECODE
                 if self.verbose:
-                    print(f"Normalized data are stored as \"{self.RECODE_key}\" in adata.obsm")
+                    print(f"Denoised data are stored as \"{self.RECODE_key}\" in adata.obsm")
             else:
                 X_out.layers[self.RECODE_key] = X_RECODE
                 X_out.layers[f"{self.RECODE_key}_NVSN"] = X_norm_RECODE
                 if self.verbose:
-                    print(f"Normalized data are stored as \"{self.RECODE_key}\" in adata.layers")
+                    print(f"Denoised data are stored as \"{self.RECODE_key}\" in adata.layers")
             X_out.uns[f"{self.RECODE_key}_essential"] = X_ess
             X_out.var[f"{self.RECODE_key}_noise_variance"] = self.noise_variance_
             X_out.var[f"{self.RECODE_key}_NVSN_variance"] = self.normalized_variance_
