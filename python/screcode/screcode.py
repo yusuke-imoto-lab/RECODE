@@ -258,7 +258,7 @@ class RECODE:
             n_components=n_components,
             random_state=self.random_state
         )
-        X_svd = svd.fit_transform(X_lognorm)
+        X_svd = svd.fit_transform(X_lognorm - np.mean(X_lognorm))
 
         np.random.seed(self.random_state)
         indices = np.random.choice(n_rows, n_thresh_samples, replace=False)
