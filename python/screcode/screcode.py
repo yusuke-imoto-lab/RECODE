@@ -368,7 +368,7 @@ class RECODE:
 
             if isinstance(X, anndata.AnnData):
                 X.obs["sampled"] = False
-                X.obs["sampled"].iloc[cell_stat] = True
+                X.obs.loc[cell_stat, "sampled"] = True
                 if self.verbose:
                     print("Sampled cells are stored in adata.obs['sampled'].")
 
