@@ -241,7 +241,7 @@ class RECODE:
         X_new = (X + 1) // 2
         return X_new
     
-    def milk_sampling(self, X, n_components=50, n_thresh_samples=None, thresh_percentile=1, n_samples=None):
+    def balanced_sampling(self, X, n_components=50, n_thresh_samples=None, thresh_percentile=1, n_samples=None):
         X_mat = self._check_datatype(X)
 
         n_rows, n_cols = X_mat.shape
@@ -266,7 +266,7 @@ class RECODE:
         distances = pdist(random_subsample, metric='euclidean')
         threshold = np.percentile(distances, thresh_percentile)
         if self.verbose:
-            print(f"Distance threshold of Milk sampling: {threshold:.4f}")
+            print(f"Distance threshold of balanced sampling: {threshold:.4f}")
     
         shuffled_indices = np.random.permutation(n_rows)
         shuffled_X_svd = X_svd[shuffled_indices]
@@ -294,7 +294,7 @@ class RECODE:
                 rejected_data_indices.append([])
                 
         if self.verbose:
-            print(f"Number of accepted data in Milk sampling: {n_accepted_data}")
+            print(f"Number of accepted data in balanced sampling: {n_accepted_data}")
 
         if n_accepted_data >= n_samples:
             sampled_data_indices = accepted_data_indices[:n_samples]
@@ -349,8 +349,8 @@ class RECODE:
                 )
             if self.version >= 3:
                 if self.verbose:
-                    print("Applying Milk sampling ..")
-                cell_stat = self.milk_sampling(
+                    print("Applying balanced sampling ..")
+                cell_stat = self.balanced_sampling(
                     X_mat,
                     n_components=50,
                     n_thresh_samples=2000,
