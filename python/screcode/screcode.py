@@ -367,8 +367,9 @@ class RECODE:
                 print("Selected %d samples from %d cells." % (len(cell_stat), X_mat.shape[0]))
 
             if isinstance(X, anndata.AnnData):
+                selected_cell_indices = X.obs.index[cell_stat]
                 X.obs["sampled"] = False
-                X.obs.loc[cell_stat, "sampled"] = True
+                X.obs.loc[selected_cell_indices, "sampled"] = True
                 if self.verbose:
                     print("Sampled cells are stored in adata.obs['sampled'].")
 
