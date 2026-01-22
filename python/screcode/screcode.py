@@ -29,6 +29,8 @@ class RECODE:
         random_state=0,
         log_normalize=True,
         target_sum=1e5,
+        reduce_genes=False,
+        reduce_gene_rate=0.6,
         verbose=True,
     ):
         """
@@ -100,6 +102,8 @@ class RECODE:
         self.random_state = random_state
         self.log_normalize = log_normalize
         self.target_sum = target_sum
+        self.reduce_genes = reduce_genes
+        self.reduce_gene_rate = reduce_gene_rate
         self.verbose = verbose
 
         # Set unit and Unit based on assay
@@ -240,6 +244,54 @@ class RECODE:
         X_new = (X + 1) // 2
         return X_new
 
+# self.idx_nonsilent = np.sum(X_mat, axis=0) > 0
+# self.X_temp = X_mat[:, self.idx_nonsilent]
+# if self.assay == "ATAC":
+#     self.X_temp = self._ATAC_preprocessing(self.X_temp)
+# if self.assay == "Multiome":
+#     self.idx_atac = X.var["feature_types"][self.idx_nonsilent] == "Peaks"
+#     self.X_temp[:, self.idx_atac] = self._ATAC_preprocessing(
+#         self.X_temp[:, self.idx_atac]
+#     )
+# X_nUMI = np.sum(self.X_temp, axis=1)
+# X_scaled = self.X_temp / X_nUMI[:,np.newaxis]
+# X_scaled_mean = np.mean(X_scaled, axis=0)
+# noise_var = np.mean(X_scaled * (1-X_scaled) / X_nUMI[:,np.newaxis],axis=0)
+# noise_var[noise_var == 0] = 1
+# X_norm = (X_scaled - X_scaled_mean) / np.sqrt(noise_var)
+# X_norm_var = np.var(X_norm, axis=0)
+
+
+    def _calculate_matrix_attributes(self, X_mat, feature_types=None):
+        idx_nonsilent = np.sum(X_mat, axis=0) > 0
+        X_temp = X_mat[:, idx_nonsilent]
+        if self.assay == "ATAC":
+            X_temp = self._ATAC_preprocessing(X_temp)
+        if self.assay == "Multiome" and feature_types is not None:
+            idx_atac = feature_types[idx_nonsilent] == "Peaks"
+            X_temp[:, idx_atac] = self._ATAC_preprocessing(X_temp[:, idx_atac])
+
+        X_nUMI = np.sum(X_temp, axis=1)
+        X_scaled = X_temp / X_nUMI[:,np.newaxis]
+        X_scaled_mean = np.mean(X_scaled, axis=0)
+        noise_var = np.mean(X_scaled * (1-X_scaled) / X_nUMI[:,np.newaxis], axis=0)
+        noise_var[noise_var == 0] = 1
+        X_norm = (X_scaled - X_scaled_mean) / np.sqrt(noise_var)
+        X_norm_var = np.var(X_norm, axis=0)
+
+        mat_dict = {
+            "idx_nonsilent": idx_nonsilent,
+            "X_temp": X_temp,
+            "X_nUMI": X_nUMI,
+            "X_scaled_mean": X_scaled_mean,
+            "noise_var": noise_var,
+            "X_norm": X_norm,
+            "X_norm_var": X_norm_var,
+        }
+        
+        return mat_dict
+
+
     def fit(self, X):
         """
         Fit the model to X. (Determine the transformation.)
@@ -255,6 +307,25 @@ class RECODE:
         idx_act_cells = np.sum(X_mat,axis=1) > 0
 
         X_mat = X_mat[idx_act_cells]
+        d_train = X_mat.shape[1]
+
+        if self.reduce_genes:
+            mat_dict = self._calculate_matrix_attributes(X_mat)
+            temp_idx_nonsilent = mat_dict["idx_nonsilent"]
+            temp_X_norm_var_nonsilent = mat_dict["X_norm_var"]
+            temp_X_norm_var = np.zeros(X_mat.shape[1], dtype=float)
+            temp_X_norm_var[temp_idx_nonsilent] = temp_X_norm_var_nonsilent
+            norm_var_threshold = np.percentile(temp_X_norm_var, 100 * self.reduce_gene_rate)
+            print(norm_var_threshold)
+            # pick_gene_num = int((1 - self.reduce_gene_rate) * len(temp_X_norm_var))
+            # idx_highvar_genes = np.argsort(temp_X_norm_var)[::-1][:pick_gene_num]
+            idx_highvar_genes = temp_X_norm_var >= norm_var_threshold
+            X_mat = X_mat[:, idx_highvar_genes]
+            
+            if self.verbose:
+                print(f"Reduced genes from {d_train} to {sum(idx_highvar_genes)} by high variance gene selection.")
+
+            del mat_dict, temp_idx_nonsilent, temp_X_norm_var_nonsilent, temp_X_norm_var
 
         if self.solver == "auto":
             self.solver = "full" if X_mat.shape[0] < 10000 else "randomized"
@@ -267,7 +338,7 @@ class RECODE:
                 )
             np.random.seed(self.random_state)
             cell_stat = np.random.choice(
-                X_mat.shape[0], int(self.downsampling_rate * X.shape[0]), replace=False
+                X_mat.shape[0], int(self.downsampling_rate * X_mat.shape[0]), replace=False
             )
             X_mat = X_mat[cell_stat]
         else:
@@ -281,22 +352,17 @@ class RECODE:
             self.logger.warning(
                 "Warning: RECODE is applicable for count data (integer matrix). Plese make sure the data type."
             )
-        self.idx_nonsilent = np.sum(X_mat, axis=0) > 0
-        self.X_temp = X_mat[:, self.idx_nonsilent]
-        if self.assay == "ATAC":
-            self.X_temp = self._ATAC_preprocessing(self.X_temp)
-        if self.assay == "Multiome":
-            self.idx_atac = X.var["feature_types"][self.idx_nonsilent] == "Peaks"
-            self.X_temp[:, self.idx_atac] = self._ATAC_preprocessing(
-                self.X_temp[:, self.idx_atac]
-            )
-        X_nUMI = np.sum(self.X_temp, axis=1)
-        X_scaled = self.X_temp / X_nUMI[:,np.newaxis]
-        X_scaled_mean = np.mean(X_scaled, axis=0)
-        noise_var = np.mean(X_scaled * (1-X_scaled) / X_nUMI[:,np.newaxis],axis=0)
-        noise_var[noise_var == 0] = 1
-        X_norm = (X_scaled - X_scaled_mean) / np.sqrt(noise_var)
-        X_norm_var = np.var(X_norm, axis=0)
+
+        mat_dict = self._calculate_matrix_attributes(X_mat)
+
+        idx_nonsilent = mat_dict["idx_nonsilent"]
+        X_temp = mat_dict["X_temp"]
+        X_nUMI = mat_dict["X_nUMI"]
+        X_scaled_mean = mat_dict["X_scaled_mean"]
+        noise_var = mat_dict["noise_var"]
+        X_norm_var = mat_dict["X_norm_var"]
+        X_norm = mat_dict["X_norm"]
+
         recode_ = RECODE_core(
             variance_estimate=False,
             fast_algorithm=self.fast_algorithm,
@@ -310,8 +376,10 @@ class RECODE:
         # self.n_all = X.shape[0]
         # self.d_all = X.shape[1]
         self.n_train = X_mat.shape[0]
-        self.d_train = X_mat.shape[1]
-        self.d_nonsilent = sum(self.idx_nonsilent)
+        self.d_train = d_train
+        self.idx_nonsilent = idx_nonsilent
+        self.d_nonsilent = sum(idx_nonsilent)
+        self.X_temp = X_temp
         self.noise_var = noise_var
         self.recode_ = recode_
         self.X_norm_var = X_norm_var
@@ -323,6 +391,11 @@ class RECODE:
         self.log_["#non-significant %ss" % self.unit] = int(sum(self.idx_nonsig))
         self.log_["#silent %ss" % self.unit] = int(X.shape[1] - sum(self.idx_sig) - sum(self.idx_nonsig))
         self.fit_idx = True
+
+        if self.reduce_genes:
+            # self.pick_gene_num = pick_gene_num
+            self.idx_highvar_genes = idx_highvar_genes
+            self.log_["#reduced %ss" % self.unit] = 0 # will be updated in transform
 
     def transform(
         self,
@@ -371,6 +444,9 @@ class RECODE:
             raise ValueError(
                 "RECODE requires the same dimension as that of fitted data."
             )
+        
+        if self.reduce_genes:
+            X_mat = X_mat[:, self.idx_highvar_genes]
 
         integration_flag = False
         
@@ -512,10 +588,10 @@ class RECODE:
             np.median(np.sum(X_RECODE[np.ix_(idx_act_cells, self.idx_nonsilent)], axis=1))
             *self._total_scaling(X_RECODE[np.ix_(idx_act_cells, self.idx_nonsilent)])
         )
-        self.cv_ = np.zeros(X.shape[1], dtype=float)
+        self.cv_ = np.zeros(X_mat.shape[1], dtype=float)
         self.cv_[self.idx_nonsilent] = np.std(X_RECODE_ss, axis=0) / np.mean(X_RECODE_ss, axis=0)
 
-        self.significance_ = np.empty(X.shape[1], dtype=object)
+        self.significance_ = np.empty(X_mat.shape[1], dtype=object)
         self.significance_[self.normalized_variance_ == 0] = "silent"
         self.significance_[self.normalized_variance_ > 0] = "non-significant"
         self.significance_[self.normalized_variance_ > 1] = "significant"
@@ -524,7 +600,11 @@ class RECODE:
         self.d_trans = X.shape[1]
 
         if type(X) == anndata._core.anndata.AnnData:
-            X_out = anndata.AnnData.copy(X)
+            if self.reduce_genes:
+                X_out = anndata.AnnData.copy(X[:, self.idx_highvar_genes])
+            else:
+                X_out = anndata.AnnData.copy(X)
+            print(X_out)
             if self.anndata_key == "obsm":
                 X_out.obsm[self.RECODE_key] = X_RECODE
                 X_out.obsm[f"{self.RECODE_key}_NVSN"] = X_norm_RECODE
