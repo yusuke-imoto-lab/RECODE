@@ -12,6 +12,7 @@ import scipy.sparse
 import seaborn as sns
 import sklearn.decomposition
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
+from scipy.spatial.distance import cdist, pdist
 
 
 class RECODE:
@@ -243,6 +244,87 @@ class RECODE:
         """
         X_new = (X + 1) // 2
         return X_new
+    
+    def balanced_sampling(self, X, n_components=50, n_thresh_samples=None, thresh_percentile=1, n_samples=None):
+        X_mat = self._check_datatype(X)
+
+        n_rows, n_cols = X_mat.shape
+        n_components = min(n_components, n_cols - 1)
+        if n_thresh_samples is None:
+            n_thresh_samples = min(2000, n_rows)
+
+        n_samples = min(n_samples, n_rows)
+
+        X_norm = X_mat / np.sum(X_mat, axis=1)[:, np.newaxis]
+        X_lognorm = self._logp1(X_norm)
+
+        svd = sklearn.decomposition.TruncatedSVD(
+            n_components=n_components,
+            random_state=self.random_state
+        )
+        X_svd = svd.fit_transform(X_lognorm - np.mean(X_lognorm))
+
+        np.random.seed(self.random_state)
+        indices = np.random.choice(n_rows, n_thresh_samples, replace=False)
+        random_subsample = X_svd[indices]
+        distances = pdist(random_subsample, metric='euclidean')
+        threshold = np.percentile(distances, thresh_percentile)
+        if self.verbose:
+            print(f"Distance threshold of balanced sampling: {threshold:.4f}")
+    
+        shuffled_indices = np.random.permutation(n_rows)
+        shuffled_X_svd = X_svd[shuffled_indices]
+
+        accepted_data_pool = np.empty((n_rows, n_components))
+        accepted_data_pool[0] = shuffled_X_svd[0]
+        accepted_data_indices = [0]
+        n_accepted_data = 1
+        rejected_data_indices = [[]]
+
+        for i, row in enumerate(shuffled_X_svd[1:], start=1):
+            row_2d = row.reshape(1, -1)
+            accepted_data = accepted_data_pool[:n_accepted_data]
+            distances = cdist(row_2d, accepted_data, metric='euclidean')[0]
+
+            nearest_accepted_data_idx = np.argmin(distances)
+            nearest_distance = distances[nearest_accepted_data_idx]
+            
+            if nearest_distance <= threshold:
+                rejected_data_indices[nearest_accepted_data_idx].append(i)
+            else:
+                accepted_data_pool[n_accepted_data] = row
+                n_accepted_data += 1
+                accepted_data_indices.append(i)
+                rejected_data_indices.append([])
+                
+        if self.verbose:
+            print(f"Number of accepted data in balanced sampling: {n_accepted_data}")
+
+        if n_accepted_data >= n_samples:
+            sampled_data_indices = accepted_data_indices[:n_samples]
+        else:
+            n_rejected_samples = n_samples - n_accepted_data
+            weights = np.zeros(n_rows)
+            for group in rejected_data_indices:
+                group_size = len(group)
+                if group_size != 0:
+                    weight_per_cell = 1 / group_size
+                    for idx in group:
+                        weights[idx] = weight_per_cell
+            
+            weights /= weights.sum()
+
+            sampled_rejected_data_indices = np.random.choice(
+                np.arange(n_rows), 
+                size=n_rejected_samples,
+                replace=False, 
+                p=weights
+            )
+            sampled_data_indices = accepted_data_indices + list(sampled_rejected_data_indices)
+
+        original_sampled_indices = np.sort(shuffled_indices[sampled_data_indices])
+
+        return original_sampled_indices
 
 # self.idx_nonsilent = np.sum(X_mat, axis=0) > 0
 # self.X_temp = X_mat[:, self.idx_nonsilent]
@@ -316,7 +398,6 @@ class RECODE:
             temp_X_norm_var = np.zeros(X_mat.shape[1], dtype=float)
             temp_X_norm_var[temp_idx_nonsilent] = temp_X_norm_var_nonsilent
             norm_var_threshold = np.percentile(temp_X_norm_var, 100 * self.reduce_gene_rate)
-            print(norm_var_threshold)
             # pick_gene_num = int((1 - self.reduce_gene_rate) * len(temp_X_norm_var))
             # idx_highvar_genes = np.argsort(temp_X_norm_var)[::-1][:pick_gene_num]
             idx_highvar_genes = temp_X_norm_var >= norm_var_threshold
@@ -336,10 +417,32 @@ class RECODE:
                     "Warning: randomized algorithm is for data with a large number of cells (>20000). \n"
                     "solver=\"full\" is recommended to keep the accuracy."
                 )
-            np.random.seed(self.random_state)
-            cell_stat = np.random.choice(
-                X_mat.shape[0], int(self.downsampling_rate * X_mat.shape[0]), replace=False
-            )
+            if self.version >= 3:
+                if self.verbose:
+                    print("Applying balanced sampling ..")
+                cell_stat = self.balanced_sampling(
+                    X_mat,
+                    n_components=50,
+                    n_thresh_samples=2000,
+                    thresh_percentile=1,
+                    n_samples=int(self.downsampling_rate * X_mat.shape[0])
+                )
+            else:
+                np.random.seed(self.random_state)
+                cell_stat = np.random.choice(
+                    X_mat.shape[0], int(self.downsampling_rate * X_mat.shape[0]), replace=False
+                )
+
+            if self.verbose:
+                print("Selected %d samples from %d cells." % (len(cell_stat), X_mat.shape[0]))
+
+            if isinstance(X, anndata.AnnData):
+                selected_cell_indices = X.obs.index[cell_stat]
+                X.obs["sampled"] = False
+                X.obs.loc[selected_cell_indices, "sampled"] = True
+                if self.verbose:
+                    print("Sampled cells are stored in adata.obs['sampled'].")
+
             X_mat = X_mat[cell_stat]
         else:
             if X.shape[0] > 20000:
@@ -455,7 +558,7 @@ class RECODE:
             for b in batch_key:
                 if b in X.obs.keys():
                     existing_batch_key.append(b)
-                else:
+                elif is_batch_key_specified:
                     warnings.warn("Batch key \"%s\" was not found in adata.obs." % b)
             if len(existing_batch_key) != 0:
                 integration_flag = True
@@ -493,7 +596,7 @@ class RECODE:
                     for b in batch_key:
                         if b in meta_data.keys():
                             existing_batch_key.append(b)
-                        else:
+                        elif is_batch_key_specified:
                             warnings.warn("Batch key \"%s\" was not found in meta_data." % b)
                     if len(existing_batch_key) != 0:
                         integration_flag = True
@@ -604,17 +707,16 @@ class RECODE:
                 X_out = anndata.AnnData.copy(X[:, self.idx_highvar_genes])
             else:
                 X_out = anndata.AnnData.copy(X)
-            print(X_out)
             if self.anndata_key == "obsm":
                 X_out.obsm[self.RECODE_key] = X_RECODE
                 X_out.obsm[f"{self.RECODE_key}_NVSN"] = X_norm_RECODE
                 if self.verbose:
-                    print(f"Normalized data are stored as \"{self.RECODE_key}\" in adata.obsm")
+                    print(f"Denoised data are stored as \"{self.RECODE_key}\" in adata.obsm")
             else:
                 X_out.layers[self.RECODE_key] = X_RECODE
                 X_out.layers[f"{self.RECODE_key}_NVSN"] = X_norm_RECODE
                 if self.verbose:
-                    print(f"Normalized data are stored as \"{self.RECODE_key}\" in adata.layers")
+                    print(f"Denoised data are stored as \"{self.RECODE_key}\" in adata.layers")
             X_out.uns[f"{self.RECODE_key}_essential"] = X_ess
             X_out.var[f"{self.RECODE_key}_noise_variance"] = self.noise_variance_
             X_out.var[f"{self.RECODE_key}_NVSN_variance"] = self.normalized_variance_
@@ -1024,8 +1126,19 @@ class RECODE:
         elif f"{RECODE_key}_{variance_key}" not in adata.var:
             raise ValueError(f"\"{RECODE_key}_{variance_key}\" not found in adata.var. Please change key RECODE_key or variance_key. ")
 
-        mean = adata.var[f"{RECODE_key}_{mean_key}"].values
-        norm_var = adata.var[f"{RECODE_key}_{variance_key}"].values
+        if f"{RECODE_key}_{mean_key}" not in adata.var:
+            if f"{RECODE_key}_log" not in adata.layers:
+                adata = self.lognormalize(adata,key=RECODE_key,target_sum=self.target_sum)
+            mean = adata.layers[f"{RECODE_key}_log"].mean(axis=0)
+        else:
+            mean = adata.var[f"{RECODE_key}_{mean_key}"].values
+        
+        if f"{RECODE_key}_{variance_key}" not in adata.var:
+            if f"{RECODE_key}_log" not in adata.layers:
+                adata = self.lognormalize(adata,key=RECODE_key,target_sum=self.target_sum)
+            norm_var = adata.layers[f"{RECODE_key}_log"].var(axis=0)
+        else:
+            norm_var = adata.var[f"{RECODE_key}_{variance_key}"].values
 
         # mean filter (optional)
         if min_mean is not None or max_mean is not None:
@@ -2641,7 +2754,7 @@ class RECODE_core:
             self.logger.setLevel(logging.ERROR)
 
     def _noise_reductor(self, X, L, U, Xmean, ell, version=1, return_ess=False):
-        if version == 2 and self.RECODE_done == False:
+        if version >= 2 and self.RECODE_done == False:
             U_ell = U[:ell, :]
             L_ell = L[:ell, :ell]
             for i in range(ell):
