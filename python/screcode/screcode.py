@@ -449,7 +449,7 @@ class RECODE:
         batch_key : string or list, default='batch'
                 Key name(s) in ``meta_data`` denoting batch. 
         
-        integration_method : {'harmony','mnn','scanorama','scvi'}, default='harmony'
+        integration_method : {'harmony','mnn','scanorama','scvi','concord'}, default='harmony'
                 A batch correction method used in iRECODE. 
 
         integration_method_params : dict, default={}
@@ -549,7 +549,7 @@ class RECODE:
                 scanpy.external.pp.harmony_integrate(adata_, basis='X',adjusted_basis='X_integrated',key=batch_key,verbose=False,**integration_method_params)
                 X_ess_merge = adata_.obsm["X_integrated"]
             elif integration_method == "bbknn":
-                scanpy.external.pp.bbknn(adata_, batch_key=batch_key, use_rep='X',**integration_method_params)
+                scanpy.external.pp.bbknn(adata_, batch_key=batch_key[0], use_rep='X',**integration_method_params)
                 X_ess_merge = adata_.X
             elif integration_method == "scanorama":
                 scanpy.external.pp.scanorama_integrate(adata_, key=batch_key[0], basis='X',adjusted_basis='X_integrated',verbose=False,**integration_method_params)
@@ -585,6 +585,16 @@ class RECODE:
                         X_c, Y_c = cca.transform(X_merged, Y_)
                         X_merged = np.concatenate([X_c, Y_c])
                     X_ess_merge = X_merged
+            elif integration_method == "concord":
+                try:
+                    import concord as ccd
+                except ImportError:
+                    raise ImportError("\nplease install concord:\n\n\tpip install torch torchvision torchaudio\n\tpip install concord-sc")
+                cur_ccd = ccd.Concord(adata=adata_, domain_key=existing_batch_key[0], latent_dim=adata_.shape[1], **integration_method_params)
+                cur_ccd.fit_transform(output_key="X_integrated")
+                print(X_ess.shape)
+                X_ess_merge = adata_.obsm["X_integrated"]
+                print(adata_)
             else:
                 raise ValueError("No integration method \"%s\". Choice from %s" % integration_method,["harmony","bbknn","scanorama","mnn","scvi","cca"])
             
