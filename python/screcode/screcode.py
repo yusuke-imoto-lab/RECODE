@@ -392,21 +392,20 @@ class RECODE:
         d_train = X_mat.shape[1]
 
         if self.reduce_genes:
-            mat_dict = self._calculate_matrix_attributes(X_mat)
-            temp_idx_nonsilent = mat_dict["idx_nonsilent"]
-            temp_X_norm_var_nonsilent = mat_dict["X_norm_var"]
+            temp_mat_dict = self._calculate_matrix_attributes(X_mat)
+            temp_idx_nonsilent = temp_mat_dict["idx_nonsilent"]
+            temp_X_norm_var_nonsilent = temp_mat_dict["X_norm_var"]
             temp_X_norm_var = np.zeros(X_mat.shape[1], dtype=float)
             temp_X_norm_var[temp_idx_nonsilent] = temp_X_norm_var_nonsilent
             norm_var_threshold = np.percentile(temp_X_norm_var, 100 * self.reduce_gene_rate)
-            # pick_gene_num = int((1 - self.reduce_gene_rate) * len(temp_X_norm_var))
-            # idx_highvar_genes = np.argsort(temp_X_norm_var)[::-1][:pick_gene_num]
             idx_highvar_genes = temp_X_norm_var >= norm_var_threshold
             X_mat = X_mat[:, idx_highvar_genes]
+            picked_gene_num = sum(idx_highvar_genes)
             
             if self.verbose:
-                print(f"Reduced genes from {d_train} to {sum(idx_highvar_genes)} by high variance gene selection.")
+                print(f"Reduced genes from {d_train} to {picked_gene_num} by high variance gene selection.")
 
-            del mat_dict, temp_idx_nonsilent, temp_X_norm_var_nonsilent, temp_X_norm_var
+            del temp_mat_dict, temp_idx_nonsilent, temp_X_norm_var_nonsilent, temp_X_norm_var
 
         if self.solver == "auto":
             self.solver = "full" if X_mat.shape[0] < 10000 else "randomized"
@@ -496,10 +495,9 @@ class RECODE:
         self.fit_idx = True
 
         if self.reduce_genes:
-            # self.pick_gene_num = pick_gene_num
             self.idx_highvar_genes = idx_highvar_genes
-            self.log_["#reduced %ss" % self.unit] = 0 # will be updated in transform
-
+            self.log_["#removed %ss" % self.unit] = int(d_train - picked_gene_num)
+            
     def transform(
         self,
         X,
