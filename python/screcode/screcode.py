@@ -519,7 +519,7 @@ class RECODE:
         batch_key : string or list, default='batch'
                 Key name(s) in ``meta_data`` denoting batch. 
         
-        integration_method : {'harmony','mnn','scanorama','scvi'}, default='harmony'
+        integration_method : {'harmony','mnn','scanorama','scvi','concord'}, default='harmony'
                 A batch correction method used in iRECODE. 
 
         integration_method_params : dict, default={}
@@ -612,45 +612,56 @@ class RECODE:
         if integration_flag == True:
             if self.verbose:
                 print("applying RECODE integration (iRECODE)")
-            meta_data_obs = {batch_key[i]: np.array(meta_data_array[i][idx_act_cells], dtype="object") for i in range(len(batch_key))}
+            unified_batch_key = "_".join(existing_batch_key)
+            meta_data_obs = {existing_batch_key[i]: np.array(meta_data_array[i][idx_act_cells], dtype="object") for i in range(len(existing_batch_key))}
+            if len(existing_batch_key) > 1:
+                meta_data_obs[unified_batch_key] = ["_".join([meta_data_obs[key][n] for key in existing_batch_key]) for n in range(X_ess.shape[0])]
+            else:
+                meta_data_obs[unified_batch_key] = meta_data_obs[existing_batch_key[0]]
             adata_ = anndata.AnnData(
                 X_ess,
                 obs = meta_data_obs,
                 obsm = {"X": X_ess},
             )
+            X_ess_n_cols = X_ess.shape[1]
             if integration_method == "harmony":
-                scanpy.external.pp.harmony_integrate(adata_, basis='X',adjusted_basis='X_integrated',key=batch_key,verbose=False,**integration_method_params)
-                X_ess_merge = adata_.obsm["X_integrated"]
+                try:
+                    import harmonypy
+                except ImportError as err:
+                    raise ImportError("\nplease install harmonypy:\n\n\tpip install harmonypy") from err
+                X_ess_float64 = X_ess.astype(np.float64)
+                harmony_out = harmonypy.run_harmony(X_ess_float64, adata_.obs, existing_batch_key, verbose=False, **integration_method_params)
+                X_ess_merge = harmony_out.Z_corr
             elif integration_method == "bbknn":
-                scanpy.external.pp.bbknn(adata_, batch_key=batch_key, use_rep='X',**integration_method_params)
+                scanpy.external.pp.bbknn(adata_, batch_key=unified_batch_key, use_rep='X',**integration_method_params)
                 X_ess_merge = adata_.X
             elif integration_method == "scanorama":
-                scanpy.external.pp.scanorama_integrate(adata_, key=batch_key[0], basis='X',adjusted_basis='X_integrated',verbose=False,**integration_method_params)
+                scanpy.external.pp.scanorama_integrate(adata_, key=unified_batch_key, basis='X',adjusted_basis='X_integrated',verbose=False,**integration_method_params)
                 X_ess_merge = adata_.obsm["X_integrated"]
             elif integration_method == "mnn":
-                batches = [' '.join([adata_.obs[b_][i] for b_ in batch_key]) for i in range(adata_.shape[0])]
+                batches = [' '.join([adata_.obs[b_][i] for b_ in existing_batch_key]) for i in range(adata_.shape[0])]
                 data_ = [adata_.X[batches==b_] for b_ in np.unique(batches)]
-                mnn_out = scanpy.external.pp.mnn_correct(*data_, var_index=np.arange(adata_.shape[1]),verbose=False,cos_norm_out=False,**integration_method_params)
+                mnn_out = scanpy.external.pp.mnn_correct(*data_, var_index=np.arange(X_ess_n_cols),verbose=False,cos_norm_out=False,**integration_method_params)
                 X_ess_merge = mnn_out[0]
             elif integration_method == "scvi":
                 try:
                     import scvi
-                except ImportError:
-                    raise ImportError("\nplease install scvi:\n\n\tpip install scvi-tools")
+                except ImportError as err:
+                    raise ImportError("\nplease install scvi:\n\n\tpip install scvi-tools") from err
                 adata_.X = adata_.X-np.min(adata_.X)
-                scvi.model.SCVI.setup_anndata(adata_, batch_key="batch")
-                model = scvi.model.SCVI(adata_,gene_likelihood="normal",n_latent=adata_.shape[1],dropout_rate=0,dispersion='gene-batch',**integration_method_params)
-                model.train()
+                scvi.model.SCVI.setup_anndata(adata_, batch_key=unified_batch_key)
+                model = scvi.model.SCVI(adata_,gene_likelihood="normal",n_latent=X_ess_n_cols,dropout_rate=0,dispersion='gene-batch',**integration_method_params)
+                model.train(max_epochs=20)
                 X_ess_merge = model.get_latent_representation() + np.min(adata_.X)
             elif integration_method == "cca":
                 from sklearn.cross_decomposition import CCA
                 X_ess_merge = adata_.X
-                for b_ in batch_key:
+                for b_ in existing_batch_key:
                     batch_set_,counts_ = np.unique(adata_.obs[b_],return_counts=True)
-                    idx_batch = np.argsort(counts_)#[::-1]
-                    X_merged = X_ess_merge[adata_.obs[b_] == batch_set_[idx_batch[0]]]
+                    idx_batch = np.argsort(counts_)
+                    X_merged = X_ess_merge[adata_.obs[b_] == batch_set_[idx_batch[-1]]]
                     for i in range(len(idx_batch)-1):
-                        Y_ = X_ess_merge[adata_.obs[b_] == batch_set_[idx_batch[i+1]]]
+                        Y_ = X_ess_merge[adata_.obs[b_] == batch_set_[idx_batch[i]]]
                         indices = np.random.choice(X_merged.shape[0], size=Y_.shape[0], replace=False)
                         X_ = X_merged[indices]
                         cca = CCA(n_components=adata_.shape[1])
@@ -658,6 +669,14 @@ class RECODE:
                         X_c, Y_c = cca.transform(X_merged, Y_)
                         X_merged = np.concatenate([X_c, Y_c])
                     X_ess_merge = X_merged
+            elif integration_method == "concord":
+                try:
+                    import concord as ccd
+                except ImportError:
+                    raise ImportError("\nplease install concord:\n\n\tpip install torch torchvision torchaudio\n\tpip install concord-sc")
+                cur_ccd = ccd.Concord(adata=adata_, domain_key=unified_batch_key, latent_dim=adata_.shape[1], **integration_method_params)
+                cur_ccd.fit_transform(output_key="X_integrated")
+                X_ess_merge = adata_.obsm["X_integrated"]
             else:
                 raise ValueError("No integration method \"%s\". Choice from %s" % integration_method,["harmony","bbknn","scanorama","mnn","scvi","cca"])
             
