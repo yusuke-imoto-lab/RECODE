@@ -328,7 +328,7 @@ class RECODE:
 
         return original_sampled_indices
 
-    def _refine_spatial_transcriptome(
+    def _integrate_spatial_transcriptome(
         self,
         X_mat,
         X_sp,
@@ -513,7 +513,7 @@ class RECODE:
                 pre_fit_transform_params = {"meta_data": meta_data} | pre_fit_transform_params
                 X_sp = (X.obsm[spatial_key][idx_act_cells])[cell_stat]
             
-            X_mat = self._refine_spatial_transcriptome(
+            X_mat = self._integrate_spatial_transcriptome(
                 X_mat,
                 X_sp,
                 n_neighbors_spatial=n_neighbors_spatial,
