@@ -419,8 +419,9 @@ class RECODE:
     def fit(
             self,
             X,
-            srecode_flag=False,
-            spatial_key="spatial",
+            method="auto",
+            X_spatial=None,
+            spatial_key=None,
             n_neighbors_spatial=24,
             n_neighbors_count_rate=0.02,
             pre_recode_params={},
@@ -437,6 +438,25 @@ class RECODE:
         """
         X_mat = self._check_datatype(X)
 
+        if method == "srecode":
+            sRECODE_flag = True
+            if isinstance(X, anndata.AnnData):
+                is_spatial_key_specified = (spatial_key is not None)
+                if X_spatial is None:
+                    spatial_key = "spatial" if spatial_key is None else spatial_key
+                    X_spatial = X.obsm.get(spatial_key, None)
+            if X_spatial is None:
+                raise ValueError("sRECODE requires spatial transcriptome data. Please set spatial_key or X_spatial.")
+        elif method == "auto":
+            is_spatial_key_specified = (spatial_key is not None)
+            spatial_key = "spatial" if spatial_key is None else spatial_key
+            if X_spatial is None and isinstance(X, anndata.AnnData):
+                X_spatial = X.obsm.get(spatial_key, None)
+            sRECODE_flag = X_spatial is not None
+            if is_spatial_key_specified and (not sRECODE_flag):
+                warnings.warn("Spatial key \"%s\" was not found in adata.obsm. sRECODE will not be applied." % spatial_key)
+        else:
+            sRECODE_flag = False
         idx_act_cells = np.sum(X_mat,axis=1) > 0
 
         X_mat = X_mat[idx_act_cells]
@@ -507,15 +527,16 @@ class RECODE:
                 "Warning: RECODE is applicable for count data (integer matrix). Plese make sure the data type."
             )
 
-        if srecode_flag:
+        if sRECODE_flag:
             if isinstance(X, anndata.AnnData):
                 meta_data = (X.obs[idx_act_cells]).iloc[cell_stat]
                 pre_fit_transform_params = {"meta_data": meta_data} | pre_fit_transform_params
-                X_sp = (X.obsm[spatial_key][idx_act_cells])[cell_stat]
-            
+            X_spatial = X_spatial[idx_act_cells][cell_stat]
+            if self.verbose:
+                print("applying spatial RECODE (sRECODE)")
             X_mat = self._integrate_spatial_transcriptome(
                 X_mat,
-                X_sp,
+                X_spatial,
                 n_neighbors_spatial=n_neighbors_spatial,
                 n_neighbors_count_rate=n_neighbors_count_rate,
                 pre_recode_params=pre_recode_params,
@@ -616,7 +637,7 @@ class RECODE:
         if self.reduce_genes:
             X_mat = X_mat[:, self.idx_highvar_genes]
 
-        integration_flag = False
+        iRECODE_flag = False
         
         if type(X) == anndata._core.anndata.AnnData:
             existing_batch_key = []
@@ -626,7 +647,7 @@ class RECODE:
                 elif is_batch_key_specified:
                     warnings.warn("Batch key \"%s\" was not found in adata.obs." % b)
             if len(existing_batch_key) != 0:
-                integration_flag = True
+                iRECODE_flag = True
                 meta_data_array = np.array([X.obs[b] for b in existing_batch_key])
             elif is_batch_key_specified:
                 warnings.warn("No batch keys were found in adata.obs. iRECODE will not be applied.")
@@ -648,7 +669,7 @@ class RECODE:
                         "The number of columns of meta_data (np.ndarray) should be 1."
                     )
                 else:
-                    integration_flag = True
+                    iRECODE_flag = True
                     meta_data_array = meta_data.T
             elif (type(meta_data) == anndata._core.views.DataFrameView) | (type(meta_data) == pd.core.frame.DataFrame):
                 if len(meta_data) != X_mat.shape[0]:
@@ -664,7 +685,7 @@ class RECODE:
                         elif is_batch_key_specified:
                             warnings.warn("Batch key \"%s\" was not found in meta_data." % b)
                     if len(existing_batch_key) != 0:
-                        integration_flag = True
+                        iRECODE_flag = True
                         meta_data_array = np.array([meta_data[b] for b in existing_batch_key])
                     elif is_batch_key_specified:
                         warnings.warn("No batch keys were found in meta_data. iRECODE will not be applied.")
@@ -676,7 +697,7 @@ class RECODE:
         X_norm = self._noise_variance_stabilizing_normalization(X_)
         X_norm_RECODE_, X_ess, U_ell, Xmean = self.recode_.transform(X_norm, return_ess=True)
 
-        if integration_flag == True:
+        if iRECODE_flag == True:
             if self.verbose:
                 print("applying RECODE integration (iRECODE)")
             unified_batch_key = "_".join(existing_batch_key)
@@ -816,10 +837,17 @@ class RECODE:
     def fit_transform(
         self,
         X,
+        method="auto",
+        X_spatial=None,
+        spatial_key=None,
+        n_neighbors_spatial=24,
+        n_neighbors_count_rate=0.02,
+        pre_recode_params={},
+        pre_fit_transform_params={},
         meta_data=None,
         batch_key=None,
-        integration_method = "harmony",
-        integration_method_params = {},
+        integration_method="harmony",
+        integration_method_params={},
     ):
         """
         Fit the model with X and transform X into RECODE-denoised data.
@@ -852,7 +880,16 @@ class RECODE:
             if self.assay in ["Multiome"]:
                 print("start RECODE for %s data" % self.assay)
 
-        self.fit(X)
+        self.fit(
+            X,
+            method=method,
+            X_spatial=X_spatial,
+            spatial_key=spatial_key,
+            n_neighbors_spatial=n_neighbors_spatial,
+            n_neighbors_count_rate=n_neighbors_count_rate,
+            pre_recode_params=pre_recode_params,
+            pre_fit_transform_params=pre_fit_transform_params
+        )
         X_RECODE = self.transform(X, meta_data, batch_key, integration_method, integration_method_params)
         end_time = datetime.datetime.now()
         elapsed_time = end_time - start_time
