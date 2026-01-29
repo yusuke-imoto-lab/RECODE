@@ -12,7 +12,9 @@ import scipy.sparse
 import seaborn as sns
 import sklearn.decomposition
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
+from scipy.sparse import lil_matrix
 from scipy.spatial.distance import cdist, pdist
+from sklearn.neighbors import NearestNeighbors
 
 
 class RECODE:
@@ -374,7 +376,13 @@ class RECODE:
         return mat_dict
 
 
-    def fit(self, X):
+    def fit(
+            self,
+            X,
+            srecode_flag=False,
+            pre_recode_params={},
+            pre_fit_transform_params={},
+        ):
         """
         Fit the model to X. (Determine the transformation.)
 
@@ -444,6 +452,7 @@ class RECODE:
 
             X_mat = X_mat[cell_stat]
         else:
+            cell_stat = np.arange(X_mat.shape[0])
             if X.shape[0] > 20000:
                 self.logger.warning(
                     "Warning: Regular RECODE uses high computational resources for data with a large number of cells. \n"
@@ -454,6 +463,67 @@ class RECODE:
             self.logger.warning(
                 "Warning: RECODE is applicable for count data (integer matrix). Plese make sure the data type."
             )
+
+        if srecode_flag:
+            meta_data=None
+            # pre_recode_params={}
+            spatial_key='spatial'
+            n_neighbors_spatial = 24
+            n_neighbors_count_rate = 0.02
+
+            X_sp = X.obsm[spatial_key][idx_act_cells][cell_stat]
+            print(X_sp.shape, X.shape, X_mat.shape)
+            nbrs_sp = NearestNeighbors(n_neighbors=n_neighbors_spatial+1).fit(X_sp)
+            distances_sp, indices_sp = nbrs_sp.kneighbors(X_sp)
+            mean_distance_sp = np.mean(distances_sp[:, 1:])
+            n = X_sp.shape[0]
+
+            row_idx = np.repeat(np.arange(n), n_neighbors_spatial+1)
+            col_idx = indices_sp.ravel()
+            idx_dis = distances_sp.ravel() < mean_distance_sp
+            adj_mat_sp = lil_matrix((n, n), dtype=float)
+            adj_mat_sp[row_idx[idx_dis], col_idx[idx_dis]] = 1
+
+            default_pre_recode_params = {
+                "fast_algorithm": self.fast_algorithm,
+                "fast_algorithm_ell_ub": self.fast_algorithm_ell_ub,
+                "assay": self.assay,
+                "version": self.version,
+                "solver": "full",
+                "downsampling_rate": self.downsampling_rate,
+                "decimals": self.decimals,
+                # "RECODE_key": self.RECODE_key,
+                # "anndata_key": "layers",
+                "random_state": self.random_state,
+                # "log_normalize": False,
+                "target_sum": self.target_sum,
+                # "reduce_genes": False,
+                # "reduce_gene_rate": 0.0,
+                "verbose": False,
+            }
+
+            pre_recode_params = default_pre_recode_params | pre_recode_params
+            pre_recode = RECODE(**pre_recode_params)
+
+            if isinstance(X, anndata.AnnData):
+                meta_data = (X.obs[idx_act_cells]).iloc[cell_stat]
+
+            pre_fit_transform_params = {"meta_data": meta_data} | pre_fit_transform_params
+
+            X_ex = pre_recode.fit_transform(X_mat, **pre_fit_transform_params)
+            
+            n_neighbors_ex = int(n_neighbors_count_rate * X_ex.shape[0])
+            nbrs_ex = NearestNeighbors(n_neighbors=n_neighbors_ex + 1).fit(X_ex)
+            _, indices_ex = nbrs_ex.kneighbors(X_ex)
+
+            row_idx = np.repeat(np.arange(n), n_neighbors_ex+1)
+            col_idx = indices_ex.ravel()
+
+            adj_mat_ex = lil_matrix((n, n), dtype=float)
+            adj_mat_ex[row_idx, col_idx] = 1
+
+            weight_sp = adj_mat_sp.multiply(adj_mat_ex)
+            X_mat = weight_sp @ X_mat
 
         mat_dict = self._calculate_matrix_attributes(X_mat)
 
