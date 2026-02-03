@@ -17,6 +17,12 @@ from scipy.spatial.distance import cdist, pdist
 from sklearn.neighbors import NearestNeighbors
 
 
+class sRECODEInapplicableError(Exception):
+    def __init__(self, message, warning_flag=False):
+        super().__init__(message)
+        self.warning_flag = warning_flag
+
+
 class iRECODEInapplicableError(Exception):
     def __init__(self, message, warning_flag=False):
         super().__init__(message)
@@ -253,6 +259,44 @@ class RECODE:
         X_new = (X + 1) // 2
         return X_new
     
+    def _check_applicability_of_sRECODE(self, X, X_spatial, spatial_key):
+        data_size = X.shape[0]
+
+        if isinstance(X, anndata.AnnData):
+            spatial_key = "spatial" if spatial_key is None else spatial_key
+            if spatial_key in X.obsm.keys():
+                X_spatial = X.obsm[spatial_key]
+            else:
+                raise sRECODEInapplicableError(
+                    "Spatial key %s was not found in adata.obsm. Please specify valid spatial_key." % spatial_key,
+                    warning_flag=False
+                )
+        elif X_spatial is None:
+            raise sRECODEInapplicableError(
+                "X_spatial is required for sRECODE when X is a numpy.ndarray.",
+                warning_flag=False
+            )
+        elif isinstance(X_spatial, np.ndarray):
+            if len(X_spatial.shape) != 2:
+                raise sRECODEInapplicableError(
+                    "X_spatial (numpy.ndarray) should be a 2-dimensional array.",
+                    warning_flag=True
+                )
+            elif X_spatial.shape[0] != data_size:
+                raise sRECODEInapplicableError(
+                    "The number of rows of X_spatial (numpy.ndarray) should be the same as the number "
+                    "of samples of X.",
+                    warning_flag=True
+                )
+        else:
+            raise sRECODEInapplicableError(
+                "X_spatial should be a numpy.ndarray.",
+                warning_flag=True
+            )
+        
+        return X_spatial
+
+    
     def balanced_sampling(self, X, n_components=50, n_thresh_samples=None, thresh_percentile=1, n_samples=None):
         X_mat = self._check_datatype(X)
 
@@ -334,6 +378,7 @@ class RECODE:
 
         return original_sampled_indices
 
+
     def _integrate_spatial_transcriptome(
         self,
         X_mat,
@@ -343,7 +388,6 @@ class RECODE:
         pre_recode_params={},
         pre_fit_transform_params={},
     ):
-        print(X_sp.shape, X_mat.shape)
         nbrs_sp = NearestNeighbors(n_neighbors=n_neighbors_spatial+1).fit(X_sp)
         distances_sp, indices_sp = nbrs_sp.kneighbors(X_sp)
         mean_distance_sp = np.mean(distances_sp[:, 1:])
@@ -448,21 +492,18 @@ class RECODE:
         X_mat = self._check_datatype(X)
 
         if sRECODE_mode == True:
-            if isinstance(X, anndata.AnnData):
-                is_spatial_key_specified = (spatial_key is not None)
-                if X_spatial is None:
-                    spatial_key = "spatial" if spatial_key is None else spatial_key
-                    X_spatial = X.obsm.get(spatial_key, None)
-            if X_spatial is None:
-                raise ValueError("sRECODE requires spatial transcriptome data. Please set valid spatial_key or X_spatial.")
+            X_spatial = self._check_applicability_of_sRECODE(X, X_spatial, spatial_key)
         elif sRECODE_mode == "auto":
-            is_spatial_key_specified = (spatial_key is not None)
-            spatial_key = "spatial" if spatial_key is None else spatial_key
-            if X_spatial is None and isinstance(X, anndata.AnnData):
-                X_spatial = X.obsm.get(spatial_key, None)
-            sRECODE_mode = X_spatial is not None
-            if is_spatial_key_specified and (not sRECODE_mode):
-                warnings.warn("Spatial key \"%s\" was not found in adata.obsm. sRECODE will not be applied." % spatial_key)
+            try:
+                X_spatial = self._check_applicability_of_sRECODE(X, X_spatial, spatial_key)
+                sRECODE_mode = True
+                if self.verbose:
+                    print("Detected spatial dataset. sRECODE will be applied.")
+            except sRECODEInapplicableError as e:
+                if e.warning_flag:
+                    warnings.warn(f"sRECODE is inapplicable due to the following reason: {e} \n Normal RECODE will be applied.")
+                sRECODE_mode = False
+
         idx_act_cells = np.sum(X_mat,axis=1) > 0
 
         X_mat = X_mat[idx_act_cells]
@@ -539,7 +580,7 @@ class RECODE:
                 pre_fit_transform_params = {"meta_data": meta_data} | pre_fit_transform_params
             X_spatial = X_spatial[idx_act_cells][cell_stat]
             if self.verbose:
-                print("applying spatial RECODE (sRECODE)")
+                print("Applying spatial RECODE (sRECODE)..")
             X_mat = self._integrate_spatial_transcriptome(
                 X_mat,
                 X_spatial,
@@ -593,7 +634,12 @@ class RECODE:
             self.log_["#removed %ss" % self.unit] = int(d_train - picked_gene_num)
 
 
-    def _check_applicability_of_iRECODE(self, meta_data, batch_key, data_size, is_metadata_specified=False):
+    def _check_applicability_of_iRECODE(self, X, meta_data, batch_key):
+        is_metadata_specified = meta_data is not None
+        if isinstance(X, anndata.AnnData):
+            meta_data = X.obs
+        data_size = X.shape[0]
+
         if batch_key is None:
             is_batch_key_specified = False
             batch_key = ["batch"]
@@ -610,18 +656,18 @@ class RECODE:
         elif isinstance(meta_data, np.ndarray):
             if len(meta_data.shape) != 2:
                 raise iRECODEInapplicableError(
-                    "meta_data (np.ndarray) should be a 2-dimensional array.",
+                    "meta_data (numpy.ndarray) should be a 2-dimensional array.",
                     warning_flag=True
                 )
             elif meta_data.shape[0] != data_size:
                 raise iRECODEInapplicableError(
-                    "The number of rows of meta_data (np.ndarray) should be the same as the number "
+                    "The number of rows of meta_data (numpy.ndarray) should be the same as the number "
                     "of samples of X.",
                     warning_flag=True
                 )
             elif meta_data.shape[1] != 1: 
                 raise iRECODEInapplicableError(
-                    "The number of columns of meta_data (np.ndarray) should be 1.",
+                    "The number of columns of meta_data (numpy.ndarray) should be 1.",
                     warning_flag=True
                 )
             else:
@@ -701,26 +747,18 @@ class RECODE:
                 "RECODE requires the same dimension as that of fitted data."
             )
         
-        is_metadata_specified = meta_data is not None
-        if isinstance(X, anndata.AnnData):
-            meta_data = X.obs
 
         if iRECODE_mode == True:
-            valid_meta_data, valid_batch_keys = self._check_applicability_of_iRECODE(meta_data, batch_key, X_mat.shape[0])
+            valid_meta_data, valid_batch_keys = self._check_applicability_of_iRECODE(X, meta_data, batch_key)
         elif iRECODE_mode == "auto":
             try:
-                valid_meta_data, valid_batch_keys = self._check_applicability_of_iRECODE(
-                    meta_data,
-                    batch_key,
-                    X_mat.shape[0],
-                    is_metadata_specified=is_metadata_specified
-                )
+                valid_meta_data, valid_batch_keys = self._check_applicability_of_iRECODE(X, meta_data, batch_key)
                 iRECODE_mode = True
                 if self.verbose:
                     print("Detected multi-batch dataset. iRECODE will be applied.")
             except iRECODEInapplicableError as e:
                 if e.warning_flag:
-                    warnings.warn(f"iRECODE is inapplicable: {e} \n Normal RECODE will be applied.")
+                    warnings.warn(f"iRECODE is inapplicable due to the following reason: {e} \n Normal RECODE will be applied.")
                 iRECODE_mode = False
         
         if self.reduce_genes:
@@ -733,7 +771,7 @@ class RECODE:
         if iRECODE_mode == True:
             valid_meta_data = valid_meta_data[idx_act_cells]
             if self.verbose:
-                print("applying RECODE integration (iRECODE)")
+                print("Applying RECODE integration (iRECODE)")
             unified_batch_key = "_".join(valid_batch_keys)
             if len(valid_batch_keys) > 1:
                 valid_meta_data[unified_batch_key] = ["_".join([valid_meta_data[key][n] for key in valid_batch_keys]) for n in range(X_ess.shape[0])]
@@ -1010,7 +1048,7 @@ class RECODE:
             if len(meta_data.shape) == len(batch_key):
                 meta_data_ = {batch_key[i]: np.array(meta_data[i], dtype="object") for i in range(len(batch_key))}
             else:
-                raise ValueError("meta_data (np.ndarray) should be the same dimension as the batch_key")
+                raise ValueError("meta_data (numpy.ndarray) should be the same dimension as the batch_key")
         elif (type(meta_data) == anndata._core.views.DataFrameView) | (type(meta_data) == pd.core.frame.DataFrame):
             for b_ in batch_key:
                 if b_ not in meta_data.keys():
