@@ -17,6 +17,12 @@ from scipy.spatial.distance import cdist, pdist
 from sklearn.neighbors import NearestNeighbors
 
 
+class iRECODEInapplicableError(Exception):
+    def __init__(self, message, warning_flag=False):
+        super().__init__(message)
+        self.warning_flag = warning_flag
+        
+
 class RECODE:
     def __init__(
         self,
@@ -419,7 +425,7 @@ class RECODE:
     def fit(
             self,
             X,
-            method="auto",
+            sRECODE_mode="auto",
             X_spatial=None,
             spatial_key=None,
             n_neighbors_spatial=24,
@@ -436,27 +442,27 @@ class RECODE:
                 single-cell sequencing data matrix (row:cell, culumn:gene/peak).
 
         """
+        if sRECODE_mode not in [True, False, "auto"]:
+            raise ValueError("sRECODE_mode should be True, False, or 'auto'.")
+
         X_mat = self._check_datatype(X)
 
-        if method == "srecode":
-            sRECODE_flag = True
+        if sRECODE_mode == True:
             if isinstance(X, anndata.AnnData):
                 is_spatial_key_specified = (spatial_key is not None)
                 if X_spatial is None:
                     spatial_key = "spatial" if spatial_key is None else spatial_key
                     X_spatial = X.obsm.get(spatial_key, None)
             if X_spatial is None:
-                raise ValueError("sRECODE requires spatial transcriptome data. Please set spatial_key or X_spatial.")
-        elif method == "auto":
+                raise ValueError("sRECODE requires spatial transcriptome data. Please set valid spatial_key or X_spatial.")
+        elif sRECODE_mode == "auto":
             is_spatial_key_specified = (spatial_key is not None)
             spatial_key = "spatial" if spatial_key is None else spatial_key
             if X_spatial is None and isinstance(X, anndata.AnnData):
                 X_spatial = X.obsm.get(spatial_key, None)
-            sRECODE_flag = X_spatial is not None
-            if is_spatial_key_specified and (not sRECODE_flag):
+            sRECODE_mode = X_spatial is not None
+            if is_spatial_key_specified and (not sRECODE_mode):
                 warnings.warn("Spatial key \"%s\" was not found in adata.obsm. sRECODE will not be applied." % spatial_key)
-        else:
-            sRECODE_flag = False
         idx_act_cells = np.sum(X_mat,axis=1) > 0
 
         X_mat = X_mat[idx_act_cells]
@@ -527,7 +533,7 @@ class RECODE:
                 "Warning: RECODE is applicable for count data (integer matrix). Plese make sure the data type."
             )
 
-        if sRECODE_flag:
+        if sRECODE_mode:
             if isinstance(X, anndata.AnnData):
                 meta_data = (X.obs[idx_act_cells]).iloc[cell_stat]
                 pre_fit_transform_params = {"meta_data": meta_data} | pre_fit_transform_params
@@ -585,14 +591,80 @@ class RECODE:
         if self.reduce_genes:
             self.idx_highvar_genes = idx_highvar_genes
             self.log_["#removed %ss" % self.unit] = int(d_train - picked_gene_num)
+
+
+    def _check_applicability_of_iRECODE(self, meta_data, batch_key, data_size, is_metadata_specified=False):
+        if batch_key is None:
+            is_batch_key_specified = False
+            batch_key = ["batch"]
+        else:
+            is_batch_key_specified = True
+            if isinstance(batch_key, str):
+                batch_key = [batch_key]
+
+        if meta_data is None:
+            raise iRECODEInapplicableError(
+                "meta_data is required for iRECODE when X is a numpy.ndarray.",
+                warning_flag=False
+            )
+        elif isinstance(meta_data, np.ndarray):
+            if len(meta_data.shape) != 2:
+                raise iRECODEInapplicableError(
+                    "meta_data (np.ndarray) should be a 2-dimensional array.",
+                    warning_flag=True
+                )
+            elif meta_data.shape[0] != data_size:
+                raise iRECODEInapplicableError(
+                    "The number of rows of meta_data (np.ndarray) should be the same as the number "
+                    "of samples of X.",
+                    warning_flag=True
+                )
+            elif meta_data.shape[1] != 1: 
+                raise iRECODEInapplicableError(
+                    "The number of columns of meta_data (np.ndarray) should be 1.",
+                    warning_flag=True
+                )
+            else:
+                valid_meta_data = pd.DataFrame(meta_data, columns=["batch"])
+                valid_batch_keys = ["batch"]
+        elif isinstance(meta_data, pd.DataFrame):
+            if meta_data.shape[0] != data_size:
+                raise iRECODEInapplicableError(
+                    "The number of rows of meta_data (DataFrame) should be the same as the number "
+                    "of samples of X.",
+                    warning_flag=True
+                )
+            else:
+                valid_batch_keys = []
+                for bk in batch_key:
+                    if bk in meta_data.keys():
+                        valid_batch_keys.append(bk)
+                    elif is_batch_key_specified:
+                        warnings.warn("Batch key \"%s\" was not found in adata.obs or meta_data." % bk)
+                if len(valid_batch_keys) != 0:
+                    valid_meta_data = meta_data[valid_batch_keys]
+                else:
+                    raise iRECODEInapplicableError(
+                        "No batch keys were found in adata.obs or meta_data.",
+                        warning_flag=(is_batch_key_specified or is_metadata_specified)
+                    )
+        else:
+            raise iRECODEInapplicableError(
+                "meta_data should be ndarray or DataFrame.",
+                warning_flag=True
+            )
+        
+        return valid_meta_data, valid_batch_keys
+
             
     def transform(
         self,
         X,
+        iRECODE_mode="auto",
         meta_data=None,
         batch_key=None,
-        integration_method = "harmony",
-        integration_method_params = {},
+        integration_method="harmony",
+        integration_method_params={},
     ):
         """
         Transform X into RECODE-denoised data.
@@ -618,13 +690,8 @@ class RECODE:
         X_new : ndarray/anndata (the same format as input)
                 Denoised data matrix.
         """
-        if batch_key is None:
-            is_batch_key_specified = False
-            batch_key = ["batch"]
-        else:
-            is_batch_key_specified = True
-            if isinstance(batch_key, str):
-                batch_key = [batch_key]
+        if iRECODE_mode not in [True, False, "auto"]:
+            raise ValueError("iRECODE_mode should be True, False, or 'auto'.")
 
         X_mat = self._check_datatype(X)
         if self.fit_idx == False:
@@ -634,81 +701,47 @@ class RECODE:
                 "RECODE requires the same dimension as that of fitted data."
             )
         
+        is_metadata_specified = meta_data is not None
+        if isinstance(X, anndata.AnnData):
+            meta_data = X.obs
+
+        if iRECODE_mode == True:
+            valid_meta_data, valid_batch_keys = self._check_applicability_of_iRECODE(meta_data, batch_key, X_mat.shape[0])
+        elif iRECODE_mode == "auto":
+            try:
+                valid_meta_data, valid_batch_keys = self._check_applicability_of_iRECODE(
+                    meta_data,
+                    batch_key,
+                    X_mat.shape[0],
+                    is_metadata_specified=is_metadata_specified
+                )
+                iRECODE_mode = True
+                if self.verbose:
+                    print("Detected multi-batch dataset. iRECODE will be applied.")
+            except iRECODEInapplicableError as e:
+                if e.warning_flag:
+                    warnings.warn(f"iRECODE is inapplicable: {e} \n Normal RECODE will be applied.")
+                iRECODE_mode = False
+        
         if self.reduce_genes:
             X_mat = X_mat[:, self.idx_highvar_genes]
-
-        iRECODE_flag = False
-        
-        if type(X) == anndata._core.anndata.AnnData:
-            existing_batch_key = []
-            for b in batch_key:
-                if b in X.obs.keys():
-                    existing_batch_key.append(b)
-                elif is_batch_key_specified:
-                    warnings.warn("Batch key \"%s\" was not found in adata.obs." % b)
-            if len(existing_batch_key) != 0:
-                iRECODE_flag = True
-                meta_data_array = np.array([X.obs[b] for b in existing_batch_key])
-            elif is_batch_key_specified:
-                warnings.warn("No batch keys were found in adata.obs. iRECODE will not be applied.")
-        else:
-            if meta_data is None:
-                pass
-            elif type(meta_data) == np.ndarray:
-                if len(meta_data.shape) != 2:
-                    raise ValueError(
-                        "meta_data (np.ndarray) should be a 2-dimensional array."
-                    )
-                elif len(meta_data) != len(X_mat):
-                    raise ValueError(
-                        "The number of rows of meta_data (np.ndarray) should be the same as the number "
-                        "of samples of X."
-                    )
-                elif meta_data.shape[1] != 1: 
-                    raise ValueError(
-                        "The number of columns of meta_data (np.ndarray) should be 1."
-                    )
-                else:
-                    iRECODE_flag = True
-                    meta_data_array = meta_data.T
-            elif (type(meta_data) == anndata._core.views.DataFrameView) | (type(meta_data) == pd.core.frame.DataFrame):
-                if len(meta_data) != X_mat.shape[0]:
-                    raise ValueError(
-                        "The number of rows of meta_data (DataFrame) should be the same as the number "
-                        "of samples of X."
-                    )
-                else:
-                    existing_batch_key = []
-                    for b in batch_key:
-                        if b in meta_data.keys():
-                            existing_batch_key.append(b)
-                        elif is_batch_key_specified:
-                            warnings.warn("Batch key \"%s\" was not found in meta_data." % b)
-                    if len(existing_batch_key) != 0:
-                        iRECODE_flag = True
-                        meta_data_array = np.array([meta_data[b] for b in existing_batch_key])
-                    elif is_batch_key_specified:
-                        warnings.warn("No batch keys were found in meta_data. iRECODE will not be applied.")
-            else:
-                raise TypeError("meta_data should be ndarray or DataFrame.")
-    
         idx_act_cells = np.sum(X_mat, axis=1) > 0
         X_ = X_mat[np.ix_(idx_act_cells, self.idx_nonsilent)]
         X_norm = self._noise_variance_stabilizing_normalization(X_)
         X_norm_RECODE_, X_ess, U_ell, Xmean = self.recode_.transform(X_norm, return_ess=True)
 
-        if iRECODE_flag == True:
+        if iRECODE_mode == True:
+            valid_meta_data = valid_meta_data[idx_act_cells]
             if self.verbose:
                 print("applying RECODE integration (iRECODE)")
-            unified_batch_key = "_".join(existing_batch_key)
-            meta_data_obs = {existing_batch_key[i]: np.array(meta_data_array[i][idx_act_cells], dtype="object") for i in range(len(existing_batch_key))}
-            if len(existing_batch_key) > 1:
-                meta_data_obs[unified_batch_key] = ["_".join([meta_data_obs[key][n] for key in existing_batch_key]) for n in range(X_ess.shape[0])]
+            unified_batch_key = "_".join(valid_batch_keys)
+            if len(valid_batch_keys) > 1:
+                valid_meta_data[unified_batch_key] = ["_".join([valid_meta_data[key][n] for key in valid_batch_keys]) for n in range(X_ess.shape[0])]
             else:
-                meta_data_obs[unified_batch_key] = meta_data_obs[existing_batch_key[0]]
+                valid_meta_data[unified_batch_key] = valid_meta_data[valid_batch_keys[0]]
             adata_ = anndata.AnnData(
                 X_ess,
-                obs = meta_data_obs,
+                obs = valid_meta_data,
                 obsm = {"X": X_ess},
             )
             X_ess_n_cols = X_ess.shape[1]
@@ -718,7 +751,7 @@ class RECODE:
                 except ImportError as err:
                     raise ImportError("\nplease install harmonypy:\n\n\tpip install harmonypy") from err
                 X_ess_float64 = X_ess.astype(np.float64)
-                harmony_out = harmonypy.run_harmony(X_ess_float64, adata_.obs, existing_batch_key, verbose=False, **integration_method_params)
+                harmony_out = harmonypy.run_harmony(X_ess_float64, adata_.obs, valid_batch_keys, verbose=False, **integration_method_params)
                 X_ess_merge = harmony_out.Z_corr
             elif integration_method == "bbknn":
                 scanpy.external.pp.bbknn(adata_, batch_key=unified_batch_key, use_rep='X',**integration_method_params)
@@ -727,7 +760,7 @@ class RECODE:
                 scanpy.external.pp.scanorama_integrate(adata_, key=unified_batch_key, basis='X',adjusted_basis='X_integrated',verbose=False,**integration_method_params)
                 X_ess_merge = adata_.obsm["X_integrated"]
             elif integration_method == "mnn":
-                batches = [' '.join([adata_.obs[b_][i] for b_ in existing_batch_key]) for i in range(adata_.shape[0])]
+                batches = [' '.join([adata_.obs[b_][i] for b_ in valid_batch_keys]) for i in range(adata_.shape[0])]
                 data_ = [adata_.X[batches==b_] for b_ in np.unique(batches)]
                 mnn_out = scanpy.external.pp.mnn_correct(*data_, var_index=np.arange(X_ess_n_cols),verbose=False,cos_norm_out=False,**integration_method_params)
                 X_ess_merge = mnn_out[0]
@@ -744,7 +777,7 @@ class RECODE:
             elif integration_method == "cca":
                 from sklearn.cross_decomposition import CCA
                 X_ess_merge = adata_.X
-                for b_ in existing_batch_key:
+                for b_ in valid_batch_keys:
                     batch_set_,counts_ = np.unique(adata_.obs[b_],return_counts=True)
                     idx_batch = np.argsort(counts_)
                     X_merged = X_ess_merge[adata_.obs[b_] == batch_set_[idx_batch[-1]]]
@@ -837,13 +870,14 @@ class RECODE:
     def fit_transform(
         self,
         X,
-        method="auto",
+        sRECODE_mode="auto",
         X_spatial=None,
         spatial_key=None,
         n_neighbors_spatial=24,
         n_neighbors_count_rate=0.02,
         pre_recode_params={},
         pre_fit_transform_params={},
+        iRECODE_mode="auto",
         meta_data=None,
         batch_key=None,
         integration_method="harmony",
@@ -882,7 +916,7 @@ class RECODE:
 
         self.fit(
             X,
-            method=method,
+            sRECODE_mode=sRECODE_mode,
             X_spatial=X_spatial,
             spatial_key=spatial_key,
             n_neighbors_spatial=n_neighbors_spatial,
@@ -890,7 +924,15 @@ class RECODE:
             pre_recode_params=pre_recode_params,
             pre_fit_transform_params=pre_fit_transform_params
         )
-        X_RECODE = self.transform(X, meta_data, batch_key, integration_method, integration_method_params)
+        X_RECODE = self.transform(
+            X,
+            iRECODE_mode=iRECODE_mode,
+            meta_data=meta_data,
+            batch_key=batch_key,
+            integration_method=integration_method,
+            integration_method_params=integration_method_params
+        )
+
         end_time = datetime.datetime.now()
         elapsed_time = end_time - start_time
         hours, remainder = divmod(elapsed_time.seconds, 3600)
