@@ -1,3 +1,4 @@
+
 import datetime
 import logging
 import warnings
@@ -343,8 +344,7 @@ class RECODE:
 # X_norm = (X_scaled - X_scaled_mean) / np.sqrt(noise_var)
 # X_norm_var = np.var(X_norm, axis=0)
 
-
-    def _calculate_matrix_attributes(self, X_mat, feature_types=None):
+    def _calculate_matrix_attributes(self, X_mat, feature_types=None, X_nUMI=None):
         idx_nonsilent = np.sum(X_mat, axis=0) > 0
         X_temp = X_mat[:, idx_nonsilent]
         if self.assay == "ATAC":
@@ -353,7 +353,8 @@ class RECODE:
             idx_atac = feature_types[idx_nonsilent] == "Peaks"
             X_temp[:, idx_atac] = self._ATAC_preprocessing(X_temp[:, idx_atac])
 
-        X_nUMI = np.sum(X_temp, axis=1)
+        if X_nUMI is None:
+            X_nUMI = np.sum(X_temp, axis=1)
         X_scaled = X_temp / X_nUMI[:,np.newaxis]
         X_scaled_mean = np.mean(X_scaled, axis=0)
         noise_var = np.mean(X_scaled * (1-X_scaled) / X_nUMI[:,np.newaxis], axis=0)
@@ -391,21 +392,33 @@ class RECODE:
         X_mat = X_mat[idx_act_cells]
         d_train = X_mat.shape[1]
 
+        if isinstance(X, anndata.AnnData):
+            feature_types = X.var.get("feature_types")
+        else:
+            feature_types = None
+        
         if self.reduce_genes:
-            temp_mat_dict = self._calculate_matrix_attributes(X_mat)
+            temp_mat_dict = self._calculate_matrix_attributes(X_mat, feature_types=feature_types)
             temp_idx_nonsilent = temp_mat_dict["idx_nonsilent"]
             temp_X_norm_var_nonsilent = temp_mat_dict["X_norm_var"]
             temp_X_norm_var = np.zeros(X_mat.shape[1], dtype=float)
             temp_X_norm_var[temp_idx_nonsilent] = temp_X_norm_var_nonsilent
             norm_var_threshold = np.percentile(temp_X_norm_var, 100 * self.reduce_gene_rate)
             idx_highvar_genes = temp_X_norm_var >= norm_var_threshold
+
             X_mat = X_mat[:, idx_highvar_genes]
+            if feature_types is not None:
+                feature_types = feature_types[idx_highvar_genes]
             picked_gene_num = sum(idx_highvar_genes)
             
             if self.verbose:
                 print(f"Reduced genes from {d_train} to {picked_gene_num} by high variance gene selection.")
+            
+            X_nUMI = temp_mat_dict["X_nUMI"]
 
             del temp_mat_dict, temp_idx_nonsilent, temp_X_norm_var_nonsilent, temp_X_norm_var
+        else:
+            X_nUMI = None
 
         if self.solver == "auto":
             self.solver = "full" if X_mat.shape[0] < 10000 else "randomized"
@@ -455,11 +468,11 @@ class RECODE:
                 "Warning: RECODE is applicable for count data (integer matrix). Plese make sure the data type."
             )
 
-        mat_dict = self._calculate_matrix_attributes(X_mat)
+        mat_dict = self._calculate_matrix_attributes(X_mat, feature_types=feature_types, X_nUMI=X_nUMI)
 
         idx_nonsilent = mat_dict["idx_nonsilent"]
         X_temp = mat_dict["X_temp"]
-        X_nUMI = mat_dict["X_nUMI"]
+        # X_nUMI = mat_dict["X_nUMI"]
         X_scaled_mean = mat_dict["X_scaled_mean"]
         noise_var = mat_dict["noise_var"]
         X_norm_var = mat_dict["X_norm_var"]
