@@ -381,7 +381,7 @@ class RECODE:
 
     def _integrate_spatial_transcriptome(
         self,
-        X_mat,
+        X,
         X_sp,
         n_neighbors_spatial=24,
         n_neighbors_count_rate=0.02,
@@ -418,7 +418,12 @@ class RECODE:
         pre_recode_params = default_pre_recode_params | pre_recode_params
         pre_recode = RECODE(**pre_recode_params)
 
-        X_ex = pre_recode.fit_transform(X_mat, **pre_fit_transform_params)
+        X_ex = pre_recode.fit_transform(X, **pre_fit_transform_params)
+        if isinstance(X, anndata.AnnData):
+            X_mat = X.X
+            X_ex = X_ex.X
+        else:
+            X_mat = X
 
         n_neighbors_ex = int(n_neighbors_count_rate * X_ex.shape[0])
         nbrs_ex = NearestNeighbors(n_neighbors=n_neighbors_ex + 1).fit(X_ex)
@@ -576,13 +581,17 @@ class RECODE:
 
         if sRECODE_mode:
             if isinstance(X, anndata.AnnData):
-                meta_data = (X.obs[idx_act_cells]).iloc[cell_stat]
-                pre_fit_transform_params = {"meta_data": meta_data} | pre_fit_transform_params
+                X_obs = (X.obs[idx_act_cells]).iloc[cell_stat]
+                X_for_sRECODE = anndata.AnnData(X_mat, obs=X_obs)
+            else: 
+                X_for_sRECODE = X_mat
             X_spatial = X_spatial[idx_act_cells][cell_stat]
+            if pre_fit_transform_params.get("meta_data") is not None:
+                pre_fit_transform_params["meta_data"] = pre_fit_transform_params["meta_data"][idx_act_cells].iloc[cell_stat]
             if self.verbose:
                 print("Applying spatial RECODE (sRECODE)..")
             X_mat = self._integrate_spatial_transcriptome(
-                X_mat,
+                X_for_sRECODE,
                 X_spatial,
                 n_neighbors_spatial=n_neighbors_spatial,
                 n_neighbors_count_rate=n_neighbors_count_rate,
