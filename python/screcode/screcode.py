@@ -1,4 +1,3 @@
-
 import datetime
 import logging
 import warnings
@@ -214,7 +213,6 @@ class RECODE:
             return X_norm_
         elif d == self.d_nonsilent:
             return X_norm
-            
 
     def _inv_noise_variance_stabilizing_normalization(self, X):
         """
@@ -327,23 +325,6 @@ class RECODE:
 
         return original_sampled_indices
 
-# self.idx_nonsilent = np.sum(X_mat, axis=0) > 0
-# self.X_temp = X_mat[:, self.idx_nonsilent]
-# if self.assay == "ATAC":
-#     self.X_temp = self._ATAC_preprocessing(self.X_temp)
-# if self.assay == "Multiome":
-#     self.idx_atac = X.var["feature_types"][self.idx_nonsilent] == "Peaks"
-#     self.X_temp[:, self.idx_atac] = self._ATAC_preprocessing(
-#         self.X_temp[:, self.idx_atac]
-#     )
-# X_nUMI = np.sum(self.X_temp, axis=1)
-# X_scaled = self.X_temp / X_nUMI[:,np.newaxis]
-# X_scaled_mean = np.mean(X_scaled, axis=0)
-# noise_var = np.mean(X_scaled * (1-X_scaled) / X_nUMI[:,np.newaxis],axis=0)
-# noise_var[noise_var == 0] = 1
-# X_norm = (X_scaled - X_scaled_mean) / np.sqrt(noise_var)
-# X_norm_var = np.var(X_norm, axis=0)
-
     def _calculate_matrix_attributes(self, X_mat, feature_types=None, X_nUMI=None):
         idx_nonsilent = np.sum(X_mat, axis=0) > 0
         X_temp = X_mat[:, idx_nonsilent]
@@ -373,7 +354,6 @@ class RECODE:
         }
         
         return mat_dict
-
 
     def fit(self, X):
         """
@@ -472,7 +452,6 @@ class RECODE:
 
         idx_nonsilent = mat_dict["idx_nonsilent"]
         X_temp = mat_dict["X_temp"]
-        # X_nUMI = mat_dict["X_nUMI"]
         X_scaled_mean = mat_dict["X_scaled_mean"]
         noise_var = mat_dict["noise_var"]
         X_norm_var = mat_dict["X_norm_var"]
