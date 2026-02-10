@@ -387,6 +387,8 @@ class RECODE:
         pre_recode_params={},
         pre_fit_transform_params={},
     ):
+        X_mat = self._check_datatype(X)
+
         nbrs_sp = NearestNeighbors(n_neighbors=n_neighbors_spatial+1).fit(X_sp)
         distances_sp, indices_sp = nbrs_sp.kneighbors(X_sp)
         mean_distance_sp = np.mean(distances_sp[:, 1:])
@@ -395,34 +397,45 @@ class RECODE:
         row_idx = np.repeat(np.arange(n), n_neighbors_spatial+1)
         col_idx = indices_sp.ravel()
         idx_distance = distances_sp.ravel() < mean_distance_sp
-        adj_mat_sp = lil_matrix((n, n), dtype=float)
-        adj_mat_sp[row_idx[idx_distance], col_idx[idx_distance]] = 1
+        adjacency_mat_sp = lil_matrix((n, n), dtype=float)
+        adjacency_mat_sp[row_idx[idx_distance], col_idx[idx_distance]] = 1
 
         default_pre_recode_params = {
             "fast_algorithm": self.fast_algorithm,
             "fast_algorithm_ell_ub": self.fast_algorithm_ell_ub,
             "assay": self.assay,
             "version": self.version,
-            "solver": "full",
+            "solver": self.solver,
             "downsampling_rate": self.downsampling_rate,
             "decimals": self.decimals,
             # "RECODE_key": self.RECODE_key,
             # "anndata_key": "layers",
             "random_state": self.random_state,
-            "log_normalize": False,
+            "log_normalize": self.log_normalize,
             "target_sum": self.target_sum,
+            "reduce_genes": self.reduce_genes,
+            "reduce_gene_rate": self.reduce_gene_rate,
             "verbose": False,
         }
 
         pre_recode_params = default_pre_recode_params | pre_recode_params
         pre_recode = RECODE(**pre_recode_params)
 
-        X_ex = pre_recode.fit_transform(X, **pre_fit_transform_params)
-        if isinstance(X, anndata.AnnData):
-            X_mat = X.X
-            X_ex = X_ex.X
+        pre_fit_transform_params = {"sRECODE_mode": False} | pre_fit_transform_params
+
+        X_ex_recode = pre_recode.fit_transform(X, **pre_fit_transform_params)
+
+        if isinstance(X_ex_recode, anndata.AnnData):
+            if pre_recode.log_normalize:
+                RECODE_key = pre_recode.RECODE_key + "_log"
+            else:
+                RECODE_key = pre_recode.RECODE_key
+            if pre_recode.anndata_key == "layers":
+                X_ex = X_ex_recode.layers[RECODE_key]
+            else:
+                X_ex = X_ex_recode.obsm[RECODE_key]
         else:
-            X_mat = X
+            X_ex = X_ex_recode
 
         n_neighbors_ex = int(n_neighbors_count_rate * X_ex.shape[0])
         nbrs_ex = NearestNeighbors(n_neighbors=n_neighbors_ex + 1).fit(X_ex)
@@ -431,10 +444,10 @@ class RECODE:
         row_idx = np.repeat(np.arange(n), n_neighbors_ex+1)
         col_idx = indices_ex.ravel()
 
-        adj_mat_ex = lil_matrix((n, n), dtype=float)
-        adj_mat_ex[row_idx, col_idx] = 1
+        adjacency_mat_ex = lil_matrix((n, n), dtype=float)
+        adjacency_mat_ex[row_idx, col_idx] = 1
 
-        weight_sp = adj_mat_sp.multiply(adj_mat_ex)
+        weight_sp = adjacency_mat_sp.multiply(adjacency_mat_ex)
         X_mat = weight_sp @ X_mat
 
         return X_mat
@@ -468,7 +481,6 @@ class RECODE:
         }
         
         return mat_dict
-
 
     def fit(
             self,
@@ -508,6 +520,18 @@ class RECODE:
                     warnings.warn(f"sRECODE is inapplicable due to the following reason: {e} \n Normal RECODE will be applied.")
                 sRECODE_mode = False
 
+        if sRECODE_mode:
+            if self.verbose:
+                print("Applying spatial RECODE (sRECODE)..")
+            X_mat = self._integrate_spatial_transcriptome(
+                X.copy(),
+                X_spatial,
+                n_neighbors_spatial=n_neighbors_spatial,
+                n_neighbors_count_rate=n_neighbors_count_rate,
+                pre_recode_params=pre_recode_params,
+                pre_fit_transform_params=pre_fit_transform_params,
+            )
+
         idx_act_cells = np.sum(X_mat,axis=1) > 0
 
         X_mat = X_mat[idx_act_cells]
@@ -535,7 +559,7 @@ class RECODE:
             if self.verbose:
                 print(f"Reduced genes from {d_train} to {picked_gene_num} by high variance gene selection.")
             
-            X_nUMI = temp_mat_dict["X_nUMI"]
+            X_nUMI = temp_mat_dict["X_nUMI"].copy()
 
             del temp_mat_dict, temp_idx_nonsilent, temp_X_norm_var_nonsilent, temp_X_norm_var
         else:
@@ -590,30 +614,13 @@ class RECODE:
                 "Warning: RECODE is applicable for count data (integer matrix). Plese make sure the data type."
             )
 
-        if sRECODE_mode:
-            if isinstance(X, anndata.AnnData):
-                X_obs = (X.obs[idx_act_cells]).iloc[cell_stat]
-                X_for_sRECODE = anndata.AnnData(X_mat, obs=X_obs)
-            else: 
-                X_for_sRECODE = X_mat
-            X_spatial = X_spatial[idx_act_cells][cell_stat]
-            if pre_fit_transform_params.get("meta_data") is not None:
-                pre_fit_transform_params["meta_data"] = pre_fit_transform_params["meta_data"][idx_act_cells].iloc[cell_stat]
-            if self.verbose:
-                print("Applying spatial RECODE (sRECODE)..")
-            X_mat = self._integrate_spatial_transcriptome(
-                X_for_sRECODE,
-                X_spatial,
-                n_neighbors_spatial=n_neighbors_spatial,
-                n_neighbors_count_rate=n_neighbors_count_rate,
-                pre_recode_params=pre_recode_params,
-                pre_fit_transform_params=pre_fit_transform_params,
-            )
-
+        X_nUMI = X_nUMI[cell_stat] if X_nUMI is not None else None
+        
         mat_dict = self._calculate_matrix_attributes(X_mat, feature_types=feature_types, X_nUMI=X_nUMI)
 
         idx_nonsilent = mat_dict["idx_nonsilent"]
         X_temp = mat_dict["X_temp"]
+        X_nUMI = mat_dict["X_nUMI"]
         X_scaled_mean = mat_dict["X_scaled_mean"]
         noise_var = mat_dict["noise_var"]
         X_norm_var = mat_dict["X_norm_var"]
