@@ -46,6 +46,13 @@ class RECODE:
         target_sum=1e5,
         reduce_genes=False,
         reduce_gene_rate=0.6,
+        iRECODE_mode="auto",
+        sRECODE_mode="auto",
+        sRECODE_n_neighbors_spatial=24,
+        sRECODE_n_neighbors_count_rate=0.02,
+        sRECODE_pre_recode_params={},
+        sRECODE_pre_fit_transform_params={},
+
         verbose=True,
     ):
         """
@@ -119,6 +126,12 @@ class RECODE:
         self.target_sum = target_sum
         self.reduce_genes = reduce_genes
         self.reduce_gene_rate = reduce_gene_rate
+        self.iRECODE_mode = iRECODE_mode
+        self.sRECODE_mode = sRECODE_mode
+        self.sRECODE_n_neighbors_spatial = sRECODE_n_neighbors_spatial
+        self.sRECODE_n_neighbors_count_rate = sRECODE_n_neighbors_count_rate
+        self.sRECODE_pre_recode_params = sRECODE_pre_recode_params
+        self.sRECODE_pre_fit_transform_params = sRECODE_pre_fit_transform_params
         self.verbose = verbose
 
         # Set unit and Unit based on assay
@@ -382,19 +395,15 @@ class RECODE:
         self,
         X,
         X_sp,
-        n_neighbors_spatial=24,
-        n_neighbors_count_rate=0.02,
-        pre_recode_params={},
-        pre_fit_transform_params={},
     ):
         X_mat = self._check_datatype(X)
 
-        nbrs_sp = NearestNeighbors(n_neighbors=n_neighbors_spatial+1).fit(X_sp)
+        nbrs_sp = NearestNeighbors(n_neighbors=self.sRECODE_n_neighbors_spatial+1).fit(X_sp)
         distances_sp, indices_sp = nbrs_sp.kneighbors(X_sp)
         mean_distance_sp = np.mean(distances_sp[:, 1:])
         n = X_sp.shape[0]
 
-        row_idx = np.repeat(np.arange(n), n_neighbors_spatial+1)
+        row_idx = np.repeat(np.arange(n), self.sRECODE_n_neighbors_spatial+1)
         col_idx = indices_sp.ravel()
         idx_distance = distances_sp.ravel() < mean_distance_sp
         adjacency_mat_sp = lil_matrix((n, n), dtype=float)
@@ -408,22 +417,24 @@ class RECODE:
             "solver": self.solver,
             "downsampling_rate": self.downsampling_rate,
             "decimals": self.decimals,
-            # "RECODE_key": self.RECODE_key,
-            # "anndata_key": "layers",
             "random_state": self.random_state,
             "log_normalize": self.log_normalize,
             "target_sum": self.target_sum,
             "reduce_genes": self.reduce_genes,
             "reduce_gene_rate": self.reduce_gene_rate,
+            "iRECODE_mode": self.iRECODE_mode,
+            "sRECODE_mode": False,
+            "sRECODE_n_neighbors_spatial": self.sRECODE_n_neighbors_spatial,
+            "sRECODE_n_neighbors_count_rate": self.sRECODE_n_neighbors_count_rate,
+            "sRECODE_pre_recode_params": self.sRECODE_pre_recode_params,
+            "sRECODE_pre_fit_transform_params": self.sRECODE_pre_fit_transform_params,
             "verbose": False,
         }
 
-        pre_recode_params = default_pre_recode_params | pre_recode_params
+        pre_recode_params = default_pre_recode_params | self.sRECODE_pre_recode_params
         pre_recode = RECODE(**pre_recode_params)
 
-        pre_fit_transform_params = {"sRECODE_mode": False} | pre_fit_transform_params
-
-        X_ex_recode = pre_recode.fit_transform(X, **pre_fit_transform_params)
+        X_ex_recode = pre_recode.fit_transform(X, **self.sRECODE_pre_fit_transform_params)
 
         if isinstance(X_ex_recode, anndata.AnnData):
             if pre_recode.log_normalize:
@@ -437,7 +448,7 @@ class RECODE:
         else:
             X_ex = X_ex_recode
 
-        n_neighbors_ex = int(n_neighbors_count_rate * X_ex.shape[0])
+        n_neighbors_ex = int(self.sRECODE_n_neighbors_count_rate * X_ex.shape[0])
         nbrs_ex = NearestNeighbors(n_neighbors=n_neighbors_ex + 1).fit(X_ex)
         _, indices_ex = nbrs_ex.kneighbors(X_ex)
 
@@ -485,13 +496,8 @@ class RECODE:
     def fit(
             self,
             X,
-            sRECODE_mode="auto",
             X_spatial=None,
-            spatial_key=None,
-            n_neighbors_spatial=24,
-            n_neighbors_count_rate=0.02,
-            pre_recode_params={},
-            pre_fit_transform_params={},
+            spatial_key=None
         ):
         """
         Fit the model to X. (Determine the transformation.)
@@ -502,10 +508,9 @@ class RECODE:
                 single-cell sequencing data matrix (row:cell, culumn:gene/peak).
 
         """
-        if sRECODE_mode not in [True, False, "auto"]:
-            raise ValueError("sRECODE_mode should be True, False, or 'auto'.")
-
         X_mat = self._check_datatype(X)
+
+        sRECODE_mode = self.sRECODE_mode
 
         if sRECODE_mode == True:
             X_spatial = self._check_applicability_of_sRECODE(X, X_spatial, spatial_key)
@@ -525,11 +530,7 @@ class RECODE:
                 print("Applying spatial RECODE (sRECODE)..")
             X_mat = self._integrate_spatial_transcriptome(
                 X.copy(),
-                X_spatial,
-                n_neighbors_spatial=n_neighbors_spatial,
-                n_neighbors_count_rate=n_neighbors_count_rate,
-                pre_recode_params=pre_recode_params,
-                pre_fit_transform_params=pre_fit_transform_params,
+                X_spatial
             )
 
         idx_act_cells = np.sum(X_mat,axis=1) > 0
@@ -732,7 +733,6 @@ class RECODE:
     def transform(
         self,
         X,
-        iRECODE_mode="auto",
         meta_data=None,
         batch_key=None,
         integration_method="harmony",
@@ -762,17 +762,15 @@ class RECODE:
         X_new : ndarray/anndata (the same format as input)
                 Denoised data matrix.
         """
-        if iRECODE_mode not in [True, False, "auto"]:
-            raise ValueError("iRECODE_mode should be True, False, or 'auto'.")
-
         X_mat = self._check_datatype(X)
+        
         if self.fit_idx == False:
             raise RuntimeError("Run fit before transform.")
         if X_mat.shape[1] != self.d_train:
             raise ValueError(
                 "RECODE requires the same dimension as that of fitted data."
             )
-        
+        iRECODE_mode = self.iRECODE_mode    
 
         if iRECODE_mode == True:
             valid_meta_data, valid_batch_keys = self._check_applicability_of_iRECODE(X, meta_data, batch_key)
@@ -934,14 +932,8 @@ class RECODE:
     def fit_transform(
         self,
         X,
-        sRECODE_mode="auto",
         X_spatial=None,
         spatial_key=None,
-        n_neighbors_spatial=24,
-        n_neighbors_count_rate=0.02,
-        pre_recode_params={},
-        pre_fit_transform_params={},
-        iRECODE_mode="auto",
         meta_data=None,
         batch_key=None,
         integration_method="harmony",
@@ -980,17 +972,11 @@ class RECODE:
 
         self.fit(
             X,
-            sRECODE_mode=sRECODE_mode,
             X_spatial=X_spatial,
             spatial_key=spatial_key,
-            n_neighbors_spatial=n_neighbors_spatial,
-            n_neighbors_count_rate=n_neighbors_count_rate,
-            pre_recode_params=pre_recode_params,
-            pre_fit_transform_params=pre_fit_transform_params
         )
         X_RECODE = self.transform(
             X,
-            iRECODE_mode=iRECODE_mode,
             meta_data=meta_data,
             batch_key=batch_key,
             integration_method=integration_method,
