@@ -763,7 +763,7 @@ class RECODE:
                 Denoised data matrix.
         """
         X_mat = self._check_datatype(X)
-        
+
         if self.fit_idx == False:
             raise RuntimeError("Run fit before transform.")
         if X_mat.shape[1] != self.d_train:
@@ -1979,7 +1979,7 @@ class RECODE:
         ax.set_xlabel("PC", fontsize=fs_label)
         ax.set_ylabel("PC variance (eigenvalue)", fontsize=fs_label)
         ax.set_yscale("symlog")
-        ax.set_xlim([n_plot*(-0.05), n_plot + 5])
+        ax.set_xlim([n_plot*(-0.005), n_plot + 5])
         ax.set_ylim([-0.5, max(plot_EV) * 1.5])
         ax.legend(
             bbox_to_anchor=(1.00, 1),
