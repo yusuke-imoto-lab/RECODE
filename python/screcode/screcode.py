@@ -49,10 +49,9 @@ class RECODE:
         iRECODE_mode="auto",
         sRECODE_mode="auto",
         sRECODE_n_neighbors_spatial=24,
-        sRECODE_n_neighbors_count_rate=0.02,
+        sRECODE_n_neighbors_count_rate=0.2,
         sRECODE_pre_recode_params={},
         sRECODE_pre_fit_transform_params={},
-
         verbose=True,
     ):
         """
@@ -400,12 +399,12 @@ class RECODE:
 
         nbrs_sp = NearestNeighbors(n_neighbors=self.sRECODE_n_neighbors_spatial+1).fit(X_sp)
         distances_sp, indices_sp = nbrs_sp.kneighbors(X_sp)
-        mean_distance_sp = np.mean(distances_sp[:, 1:])
+        distance_thresh_sp = np.mean(distances_sp[:, 1:self.sRECODE_n_neighbors_spatial])
         n = X_sp.shape[0]
 
         row_idx = np.repeat(np.arange(n), self.sRECODE_n_neighbors_spatial+1)
         col_idx = indices_sp.ravel()
-        idx_distance = distances_sp.ravel() < mean_distance_sp
+        idx_distance = distances_sp.ravel() < distance_thresh_sp
         adjacency_mat_sp = lil_matrix((n, n), dtype=float)
         adjacency_mat_sp[row_idx[idx_distance], col_idx[idx_distance]] = 1
 
