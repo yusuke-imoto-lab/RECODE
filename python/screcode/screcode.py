@@ -163,25 +163,25 @@ class RECODE:
                 return np.array(X.X)
             else:
                 raise TypeError("Data type error: ndarray or anndata is available.")
-            if "feature_types" in adata.var.keys():
-                if (set(adata.var["feature_types"]) == {"Gene Expression"}) & (
-                    self.assay != "RNA"
-                ):
-                    self.logger.warning(
-                        "Warning: Input data may be scRNA-seq data. Please add option assay='RNA' like screcode.RECODE(assay='RNA'). "
-                    )
-                elif (set(adata.var["feature_types"]) == {"Peaks"}) & (
-                    self.assay != "ATAC"
-                ):
-                    self.logger.warning(
-                        "Warning: Input data may be scATAC-seq data. Please add option assay='ATAC' like screcode.RECODE(assay='ATAC'). "
-                    )
-                elif (
-                    set(adata.var["feature_types"]) == {"Gene Expression", "Peaks"}
-                ) & (self.assay != "Multiome"):
-                    self.logger.warning(
-                        "Warning: Input data may be multiome (scRNA-seq + scATAC-seq) data. Please add option assay='Multiome' like screcode.RECODE(assay='Multiome'). "
-                    )
+            # if "feature_types" in adata.var.keys():
+            #     if (set(adata.var["feature_types"]) == {"Gene Expression"}) & (
+            #         self.assay != "RNA"
+            #     ):
+            #         self.logger.warning(
+            #             "Warning: Input data may be scRNA-seq data. Please add option assay='RNA' like screcode.RECODE(assay='RNA'). "
+            #         )
+            #     elif (set(adata.var["feature_types"]) == {"Peaks"}) & (
+            #         self.assay != "ATAC"
+            #     ):
+            #         self.logger.warning(
+            #             "Warning: Input data may be scATAC-seq data. Please add option assay='ATAC' like screcode.RECODE(assay='ATAC'). "
+            #         )
+            #     elif (
+            #         set(adata.var["feature_types"]) == {"Gene Expression", "Peaks"}
+            #     ) & (self.assay != "Multiome"):
+            #         self.logger.warning(
+            #             "Warning: Input data may be multiome (scRNA-seq + scATAC-seq) data. Please add option assay='Multiome' like screcode.RECODE(assay='Multiome'). "
+            #         )
         elif self.assay == "Multiome":
             raise TypeError(
                 "Data type error: only anndata type is acceptable for multiome (scRNA-seq + scATAC-seq) data."
